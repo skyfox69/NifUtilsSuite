@@ -1,0 +1,237 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E72552E1-6D79-4413-8B63-83E25BF3E87B}</ProjectGuid>
+    <RootNamespace>NifUtilsSuite</RootNamespace>
+    <Keyword>MFCProj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(NIFLIB_DIR)include;$(HVKSDK_DIR)Source;$(DXSDK_DIR)Include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(NIFLIB_DIR)\lib;$(HVKSDK_DIR)\lib;$(DXSDK_DIR)Lib\x86</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VCInstallDir)include;$(VCInstallDir)atlmfc\include;$(WindowsSdkDir)include;$(FrameworkSDKDir)\include;$(NIFLIB_DIR)include;$(HVKSDK_DIR)Source;$(DXSDK_DIR)Include</IncludePath>
+    <LibraryPath>$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSdkDir)lib;$(FrameworkSDKDir)\lib;$(NIFLIB_DIR)\lib;$(HVKSDK_DIR)\lib;$(DXSDK_DIR)Lib\x86</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;HK_CONFIG_SIMD=2;_CRT_SECURE_NO_WARNINGS;NIFLIB_STATIC_LINK;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>hkBase.lib;hkSerialize.lib;hkSceneData.lib;hkInternal.lib;hkGeometryUtilities.lib;hkVisualize.lib;hkCompat.lib;hkpCollide.lib;hkpConstraintSolver.lib;hkpDynamics.lib;hkpInternal.lib;hkpUtilities.lib;hkpVehicle.lib;UxTheme.lib;niflib_static.lib;d3d9.lib;d3dx9.lib;version.lib</AdditionalDependencies>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreSpecificDefaultLibraries>LIBCMT</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(HVKSDK_DIR)Lib\win32_net_8-0\release_multithreaded</AdditionalLibraryDirectories>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <PreBuildEvent>
+      <Command>F:\Sourcen\verschange\Release\verschange.exe ./version.h</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;HK_CONFIG_SIMD=2;_CRT_SECURE_NO_WARNINGS;NIFLIB_STATIC_LINK;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalDependencies>hkBase.lib;hkSerialize.lib;hkSceneData.lib;hkInternal.lib;hkGeometryUtilities.lib;hkVisualize.lib;hkCompat.lib;hkpCollide.lib;hkpConstraintSolver.lib;hkpDynamics.lib;hkpInternal.lib;hkpUtilities.lib;hkpVehicle.lib;UxTheme.lib;niflib_static.lib;d3d9.lib;d3dx9.lib</AdditionalDependencies>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <IgnoreSpecificDefaultLibraries>
+      </IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(HVKSDK_DIR)Lib\win32_net_8-0\release_multithreaded</AdditionalLibraryDirectories>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="res\Cake_3D_NIF.ico" />
+    <None Include="res\havok.bmp" />
+    <None Include="res\ModelViewer.bmp" />
+    <None Include="res\NifUtilsSuite.rc2" />
+    <None Include="res\NifUtilsSuiteDoc.ico" />
+    <None Include="res\NifUtilsSuite_NIF.bmp" />
+    <None Include="res\Numbers.bmp" />
+    <None Include="res\Other.bmp" />
+    <None Include="res\OtherDisabled.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Common\GUI\AboutDialog.h" />
+    <ClInclude Include="Common\GUI\AboutPage1.h" />
+    <ClInclude Include="Common\GUI\AboutPage2.h" />
+    <ClInclude Include="Common\GUI\BCBrowseVSListBox.h" />
+    <ClInclude Include="Common\GUI\BCTabBarCtrl.h" />
+    <ClInclude Include="Common\GUI\NifUtilsSuiteFrm.h" />
+    <ClInclude Include="Common\GUI\OptionsPageGeneral.h" />
+    <ClInclude Include="Common\GUI\OptionsPageLogView.h" />
+    <ClInclude Include="Common\GUI\OptionsPageMaterial.h" />
+    <ClInclude Include="Common\GUI\OptionsSheet.h" />
+    <ClInclude Include="Common\Nif\ChunkNameHandling.h" />
+    <ClInclude Include="Common\Nif\CollisionNodeHandling.h" />
+    <ClInclude Include="Common\Nif\MaterialTypeHandling.h" />
+    <ClInclude Include="Common\Nif\NifChunkData.h" />
+    <ClInclude Include="Common\Nif\NifCollisionUtility.h" />
+    <ClInclude Include="Common\Nif\NifConvertUtility.h" />
+    <ClInclude Include="Common\Nif\NifUtlMaterial.h" />
+    <ClInclude Include="Common\Nif\VertexColorHandling.h" />
+    <ClInclude Include="Common\Util\Configuration.h" />
+    <ClInclude Include="Common\Util\DefLogMessageTypes.h" />
+    <ClInclude Include="Common\Util\FDCLibHelper.h" />
+    <ClInclude Include="Common\Util\FDFileHelper.h" />
+    <ClInclude Include="Common\Util\FDResourceManager.h" />
+    <ClInclude Include="Common\Util\FDToolEntry.h" />
+    <ClInclude Include="Common\Util\FDToolTipText.h" />
+    <ClInclude Include="Common\Util\IfcBroadcastObject.h" />
+    <ClInclude Include="Common\Util\IfcLogMessageObject.h" />
+    <ClInclude Include="Common\Util\IfcModelListViewObject.h" />
+    <ClInclude Include="Common\Util\LogMessageObject.h" />
+    <ClInclude Include="DirectX\DirectXAlphaState.h" />
+    <ClInclude Include="DirectX\DirectXGraphics.h" />
+    <ClInclude Include="DirectX\DirectXMesh.h" />
+    <ClInclude Include="DirectX\DirectXMeshAxes.h" />
+    <ClInclude Include="DirectX\DirectXMeshCollision.h" />
+    <ClInclude Include="DirectX\DirectXMeshModel.h" />
+    <ClInclude Include="DirectX\DirectXMeshModelLOD.h" />
+    <ClInclude Include="DirectX\DirectXNifConverter.h" />
+    <ClInclude Include="DirectX\DirectXObjConverter.h" />
+    <ClInclude Include="DirectX\DirectXView.h" />
+    <ClInclude Include="DirectX\IfcDirectXRenderObject.h" />
+    <ClInclude Include="NifUtilsSuite.h" />
+    <ClInclude Include="NifUtilsSuiteDoc.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tools\ChunkExtract\FormChunkExtractView.h" />
+    <ClInclude Include="Tools\ChunkExtract\OptionsPageChunkExtract.h" />
+    <ClInclude Include="Tools\ChunkMerge\FormChunkMergeView.h" />
+    <ClInclude Include="Tools\ChunkMerge\OptionsPageChunkMerge.h" />
+    <ClInclude Include="Tools\ModelViewer\FormModelViewerView.h" />
+    <ClInclude Include="Tools\ModelViewer\ModelViewerListCtrl.h" />
+    <ClInclude Include="Tools\ModelViewer\OptionsPageModelView.h" />
+    <ClInclude Include="Tools\NifConvert\FormNifConvertView.h" />
+    <ClInclude Include="Tools\NifConvert\OptionsPageNifConvert.h" />
+    <ClInclude Include="version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Common\GUI\AboutDialog.cpp" />
+    <ClCompile Include="Common\GUI\AboutPage1.cpp" />
+    <ClCompile Include="Common\GUI\AboutPage2.cpp" />
+    <ClCompile Include="Common\GUI\BCBrowseVSListBox.cpp" />
+    <ClCompile Include="Common\GUI\BCTabBarCtrl.cpp" />
+    <ClCompile Include="Common\GUI\NifUtilsSuiteFrm.cpp" />
+    <ClCompile Include="Common\GUI\OptionsPageGeneral.cpp" />
+    <ClCompile Include="Common\GUI\OptionsPageLogView.cpp" />
+    <ClCompile Include="Common\GUI\OptionsPageMaterial.cpp" />
+    <ClCompile Include="Common\GUI\OptionsSheet.cpp" />
+    <ClCompile Include="Common\Nif\NifCollisionUtility.cpp" />
+    <ClCompile Include="Common\Nif\NifConvertUtility.cpp" />
+    <ClCompile Include="Common\Nif\NifUtlMaterial.cpp" />
+    <ClCompile Include="Common\Util\Configuration.cpp" />
+    <ClCompile Include="Common\Util\FDCLibHelper.cpp" />
+    <ClCompile Include="Common\Util\FDFileHelper.cpp" />
+    <ClCompile Include="Common\Util\FDResourceManager.cpp" />
+    <ClCompile Include="Common\Util\LogMessageObject.cpp" />
+    <ClCompile Include="DirectX\DirectXGraphics.cpp" />
+    <ClCompile Include="DirectX\DirectXMesh.cpp" />
+    <ClCompile Include="DirectX\DirectXMeshAxes.cpp" />
+    <ClCompile Include="DirectX\DirectXMeshCollision.cpp" />
+    <ClCompile Include="DirectX\DirectXMeshModel.cpp" />
+    <ClCompile Include="DirectX\DirectXMeshModelLOD.cpp" />
+    <ClCompile Include="DirectX\DirectXNifConverter.cpp" />
+    <ClCompile Include="DirectX\DirectXObjConverter.cpp" />
+    <ClCompile Include="DirectX\DirectXView.cpp" />
+    <ClCompile Include="NifUtilsSuite.cpp" />
+    <ClCompile Include="NifUtilsSuiteDoc.cpp" />
+    <ClCompile Include="Tools\ChunkExtract\FormChunkExtractView.cpp" />
+    <ClCompile Include="Tools\ChunkExtract\OptionsPageChunkExtract.cpp" />
+    <ClCompile Include="Tools\ChunkMerge\FormChunkMergeView.cpp" />
+    <ClCompile Include="Tools\ChunkMerge\OptionsPageChunkMerge.cpp" />
+    <ClCompile Include="Tools\ModelViewer\FormModelViewerView.cpp" />
+    <ClCompile Include="Tools\ModelViewer\ModelViewerListCtrl.cpp" />
+    <ClCompile Include="Tools\ModelViewer\OptionsPageModelView.cpp" />
+    <ClCompile Include="Tools\NifConvert\FormNifConvertView.cpp" />
+    <ClCompile Include="Tools\NifConvert\OptionsPageNifConvert.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NifUtilsSuite.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="NifUtilsSuite.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

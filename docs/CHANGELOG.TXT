@@ -1,0 +1,4 @@
+Version 1.0.3
+================
+
+* Added:  first initial release of NIFUtilsSuite as Beta
