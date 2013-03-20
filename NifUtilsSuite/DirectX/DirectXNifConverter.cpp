@@ -473,8 +473,16 @@ unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pSha
 unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObjectRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
 	//  search for embedded bhkCompressedMeshShapeData
-	bhkRigidBodyRef		pRBody(DynamicCast<bhkRigidBody>(pShape->GetBody()));
+	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pShape->GetBody()));
 	if (pRBody == NULL)		return meshList.size(); 
+
+	//  add own translation to list
+	Vector4		tVec4 (pRBody->GetTranslation());
+	Vector3		tVec3 (tVec4.x * 71.0f, tVec4.y * 71.0f, tVec4.z * 71.0f);
+	Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
+	Matrix44	tMat44(tVec3, tMat33, 1.0f);
+
+	transformAry.push_back(tMat44);
 
 	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
 	if (pMBTS == NULL)		return meshList.size();
@@ -702,6 +710,9 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 		}  //  for (auto pIter=chunkDataList.begin(), pEnd=chunkDataList.end(); pIter != pEnd; ++pIter)
 	}  //  if (!tBVecVec.empty() && !tBTriVec.empty())
 
+	//  remove own translation from list
+	transformAry.pop_back();
+
 	return meshList.size();
 }
 
@@ -784,6 +795,38 @@ D3DXMATRIX DirectXNifConverter::Matrix44ToD3DXMATRIX(const Matrix44& matrixIn)
 	{
 		matrixOut((idx / 4), (idx % 4)) = matrixIn.rows[(idx / 4)][(idx % 4)];
 	}
+
+	return matrixOut;
+}
+
+//-----  QuaternionToMatrix44()  ----------------------------------------------
+Matrix33 DirectXNifConverter::QuaternionToMatrix33(const QuaternionXYZW& quadIn)
+{
+	Matrix33	matrixOut;
+	double		xx  (quadIn.x * quadIn.x);
+	double		yy  (quadIn.y * quadIn.y);
+	double		zz  (quadIn.z * quadIn.z);
+	double		ww  (quadIn.w * quadIn.w);
+	double		invs(1 / (xx + yy + zz + ww));
+	double		tmp1(quadIn.x * quadIn.y);
+	double		tmp2(quadIn.z * quadIn.w);
+
+	matrixOut.rows[0][0] = (float) (( xx - yy - zz + ww) * invs);
+	matrixOut.rows[1][1] = (float) ((-xx + yy - zz + ww) * invs);
+	matrixOut.rows[2][2] = (float) ((-xx - yy + zz + ww) * invs);
+
+	matrixOut.rows[1][0] = (float) (2.0f * (tmp1 + tmp2)*invs);
+	matrixOut.rows[0][1] = (float) (2.0f * (tmp1 - tmp2)*invs);
+
+	tmp1 = quadIn.x * quadIn.z;
+	tmp2 = quadIn.y * quadIn.w;
+	matrixOut.rows[2][0] = (float) (2.0f * (tmp1 - tmp2)*invs);
+	matrixOut.rows[0][2] = (float) (2.0f * (tmp1 + tmp2)*invs);
+
+	tmp1 = quadIn.y * quadIn.z;
+	tmp2 = quadIn.x * quadIn.w;
+	matrixOut.rows[2][1] = (float) (2.0f * (tmp1 + tmp2)*invs);
+	matrixOut.rows[1][2] = (float) (2.0f * (tmp1 - tmp2)*invs);
 
 	return matrixOut;
 }

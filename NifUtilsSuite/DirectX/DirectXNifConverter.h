@@ -20,6 +20,7 @@
 #include "obj/nitrishape.h"
 #include "obj/NiAlphaProperty.h"
 #include "obj/bhkCollisionObject.h"
+#include "gen/QuaternionXYZW.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 using namespace std;
@@ -50,6 +51,7 @@ class DirectXNifConverter
 
 		virtual	void				BlendFuncToDXBlend     (const NiAlphaProperty::BlendFunc value, DWORD& dxBlend, DWORD& dxArg);
 		virtual D3DXMATRIX			Matrix44ToD3DXMATRIX   (const Matrix44& matrixIn);
+		virtual	Matrix33			QuaternionToMatrix33   (const QuaternionXYZW& quadIn);
 		virtual	string				CheckTextureName       (string texName);
 		virtual	DirectXAlphaState*	DecodeAlphaProperty    (NiAlphaProperty* pProperty);
 
