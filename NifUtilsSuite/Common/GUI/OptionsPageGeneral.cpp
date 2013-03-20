@@ -57,6 +57,39 @@ void COptionsPageGeneral::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_ED_PATH_NIFSKOPE,  _pathNifSkope);
 }
 
+//-----  PreTranslateMessage()  -----------------------------------------------
+BOOL COptionsPageGeneral::PreTranslateMessage(MSG* pMsg)
+{
+	m_ToolTip.RelayEvent(pMsg);
+	return CPropertyPage::PreTranslateMessage(pMsg);
+}
+
+//-----  OnInitDialog()  ------------------------------------------------------
+BOOL COptionsPageGeneral::OnInitDialog()
+{
+	CPropertyPage::OnInitDialog();
+
+	//Create the ToolTip control
+	if( !m_ToolTip.Create(this))
+	{
+		TRACE0("Unable to create the ToolTip!");
+	}
+	else
+	{
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_SKYRIM),    _pathSkyrim);
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_NIFXML),    _pathNifXML);
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_TEMPLATES), _pathTemplates);
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_INPUT),     _pathDefInput);
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_OUTPUT),    _pathDefOutput);
+		m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_NIFSKOPE),  _pathNifSkope);
+
+		m_ToolTip.Activate(TRUE);
+		m_ToolTip.SetDelayTime(TTDT_INITIAL, 250);
+	}
+
+	return TRUE;
+}
+
 //-----  OnWizardNext()  ------------------------------------------------------
 LRESULT COptionsPageGeneral::OnWizardNext()
 {
@@ -109,6 +142,7 @@ void COptionsPageGeneral::OnBnClickedBtPathNifxml()
 	UpdateData(TRUE);
 	_pathNifXML = FDFileHelper::getFile(_pathNifXML, _T("Nif-XML (nif.xml)|nif.xml||"), _T("xml"), false, _T("Please select Nif.xml file"), OFN_FILEMUSTEXIST);
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_NIFXML), _pathNifXML);
 
 	//  re-initialize material list
 	delete NifUtlMaterialList::getInstance();
@@ -121,6 +155,7 @@ void COptionsPageGeneral::OnBnClickedBtPathSkyrim()
 	UpdateData(TRUE);
 	_pathSkyrim = FDFileHelper::getFolder(_pathSkyrim, _T("Data (Data-Dir)|*.*||"), _T("*"), false, _T("Please select SKYRIM executeable"));
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_SKYRIM), _pathSkyrim);
 }
 
 //-----  OnBnClickedBtPathTemplates()  ----------------------------------------
@@ -129,6 +164,7 @@ void COptionsPageGeneral::OnBnClickedBtPathTemplates()
 	UpdateData(TRUE);
 	_pathTemplates = FDFileHelper::getFolder(_pathTemplates, _T("*.nif (*.nif)|*.nif||"), _T("nif"), false, _T("Please select template directory"));
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_TEMPLATES), _pathTemplates);
 }
 
 //-----  OnBnClickedBtPathInput()  --------------------------------------------
@@ -137,6 +173,7 @@ void COptionsPageGeneral::OnBnClickedBtPathInput()
 	UpdateData(TRUE);
 	_pathDefInput = FDFileHelper::getFolder(_pathDefInput, _T("*.nif (*.nif)|*.nif||"), _T("nif"), false, _T("Please select default input directory"));
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_INPUT), _pathDefInput);
 }
 
 //-----  OnBnClickedBtPathOutput()  -------------------------------------------
@@ -145,6 +182,7 @@ void COptionsPageGeneral::OnBnClickedBtPathOutput()
 	UpdateData(TRUE);
 	_pathDefOutput = FDFileHelper::getFolder(_pathDefOutput, _T("*.nif (*.nif)|*.nif||"), _T("nif"), false, _T("Please select default output directory"));
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_OUTPUT), _pathDefOutput);
 }
 
 //-----  OnBnClickedBtPathNifSkope()  -----------------------------------------
@@ -153,5 +191,6 @@ void COptionsPageGeneral::OnBnClickedBtPathNifSkope()
 	UpdateData(TRUE);
 	_pathNifSkope = FDFileHelper::getFile(_pathNifSkope, _T("NifSkope (NifSkope)|NifSkope.exe||"), _T("NifSkope.exe"), false, _T("Please select NifSkope executeable"), OFN_FILEMUSTEXIST);
 	UpdateData(FALSE);
+	m_ToolTip.AddTool(GetDlgItem(IDC_ED_PATH_NIFSKOPE), _pathNifSkope);
 }
 

@@ -17,6 +17,7 @@ class COptionsPageGeneral : public CPropertyPage
 	private:
 		enum { IDD = IDD_PROPPAGE_GENERAL };
 
+				CToolTipCtrl	m_ToolTip;
 				CString			_pathSkyrim;
 				CString			_pathNifXML;
 				CString			_pathTemplates;
@@ -27,8 +28,10 @@ class COptionsPageGeneral : public CPropertyPage
 	protected:
 		virtual	void			DoDataExchange(CDataExchange* pDX);
 		virtual BOOL			OnSetActive();
+		virtual	BOOL			OnInitDialog();
 		virtual	void			OnOK();
 		virtual	LRESULT			OnWizardNext();
+		virtual	BOOL			PreTranslateMessage(MSG* pMsg);
 		afx_msg void			OnBnClickedBtPathNifxml();
 		afx_msg void			OnBnClickedBtPathSkyrim();
 		afx_msg void			OnBnClickedBtPathTemplates();
