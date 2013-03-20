@@ -272,6 +272,9 @@ void CFormModelViewerView::LoadModel(const string fileName)
 	vector<DirectXMesh*>&	meshList (_directXView.dxGetMeshList());
 	string					fName    (fileName);
 
+	//  reset view
+	OnBnClickedBtResetView();
+
 	//  clear old mesh
 	_directXView.dxResetMeshList();
 
