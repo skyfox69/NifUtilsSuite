@@ -42,6 +42,8 @@ class CFormModelViewerView : public CFormView, public IfcBroadcastObject
 		afx_msg void				OnBnClickedBtResetView();
 		afx_msg	void				OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 		afx_msg	void				OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
+		afx_msg void				OnBnClickedCkDoubleSided();
+		afx_msg void				OnCkVwCollisionHotkey();
 
 		virtual	void				LoadModel(const string fileName);
 		virtual	void				FillListView(vector<DirectXMesh*>& meshList);
@@ -57,7 +59,6 @@ class CFormModelViewerView : public CFormView, public IfcBroadcastObject
 
 		//  IfcBroadcastObject
 		virtual	BOOL				BroadcastEvent(WORD event, void* pParameter=NULL);
-		afx_msg void OnBnClickedCkDoubleSided();
 };
 
 #ifndef _DEBUG  // debug version in NifUtilsSuiteView.cpp

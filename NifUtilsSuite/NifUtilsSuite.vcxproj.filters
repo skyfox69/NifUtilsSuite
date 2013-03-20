@@ -70,7 +70,7 @@
     <Filter Include="Header Files\DirectX">
       <UniqueIdentifier>{5af17648-7065-4a34-9b57-0408544a01bd}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Common\Nif\NifConvert">
+    <Filter Include="Header Files\Tools\NifConvert">
       <UniqueIdentifier>{45d46216-f66f-4383-80b5-55fcbb9c28af}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -135,7 +135,7 @@
       <Filter>Header Files\Tools\ModelViewer</Filter>
     </ClInclude>
     <ClInclude Include="Tools\NifConvert\FormNifConvertView.h">
-      <Filter>Source Files\Common\Nif\NifConvert</Filter>
+      <Filter>Header Files\Tools\NifConvert</Filter>
     </ClInclude>
     <ClInclude Include="Common\Util\FDResourceManager.h">
       <Filter>Header Files\Common\Util</Filter>
@@ -159,7 +159,7 @@
       <Filter>Header Files\Tools\ModelViewer</Filter>
     </ClInclude>
     <ClInclude Include="Tools\NifConvert\OptionsPageNifConvert.h">
-      <Filter>Source Files\Common\Nif\NifConvert</Filter>
+      <Filter>Header Files\Tools\NifConvert</Filter>
     </ClInclude>
     <ClInclude Include="Common\Nif\NifUtlMaterial.h">
       <Filter>Header Files\Common\Nif</Filter>

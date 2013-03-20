@@ -49,6 +49,7 @@ BEGIN_MESSAGE_MAP(CFormModelViewerView, CFormView)
 	ON_BN_CLICKED(IDC_CK_VW_COLLISION, &CFormModelViewerView::OnBnClickedCkVwButton)
 	ON_BN_CLICKED(IDC_BT_RESET_VIEW,   &CFormModelViewerView::OnBnClickedBtResetView)
 	ON_BN_CLICKED(IDC_CK_DOUBLE_SIDED, &CFormModelViewerView::OnBnClickedCkDoubleSided)
+	ON_COMMAND(IDC_CK_VW_COLLISION_HOTKEY, &CFormModelViewerView::OnCkVwCollisionHotkey)
 END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
@@ -496,4 +497,14 @@ void CFormModelViewerView::OnBnClickedCkDoubleSided()
 		}
 
 	}  //  for (int selIdx(0); selIdx < cntItems; ++selIdx)
+}
+
+//-----  OnCkVwCollisionHotkey()  ---------------------------------------------
+void CFormModelViewerView::OnCkVwCollisionHotkey()
+{
+	CButton*	pButton((CButton*) GetDlgItem(IDC_CK_VW_COLLISION));
+
+	//  toggle collision view flag
+	pButton->SetCheck((pButton->GetCheck() == BST_CHECKED) ? BST_UNCHECKED : BST_CHECKED);
+	return OnBnClickedCkVwButton();
 }
