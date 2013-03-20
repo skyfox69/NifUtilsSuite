@@ -28,6 +28,7 @@ class CFormModelViewerView : public CFormView, public IfcBroadcastObject
 		CToolTipCtrl				_toolTipCtrl;
 		CSliderCtrl					_levelLOD;
 		CDirectXView				_directXView;
+		string						_fileName;
 
 									CFormModelViewerView();
 		virtual	void				DoDataExchange(CDataExchange* pDX);
@@ -44,6 +45,7 @@ class CFormModelViewerView : public CFormView, public IfcBroadcastObject
 		afx_msg	void				OnActivateView(BOOL bActivate, CView* pActivateView, CView* pDeactiveView);
 		afx_msg void				OnBnClickedCkDoubleSided();
 		afx_msg void				OnCkVwCollisionHotkey();
+		afx_msg void				OnBnClickedBtReloadModel();
 
 		virtual	void				LoadModel(const string fileName);
 		virtual	void				FillListView(vector<DirectXMesh*>& meshList);

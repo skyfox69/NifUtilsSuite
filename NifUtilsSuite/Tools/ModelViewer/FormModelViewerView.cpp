@@ -28,11 +28,12 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_VW_FRONT,     "Switch to front 
 						                   {IDC_BT_VW_SIDE,      "Switch to side view"},
 						                   {IDC_SL_LOD,          "Modify Level-Of-Detail"},
 						                   {IDC_CK_VW_MODEL,     "Toggle display of model meshes"},
-						                   {IDC_CK_VW_COLLISION, "Toggle display of collision wireframe"},
+						                   {IDC_CK_VW_COLLISION, "Toggle display of collision wireframe <F4>"},
 						                   {IDC_CK_VW_AXES,      "Toggle display of coordinate axes"},
 						                   {IDC_BT_RESET_VIEW,   "Reset view to default settings"},
 						                   {IDC_LV_NODES,        "List of displayed objects. Use multi-select and context menu for more options"},
 										   {IDC_CK_DOUBLE_SIDED, "Toggle between one and two side texture rendering"},
+										   {IDC_BT_RELOAD_MODEL, "Reload actual model from file <F5>"},
 						                   {-1, ""}
 						                  };
 
@@ -50,6 +51,8 @@ BEGIN_MESSAGE_MAP(CFormModelViewerView, CFormView)
 	ON_BN_CLICKED(IDC_BT_RESET_VIEW,   &CFormModelViewerView::OnBnClickedBtResetView)
 	ON_BN_CLICKED(IDC_CK_DOUBLE_SIDED, &CFormModelViewerView::OnBnClickedCkDoubleSided)
 	ON_COMMAND(IDC_CK_VW_COLLISION_HOTKEY, &CFormModelViewerView::OnCkVwCollisionHotkey)
+	ON_BN_CLICKED(IDC_BT_RELOAD_MODEL, &CFormModelViewerView::OnBnClickedBtReloadModel)
+	ON_COMMAND(IDC_BT_RELOAD_MODEL,    &CFormModelViewerView::OnCkVwCollisionHotkey)
 END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
@@ -87,10 +90,11 @@ void CFormModelViewerView::OnInitialUpdate()
 	CImageList*		pImageList   (CFDResourceManager::getInstance()->getImageListOther());
 	CImageList*		pImageListDis(CFDResourceManager::getInstance()->getImageListOtherDis());
 	
-	((CMFCButton*) GetDlgItem(IDC_BT_RESET_VIEW))->SetImage(pImageList->ExtractIcon(2));
-	((CMFCButton*) GetDlgItem(IDC_BT_VW_FRONT))  ->SetImage(pImageList->ExtractIcon(12), true, NULL, pImageListDis->ExtractIcon(12));
-	((CMFCButton*) GetDlgItem(IDC_BT_VW_TOP))    ->SetImage(pImageList->ExtractIcon(14), true, NULL, pImageListDis->ExtractIcon(14));
-	((CMFCButton*) GetDlgItem(IDC_BT_VW_SIDE))   ->SetImage(pImageList->ExtractIcon(13), true, NULL, pImageListDis->ExtractIcon(13));
+	((CMFCButton*) GetDlgItem(IDC_BT_RESET_VIEW))  ->SetImage(pImageList->ExtractIcon(2));
+	((CMFCButton*) GetDlgItem(IDC_BT_RELOAD_MODEL))->SetImage(pImageList->ExtractIcon(1));
+	((CMFCButton*) GetDlgItem(IDC_BT_VW_FRONT))    ->SetImage(pImageList->ExtractIcon(12), true, NULL, pImageListDis->ExtractIcon(12));
+	((CMFCButton*) GetDlgItem(IDC_BT_VW_TOP))      ->SetImage(pImageList->ExtractIcon(14), true, NULL, pImageListDis->ExtractIcon(14));
+	((CMFCButton*) GetDlgItem(IDC_BT_VW_SIDE))     ->SetImage(pImageList->ExtractIcon(13), true, NULL, pImageListDis->ExtractIcon(13));
 
 	//  initialize list view
 	DWORD	exStyle(LVS_EX_FULLROWSELECT | LVS_EX_FLATSB);
@@ -127,6 +131,9 @@ void CFormModelViewerView::OnInitialUpdate()
 
 	//  set settings from configuration
 	BroadcastEvent(IBCE_CHANGED_SETTINGS);
+
+	//  disable reload button until model loaded
+	GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(FALSE);
 
 	//  add default axes
 	vector<DirectXMesh*>&	meshList(_directXView.dxGetMeshList());
@@ -262,8 +269,8 @@ void CFormModelViewerView::LoadModel(const string fileName)
 {
 	Configuration*			pConfig  (Configuration::getInstance());
 	DirectXMeshAxes*		pMeshAxes(NULL);
-	vector<DirectXMesh*>&	meshList(_directXView.dxGetMeshList());
-	string					fName   (fileName);
+	vector<DirectXMesh*>&	meshList (_directXView.dxGetMeshList());
+	string					fName    (fileName);
 
 	//  clear old mesh
 	_directXView.dxResetMeshList();
@@ -277,6 +284,9 @@ void CFormModelViewerView::LoadModel(const string fileName)
 
 	//  detect type of source
 	transform(fName.begin(), fName.end(), fName.begin(), ::tolower);
+
+	//  remember file name
+	_fileName = fName;
 
 	//  NIF source
 	if (fName.find(".nif") != string::npos)
@@ -296,6 +306,11 @@ void CFormModelViewerView::LoadModel(const string fileName)
 		if (!dxConverter.ConvertModel(fileName, meshList))
 		{
 			AfxMessageBox(_T("Something went wrong while converting model"), MB_OK | MB_ICONERROR);
+			_fileName = "";
+
+			//  disable reload button until model loaded
+			GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(FALSE);
+
 			return;
 		}
 	}
@@ -312,6 +327,11 @@ void CFormModelViewerView::LoadModel(const string fileName)
 		if (!dxConverter.ConvertModel(fileName, meshList))
 		{
 			AfxMessageBox(_T("Something went wrong while converting model"), MB_OK | MB_ICONERROR);
+			_fileName = "";
+
+			//  disable reload button until model loaded
+			GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(FALSE);
+
 			return;
 		}
 	}
@@ -319,11 +339,19 @@ void CFormModelViewerView::LoadModel(const string fileName)
 	else
 	{
 		AfxMessageBox(_T("Unknown source file format"), MB_OK | MB_ICONERROR);
+		_fileName = "";
+
+		//  disable reload button until model loaded
+		GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(FALSE);
+
 		return;
 	}
 
 	//  fill model listview
 	FillListView(meshList);
+
+	//  enable reload button
+	GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(TRUE);
 }
 
 //-----  FillListView()  ------------------------------------------------------
@@ -507,4 +535,13 @@ void CFormModelViewerView::OnCkVwCollisionHotkey()
 	//  toggle collision view flag
 	pButton->SetCheck((pButton->GetCheck() == BST_CHECKED) ? BST_UNCHECKED : BST_CHECKED);
 	return OnBnClickedCkVwButton();
+}
+
+//-----  OnBnClickedBtReloadModel()  ------------------------------------------
+void CFormModelViewerView::OnBnClickedBtReloadModel()
+{
+	if (!_fileName.empty())
+	{
+		LoadModel(_fileName);
+	}
 }
