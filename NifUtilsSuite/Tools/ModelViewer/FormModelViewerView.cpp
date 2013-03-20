@@ -194,6 +194,7 @@ BOOL CFormModelViewerView::BroadcastEvent(WORD event, void* pParameter)
 			{
 				_listView.SetExtendedStyle(_listView.GetExtendedStyle() & ~LVS_EX_GRIDLINES);
 			}
+			_listView.SetToggleRowBackground(pConfig->_mvAlterRows);
 
 			//- view flags
 			((CButton*) GetDlgItem(IDC_CK_VW_AXES)     )->SetCheck(pConfig->_mvShowAxes      ? BST_CHECKED : BST_UNCHECKED);

@@ -26,7 +26,8 @@ END_MESSAGE_MAP()
 
 //-----  CModelViewerListCtrl()  ----------------------------------------------
 CModelViewerListCtrl::CModelViewerListCtrl()
-	:	CListCtrl()
+	:	CListCtrl           (),
+		_toggleRowBackground(true)
 {}
 
 //-----  ~CModelViewerListCtrl()  ---------------------------------------------
@@ -107,7 +108,7 @@ void CModelViewerListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 				case 0:
 				{
 					SetItem(row, col, LVIF_IMAGE, NULL, (int) pMesh->GetRenderMode(), 0, 0, 0 );
-					pLVCD->clrTextBk = ((row % 2) == 0) ? 0xFF000000 : 0x00F4F4F4;
+					pLVCD->clrTextBk = (_toggleRowBackground && ((row % 2) == 1)) ? 0x00F4F4F4 : 0xFF000000;
 					*pResult = CDRF_DODEFAULT;
 					break;
 				}
@@ -121,7 +122,7 @@ void CModelViewerListCtrl::OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult)
 
 				default:
 				{
-					pLVCD->clrTextBk = ((row % 2) == 0) ? 0xFF000000 : 0x00F4F4F4;
+					pLVCD->clrTextBk = (_toggleRowBackground && ((row % 2) == 1)) ? 0x00F4F4F4 : 0xFF000000;
 					*pResult = CDRF_NEWFONT;
 					break;
 				}
@@ -285,4 +286,13 @@ void CModelViewerListCtrl::OnMmvDisplaySolid()
 void CModelViewerListCtrl::OnMmvDisplayTexture()
 {
 	SetSelectedRenderMode(DXRM_TEXTURE);
+}
+
+//-----  SetToggleRowBackground()  --------------------------------------------
+bool CModelViewerListCtrl::SetToggleRowBackground(const bool toggle)
+{
+	bool	oldToggle(_toggleRowBackground);
+
+	_toggleRowBackground = toggle;
+	return oldToggle;
 }

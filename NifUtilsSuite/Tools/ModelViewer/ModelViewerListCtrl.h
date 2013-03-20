@@ -22,6 +22,7 @@ class CModelViewerListCtrl : public CListCtrl
 {
 	protected:
 		string				_emptyMessage;
+		bool				_toggleRowBackground;
 
 		afx_msg	void		OnPaint     ();
 		afx_msg	void		OnCustomDraw(NMHDR* pNMHDR, LRESULT* pResult);
@@ -42,4 +43,5 @@ class CModelViewerListCtrl : public CListCtrl
 		virtual				~CModelViewerListCtrl();
 
 		virtual	void		SetEmptyMessage(const string message);
+		virtual bool		SetToggleRowBackground(const bool toggle);
 };
