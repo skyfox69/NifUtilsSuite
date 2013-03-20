@@ -14,6 +14,8 @@
 #include "DirectX\DirectXMeshModelLOD.h"
 #include "DirectX\DirectXMeshCollision.h"
 #include "Common\Util\FDCLibHelper.h"
+#include "Common\Nif\NifUtlMaterial.h"
+#include "Common\Nif\NifChunkData.h"
 
 //  niflib includes
 #include "niflib.h"
@@ -558,9 +560,9 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 
 		//  collected all data needed => convert to DirectX
 		//  - transformation matrix
-		for (vector<Matrix44>::iterator pIter=transformAry.begin(); pIter != transformAry.end(); ++pIter)
+		for (vector<Matrix44>::iterator pIterT=transformAry.begin(); pIterT != transformAry.end(); ++pIterT)
 		{
-			locTransform *= *pIter;
+			locTransform *= *pIterT;
 		}
 
 		//  create new model
@@ -577,7 +579,7 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 		//  add model view data
 		stringstream	sStream;
 
-		sStream << "Chunk #" << idxChunk;
+		sStream << "Chunk #" << idxChunk << ": " << NifUtlMaterialList::getInstance()->getMaterialDefName(chunkMatList[pIter->materialIndex].skyrimMaterial);
 		pNewModel->SetNifData(sStream.str(), "bhkCMSDChunk", pShape->internal_block_number);
 
 		//  append model to list
@@ -592,69 +594,112 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 	//  if existing
 	if (!tBVecVec.empty() && !tBTriVec.empty())
 	{
-		vector<Vector3>		vecVertices;
-		vector<Triangle>	vecTriangles;
-		Matrix44			locTransform;
+		NifChunkData*						pTmpCData(NULL);
+		vector<NifChunkData>				chunkDataList;
+		map<unsigned int, unsigned int>		knownMaterials;
 
-		//  convert vertices
-		for (unsigned int idx(0), size(tBVecVec.size()); idx < size; ++idx)
+		//  for each face
+		for (auto pIter=tBTriVec.begin(), pEnd=tBTriVec.end(); pIter != pEnd; ++pIter)
 		{
-			vecVertices.push_back(Vector3(tBVecVec[idx].x, tBVecVec[idx].y, tBVecVec[idx].z));
-		}
+			//  look for known material mesh
+			if (knownMaterials.count(pIter->unknownInt1) <= 0)
+			{
+				NifChunkData	tmpCData;
+			
+				//  initialize data structure
+				tmpCData._material = chunkMatList[pIter->unknownInt1].skyrimMaterial;
+				tmpCData._index    = -1;
 
-		//  convert triangles
-		for (unsigned int idx(0), size(tBTriVec.size()); idx < size; ++idx)
+				//  add new mesh to known materials
+				knownMaterials[pIter->unknownInt1] = chunkDataList.size();
+
+				// append geometry to list
+				chunkDataList.push_back(tmpCData);
+			}
+
+			//  get known mesh
+			pTmpCData = &chunkDataList[knownMaterials[pIter->unknownInt1]];
+
+			//  vertices
+			short	idxP1(pTmpCData->_vertices.size());
+			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle1].x,
+												   tBVecVec[pIter->triangle1].y,
+												   tBVecVec[pIter->triangle1].z
+												  ));
+
+			short	idxP2(pTmpCData->_vertices.size());
+			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle2].x,
+												   tBVecVec[pIter->triangle2].y,
+												   tBVecVec[pIter->triangle2].z
+												  ));
+
+			short	idxP3(pTmpCData->_vertices.size());
+			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle3].x,
+												   tBVecVec[pIter->triangle3].y,
+												   tBVecVec[pIter->triangle3].z
+												  ));
+
+			//  triangle
+			pTmpCData->_triangles.push_back(Triangle(idxP1, idxP2, idxP3));
+
+		}  //  for (auto pIter=tBTriVec.begin(), pEnd=tBTriVec.end(); pIter != pEnd; ++pIter)
+
+		//  convert each entry in chunkDataList to DirectX
+		for (auto pIter=chunkDataList.begin(), pEnd=chunkDataList.end(); pIter != pEnd; ++pIter)
 		{
-			vecTriangles.push_back(Triangle(tBTriVec[idx].triangle1, tBTriVec[idx].triangle2, tBTriVec[idx].triangle3));
-		}
+			Matrix44	locTransform;
 
-		//  - indices
-		unsigned int		countI     (vecTriangles.size()*3);
-		unsigned short*		pBufIndices(new unsigned short[countI]);
+			//  - indices
+			unsigned int		countI     (pIter->_triangles.size()*3);
+			unsigned short*		pBufIndices(new unsigned short[countI]);
 
-		for (unsigned int i(0); i < countI; i+=3)
-		{
-			pBufIndices[i]   = vecTriangles[i/3].v1;
-			pBufIndices[i+1] = vecTriangles[i/3].v2;
-			pBufIndices[i+2] = vecTriangles[i/3].v3;
-		}
+			for (unsigned int i(0); i < countI; i+=3)
+			{
+				pBufIndices[i]   = pIter->_triangles[i/3].v1;
+				pBufIndices[i+1] = pIter->_triangles[i/3].v2;
+				pBufIndices[i+2] = pIter->_triangles[i/3].v3;
+			}
 
-		//  - vertices
-		unsigned int							countV      (vecVertices.size());
-		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+			//  - vertices
+			unsigned int							countV      (pIter->_vertices.size());
+			DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
 
-		for (unsigned int i(0); i < countV; ++i)
-		{
-			pBufVertices[i]._x     = vecVertices[i].x * 71.0f;
-			pBufVertices[i]._y     = vecVertices[i].y * 71.0f;
-			pBufVertices[i]._z     = vecVertices[i].z * 71.0f;
-			pBufVertices[i]._color = _defCollisionColor;
-		}
+			for (unsigned int i(0); i < countV; ++i)
+			{
+				pBufVertices[i]._x     = pIter->_vertices[i].x * 71.0f;
+				pBufVertices[i]._y     = pIter->_vertices[i].y * 71.0f;
+				pBufVertices[i]._z     = pIter->_vertices[i].z * 71.0f;
+				pBufVertices[i]._color = _defCollisionColor;
+			}
 
-		//  collected all data needed => convert to DirectX
-		//  - transformation matrix
-		for (vector<Matrix44>::iterator pIter=transformAry.begin(); pIter != transformAry.end(); ++pIter)
-		{
-			locTransform *= *pIter;
-		}
+			//  collected all data needed => convert to DirectX
+			//  - transformation matrix
+			for (vector<Matrix44>::iterator pIterT=transformAry.begin(); pIterT != transformAry.end(); ++pIterT)
+			{
+				locTransform *= *pIterT;
+			}
 
-		//  create new model
-		DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
-																		pBufVertices,
-																		countV,
-																		pBufIndices,
-																		countI,
-																		_defCollisionColor
-																	);
-		//  set visibility
-		if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+			//  create new model
+			DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																			pBufVertices,
+																			countV,
+																			pBufIndices,
+																			countI,
+																			_defCollisionColor
+																		);
+			//  set visibility
+			if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
 
-		//  add model view data
-		pNewModel->SetNifData("BigTri", "bhkCMSDBigTris", pShape->internal_block_number);
+			//  add model view data
+			stringstream	sStream;
 
-		//  append model to list
-		meshList.push_back(pNewModel);
+			sStream << "BigTri: " << NifUtlMaterialList::getInstance()->getMaterialDefName(pIter->_material);
+			pNewModel->SetNifData(sStream.str(), "bhkCMSDBigTris", pShape->internal_block_number);
 
+			//  append model to list
+			meshList.push_back(pNewModel);
+
+		}  //  for (auto pIter=chunkDataList.begin(), pEnd=chunkDataList.end(); pIter != pEnd; ++pIter)
 	}  //  if (!tBVecVec.empty() && !tBTriVec.empty())
 
 	return meshList.size();
