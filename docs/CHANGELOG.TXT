@@ -1,4 +1,17 @@
-Version 1.0.3 (Beta)
+Version 1.0.4 (Beta2)
+====================
+
+* Added:	Settings: show full path names as tooltip on general tab
+* Added:	ModelViewer: shortcut F4 for toggling collision display as in CreationKit
+* Added:	ModelViewer: button 'Reload Model' + shortcut F5 as in CreationKit
+* Added:	ModelViewer: reset to users defaults when loading new model
+* Fixed:	ModelViewer: toggling 'row background' in settings has no effect
+* Fixed:	ModelViewer: display material name used at each Chunk/BigTri
+* Fixed:	ModelViewer: some nested blocks rendered at wrong position
+* Fixed:	ModelViewer: crash when attempt to render NIF without UV set
+* Fixed:	ModelViewer: translation/rotation of 'bhkRidgidBodyT' is ignored
+
+Version 1.0.3 (Beta1)
 ====================
 
 * Added:	first initial release of NIFUtilsSuite as Beta
