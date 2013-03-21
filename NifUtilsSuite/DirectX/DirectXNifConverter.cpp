@@ -153,17 +153,21 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 {
 	vector<NiAVObjectRef>	childList(pNode->GetChildren());
 
-	if (pNode->internal_block_number == 331)
-	{
-		int	iiii=0;
-	}
-
-
 	//  check for NiBillboardNode
 	_isBillboard = (DynamicCast<NiBillboardNode>(pNode) != NULL);
 
 	//  add own translation to list
 	transformAry.push_back(pNode->GetLocalTransform());
+
+	Matrix44	locTransform;
+	string		name = pNode->GetName();
+
+	for (vector<Matrix44>::iterator pIter=transformAry.begin(); pIter != transformAry.end(); ++pIter)
+	{
+		locTransform *= *pIter;
+	}
+
+	Vector3	trans = locTransform.GetTranslation();
 
 	//  iterate over children
 	for (auto pIter=childList.begin(), pEnd=childList.end(); pIter != pEnd; ++pIter)
@@ -307,7 +311,7 @@ unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pSha
 
 		//  collected all data needed => convert to DirectX
 		//  - transformation matrix
-		for (vector<Matrix44>::iterator pIter=transformAry.begin(); pIter != transformAry.end(); ++pIter)
+		for (auto pIter=transformAry.rbegin(), pEnd=transformAry.rend(); pIter != pEnd; ++pIter)
 		{
 			locTransform *= *pIter;
 		}
@@ -568,7 +572,7 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 
 		//  collected all data needed => convert to DirectX
 		//  - transformation matrix
-		for (vector<Matrix44>::iterator pIterT=transformAry.begin(); pIterT != transformAry.end(); ++pIterT)
+		for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
 		{
 			locTransform *= *pIterT;
 		}
