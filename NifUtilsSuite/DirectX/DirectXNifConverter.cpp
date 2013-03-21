@@ -348,8 +348,8 @@ unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pSha
 				pBufVertices[i]._normal.y = vecNormals[i].y;
 				pBufVertices[i]._normal.z = vecNormals[i].z;
 				pBufVertices[i]._color    = !vecColors.empty() ? D3DXCOLOR(vecColors[i].r, vecColors[i].g, vecColors[i].b, 1.0f) : D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-				pBufVertices[i]._u        = (i <= texCoordSize) ? vecTexCoords[i].u : 0.0f;
-				pBufVertices[i]._v        = (i <= texCoordSize) ? vecTexCoords[i].v : 0.0f;
+				pBufVertices[i]._u        = (i < texCoordSize) ? vecTexCoords[i].u : 0.0f;
+				pBufVertices[i]._v        = (i < texCoordSize) ? vecTexCoords[i].v : 0.0f;
 			}
 
 			//  - material

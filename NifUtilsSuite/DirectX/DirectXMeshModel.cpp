@@ -89,7 +89,7 @@ DirectXRenderMode DirectXMeshModel::IncreaseRenderMode()
 {
 	DirectXRenderMode	oldMode   (GetRenderMode());
 	int					renderMode(oldMode + 1);
-	int					maxMode   (_textureName.empty() ? DXRM_WIREFRAME : DXRM_TEXTURE);
+	int					maxMode   (_textureName.empty() ? DXRM_SOLID : DXRM_TEXTURE);
 
 	if (renderMode > maxMode)		renderMode = 0;
 
