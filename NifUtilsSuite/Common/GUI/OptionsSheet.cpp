@@ -13,9 +13,11 @@
 #include "Common\GUI\OptionsPageMaterial.h"
 #include "Common\GUI\OptionsPageLogView.h"
 #include "Tools\NifConvert\OptionsPageNifConvert.h"
-#include "Tools\ModelViewer\OptionsPageModelView.h"
 #include "Tools\ChunkMerge\OptionsPageChunkMerge.h"
 #include "Tools\ChunkExtract\OptionsPageChunkExtract.h"
+#ifndef NUS_LIGHT
+#include "Tools\ModelViewer\OptionsPageModelView.h"
+#endif
 #include "Common\Util\Configuration.h"
 #include "Common\Nif\NifUtlMaterial.h"
 
@@ -47,7 +49,9 @@ INT_PTR COptionsSheet::DoModal()
 	COptionsPageNifConvert		optPageNif;
 	COptionsPageChunkMerge		optPageCMg;
 	COptionsPageChunkExtract	optPageCEx;
+#ifndef NUS_LIGHT
 	COptionsPageModelView		optPageMVw;
+#endif
 	COptionsPageLogView			optPageLVw;
 
 	AddPage(&optPageGen);
@@ -56,7 +60,9 @@ INT_PTR COptionsSheet::DoModal()
 	AddPage(&optPageNif);
 	AddPage(&optPageCMg);
 	AddPage(&optPageCEx);
+#ifndef NUS_LIGHT
 	AddPage(&optPageMVw);
+#endif
 
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 

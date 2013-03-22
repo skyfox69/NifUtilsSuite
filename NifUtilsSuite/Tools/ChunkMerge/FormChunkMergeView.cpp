@@ -311,7 +311,9 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
 	}
+#ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
+#endif
 	GetDlgItem(IDC_BT_NSCOPE_IN)->EnableWindow(!_fileNameIn.IsEmpty());
 }
 
@@ -337,7 +339,9 @@ void CFormChunkMergeView::OnBnClickedBtFileColl()
 		_fileNameColl = fileName;
 		UpdateData(FALSE);
 	}
+#ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(!_fileNameColl.IsEmpty());
+#endif
 	GetDlgItem(IDC_BT_NSCOPE_COLL)->EnableWindow(!_fileNameColl.IsEmpty());
 }
 

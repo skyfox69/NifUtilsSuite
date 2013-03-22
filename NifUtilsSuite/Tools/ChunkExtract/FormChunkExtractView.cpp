@@ -296,7 +296,9 @@ void CFormChunkExtractView::OnBnClickedBtFileIn()
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
 	}
+#ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
+#endif
 	GetDlgItem(IDC_BT_NSCOPE_IN)->EnableWindow(!_fileNameIn.IsEmpty());
 }
 
@@ -428,8 +430,10 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 	if (ncReturn == NCU_OK)
 	{
 		LogMessageObject::LogMessage(NCU_MSG_TYPE_SUCCESS, "Chunks extracted successfully");
+#ifndef NUS_LIGHT
 		GetDlgItem(IDC_BT_VIEW_OUT2) ->EnableWindow(!_fileNameObj.IsEmpty());
 		GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(!_fileNameNif.IsEmpty());
+#endif
 		GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(!_fileNameNif.IsEmpty());
 	}
 	else

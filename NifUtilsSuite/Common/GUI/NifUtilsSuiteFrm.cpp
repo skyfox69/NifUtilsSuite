@@ -21,8 +21,10 @@
 #include "Common\Nif\NifUtlMaterial.h"
 #include "Tools\NifConvert\FormNifConvertView.h"
 #include "Tools\ChunkMerge\FormChunkMergeView.h"
-#include "Tools\ModelViewer\FormModelViewerView.h"
 #include "Tools\ChunkExtract\FormChunkExtractView.h"
+#ifndef NUS_LIGHT
+#include "Tools\ModelViewer\FormModelViewerView.h"
+#endif
 
 //-----  DEFINES  -------------------------------------------------------------
 IMPLEMENT_DYNCREATE(CNifUtilsSuiteFrame, CFrameWnd)
@@ -45,7 +47,9 @@ END_MESSAGE_MAP()
 static SFDToolEntry toolList[] = { SFDToolEntry(RUNTIME_CLASS(CFormNifConvertView),   ID_TOOLS_NIFCONVERT,   " NifConvert",   5),
 								   SFDToolEntry(RUNTIME_CLASS(CFormChunkMergeView),   ID_TOOLS_CHUNKMERGE,   " ChunkMerge",   6),
 								   SFDToolEntry(RUNTIME_CLASS(CFormChunkExtractView), ID_TOOLS_CHUNKEXTRACT, " ChunkExtract", 11),
+#ifndef NUS_LIGHT
 								   SFDToolEntry(RUNTIME_CLASS(CFormModelViewerView),  ID_TOOLS_MODELVIEWER,  " ModelViewer",  4),
+#endif
 								   SFDToolEntry(NULL, 0, "", 0)
 								};
 

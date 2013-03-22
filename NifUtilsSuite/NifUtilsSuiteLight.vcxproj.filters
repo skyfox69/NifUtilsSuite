@@ -1,0 +1,304 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Tools">
+      <UniqueIdentifier>{472c7f08-996a-4995-bd0e-3b959ca84678}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools\ChunkExtract">
+      <UniqueIdentifier>{05ff9f35-c8de-428e-a7fd-168d6711c356}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools\ChunkMerge">
+      <UniqueIdentifier>{737647ad-3e26-4447-8dbd-54f6842d0de5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools\NifConvert">
+      <UniqueIdentifier>{6ef40b02-8aa9-460d-a857-04e917a469de}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common">
+      <UniqueIdentifier>{c0d0f766-7840-4524-99e4-d0605e661675}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common\GUI">
+      <UniqueIdentifier>{7833b0df-55df-4dbb-b97e-7074f06110bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common\Nif">
+      <UniqueIdentifier>{11137ebb-4f36-4083-896c-4a780b7f94bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Common\Util">
+      <UniqueIdentifier>{f0909bac-bef5-4fad-8ae7-86e6b9f02a85}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools">
+      <UniqueIdentifier>{f86c1909-cd3f-4f3e-af8d-6689bc3febf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools\ChunkExtract">
+      <UniqueIdentifier>{621824ec-10ab-4ef8-9f8f-ca8623c95708}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools\ChunkMerge">
+      <UniqueIdentifier>{d8c789e2-d679-4acd-be76-9105e23a5e6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools\NifConvert">
+      <UniqueIdentifier>{f36508d3-c98a-4634-8508-85ab71f2c8c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common">
+      <UniqueIdentifier>{752a58af-68fb-4409-a7dc-cf83dfd95768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common\GUI">
+      <UniqueIdentifier>{43291010-2193-45b5-be0e-dc23d5f75323}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common\Nif">
+      <UniqueIdentifier>{ca872080-75dc-4b21-9c26-56d61888584b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Common\Util">
+      <UniqueIdentifier>{e1b284fd-32d8-46f7-97fc-cacf322d7f30}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="NifUtilsSuite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NifUtilsSuiteDoc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\ChunkExtract\FormChunkExtractView.cpp">
+      <Filter>Source Files\Tools\ChunkExtract</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\ChunkExtract\OptionsPageChunkExtract.cpp">
+      <Filter>Source Files\Tools\ChunkExtract</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\ChunkMerge\FormChunkMergeView.cpp">
+      <Filter>Source Files\Tools\ChunkMerge</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\ChunkMerge\OptionsPageChunkMerge.cpp">
+      <Filter>Source Files\Tools\ChunkMerge</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\NifConvert\FormNifConvertView.cpp">
+      <Filter>Source Files\Tools\NifConvert</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\NifConvert\OptionsPageNifConvert.cpp">
+      <Filter>Source Files\Tools\NifConvert</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Nif\NifCollisionUtility.cpp">
+      <Filter>Source Files\Common\Nif</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Nif\NifUtlMaterial.cpp">
+      <Filter>Source Files\Common\Nif</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Nif\NifConvertUtility.cpp">
+      <Filter>Source Files\Common\Nif</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\Configuration.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\FDCLibHelper.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\FDFileHelper.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\FDResourceManager.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\LogMessageObject.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\AboutDialog.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\AboutPage1.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\AboutPage2.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\BCBrowseVSListBox.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\BCTabBarCtrl.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\NifUtilsSuiteFrm.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\OptionsPageGeneral.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\OptionsPageLogView.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\OptionsPageMaterial.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\OptionsSheet.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="NifUtilsSuite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NifUtilsSuiteDoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ChunkExtract\FormChunkExtractView.h">
+      <Filter>Header Files\Tools\ChunkExtract</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ChunkExtract\OptionsPageChunkExtract.h">
+      <Filter>Header Files\Tools\ChunkExtract</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ChunkMerge\FormChunkMergeView.h">
+      <Filter>Header Files\Tools\ChunkMerge</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\ChunkMerge\OptionsPageChunkMerge.h">
+      <Filter>Header Files\Tools\ChunkMerge</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\NifConvert\FormNifConvertView.h">
+      <Filter>Header Files\Tools\NifConvert</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\NifConvert\OptionsPageNifConvert.h">
+      <Filter>Header Files\Tools\NifConvert</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\ChunkNameHandling.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\CollisionNodeHandling.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\MaterialTypeHandling.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\NifChunkData.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\NifCollisionUtility.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\NifConvertUtility.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\NifUtlMaterial.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\VertexColorHandling.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\AboutDialog.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\AboutPage1.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\AboutPage2.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\BCBrowseVSListBox.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\BCTabBarCtrl.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\NifUtilsSuiteFrm.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\OptionsPageGeneral.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\OptionsPageLogView.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\OptionsPageMaterial.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\OptionsSheet.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\Configuration.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\DefLogMessageTypes.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDCLibHelper.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDFileHelper.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDResourceManager.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDToolEntry.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDToolTipText.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\IfcBroadcastObject.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\IfcLogMessageObject.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\IfcModelListViewObject.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\LogMessageObject.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NifUtilsSuite.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Cake_3D_NIF.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\havok.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\ModelViewer.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\NifUtilsSuite.rc2">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\NifUtilsSuiteDoc.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\NifUtilsSuite_NIF.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\Numbers.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\Other.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\OtherDisabled.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

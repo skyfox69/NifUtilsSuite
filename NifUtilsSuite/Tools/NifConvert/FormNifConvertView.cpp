@@ -304,7 +304,9 @@ void CFormNifConvertView::OnBnClickedBtFileIn()
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
 	}
+#ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
+#endif
 	GetDlgItem(IDC_BT_NSCOPE_IN)->EnableWindow(!_fileNameIn.IsEmpty());
 }
 
@@ -462,7 +464,9 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 	if (ncReturn == NCU_OK)
 	{
 		LogMessageObject::LogMessage(NCU_MSG_TYPE_SUCCESS, "NIF converted successfully");
+#ifndef NUS_LIGHT
 		GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(TRUE);
+#endif
 		GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(TRUE);
 	}
 	else
