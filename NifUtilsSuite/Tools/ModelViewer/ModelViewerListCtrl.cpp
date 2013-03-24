@@ -22,6 +22,8 @@ BEGIN_MESSAGE_MAP(CModelViewerListCtrl, CListCtrl)
 	ON_COMMAND(ID_MMV_DISPLAY_WIREFRAME,        &CModelViewerListCtrl::OnMmvDisplayWireframe)
 	ON_COMMAND(ID_MMV_DISPLAY_SOLID,            &CModelViewerListCtrl::OnMmvDisplaySolid)
 	ON_COMMAND(ID_MMV_DISPLAY_TEXTURE,          &CModelViewerListCtrl::OnMmvDisplayTexture)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTW, 0, 0xFFFF, &CModelViewerListCtrl::OnToolTipText)
+	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXTA, 0, 0xFFFF, &CModelViewerListCtrl::OnToolTipText)
 END_MESSAGE_MAP()
 
 //-----  CModelViewerListCtrl()  ----------------------------------------------
@@ -288,6 +290,102 @@ void CModelViewerListCtrl::OnMmvDisplayTexture()
 	SetSelectedRenderMode(DXRM_TEXTURE);
 }
 
+//-----  OnToolHitTest()  -----------------------------------------------------
+int CModelViewerListCtrl::OnToolHitTest(CPoint point, TOOLINFO * pTI) const
+{
+	int		row(0);
+	int		col(0);
+	RECT	cellrect = { 0 };
+
+	if (!CellRectFromPoint(point, cellrect, row, col))
+	{
+		return -1;
+	}
+
+	pTI->hwnd     = m_hWnd;
+	pTI->uId      = (UINT)((row<<10)+(col&0x3ff)+1);
+	pTI->lpszText = LPSTR_TEXTCALLBACK;
+	pTI->rect     = cellrect;
+
+	return pTI->uId;
+}
+
+//-----  CellRectFromPoint()  -------------------------------------------------
+bool CModelViewerListCtrl::CellRectFromPoint(CPoint& point, RECT& cellrect, int& row, int& col) const
+{
+	CHeaderCtrl*	pHeader    ((CHeaderCtrl*) GetDlgItem(0));
+	CRect			rect;
+	int				columnCount(pHeader->GetItemCount());
+	int				bottom     (0);
+
+	// Get the top and bottom row visible
+	row    = GetTopIndex();
+	bottom = row + GetCountPerPage();
+
+	if (bottom > GetItemCount())		bottom = GetItemCount();
+	
+	//  for each visible rows
+	for(; row <= bottom; ++row)
+	{
+		GetItemRect(row, &rect, LVIR_BOUNDS);
+
+		if (rect.PtInRect(point))
+		{
+			// Now find the column
+			for (col=0; col < columnCount; ++col)
+			{
+				// Getting column width
+				int		colwidth(GetColumnWidth(col));
+
+				if ((point.x >= rect.left) && (point.x <= (rect.left + colwidth)))
+				{
+					RECT	rectClient = { 0 };
+
+					GetClientRect(&rectClient);
+
+					rect.right = rect.left + colwidth;
+					if (rect.right > rectClient.right)		rect.right = rectClient.right;
+
+					cellrect = rect;
+					return true;
+
+				}  //  if ((point.x >= rect.left) && (point.x <= (rect.left + colwidth)))
+
+				rect.left += colwidth;
+
+			}  //  for (col=0; col < columnCount; ++col)
+		}  //  if (rect.PtInRect(point))
+	}  //  for(; row <= bottom; ++row)
+
+	return false;
+}
+
+//-----  OnMmvDisplayNone()  --------------------------------------------------
+BOOL CModelViewerListCtrl::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult)
+{
+	//  automated created tooltips
+	if (pNMHDR->idFrom == 0)		return FALSE;
+
+	int		row    (((pNMHDR->idFrom - 1) >> 10) & 0x003fffff);
+	int		col    ((pNMHDR->idFrom - 1) & 0x000003ff);
+	CString	tipText(GetItemText(row, col));
+
+	//  set text for wide or ascii character set
+	if (pNMHDR->code == TTN_NEEDTEXTA)
+	{
+		_wcstombsz(((TOOLTIPTEXTA*)pNMHDR)->szText, tipText, 80);
+	}
+	else
+	{
+		lstrcpyn(((TOOLTIPTEXTW*)pNMHDR)->szText, tipText, 80);
+	}
+
+	//  mark final result OK
+	*pResult = 0;
+
+	return TRUE;
+}
+
 //-----  SetToggleRowBackground()  --------------------------------------------
 bool CModelViewerListCtrl::SetToggleRowBackground(const bool toggle)
 {
@@ -296,3 +394,4 @@ bool CModelViewerListCtrl::SetToggleRowBackground(const bool toggle)
 	_toggleRowBackground = toggle;
 	return oldToggle;
 }
+

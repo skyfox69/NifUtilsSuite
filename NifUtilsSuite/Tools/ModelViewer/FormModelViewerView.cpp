@@ -31,7 +31,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_VW_FRONT,     "Switch to front 
 						                   {IDC_CK_VW_COLLISION, "Toggle display of collision wireframe <F4>"},
 						                   {IDC_CK_VW_AXES,      "Toggle display of coordinate axes"},
 						                   {IDC_BT_RESET_VIEW,   "Reset view to default settings"},
-						                   {IDC_LV_NODES,        "List of displayed objects. Use multi-select and context menu for more options"},
+//						                   {IDC_LV_NODES,        "List of displayed objects. Use multi-select and context menu for more options"},
 										   {IDC_CK_DOUBLE_SIDED, "Toggle between one and two side texture rendering"},
 										   {IDC_BT_RELOAD_MODEL, "Reload actual model from file <F5>"},
 						                   {-1, ""}
@@ -108,6 +108,7 @@ void CFormModelViewerView::OnInitialUpdate()
 	_listView.InsertColumn(3, _T("Name/Material"), LVCFMT_LEFT,   120, 3);
 	_listView.SetEmptyMessage("No object model loaded");
 	_listView.SetImageList(CFDResourceManager::getInstance()->getImageListModelView(), LVSIL_SMALL);
+	_listView.EnableToolTips(TRUE);
 
 	//  DirectX view
 	CRect	rect;

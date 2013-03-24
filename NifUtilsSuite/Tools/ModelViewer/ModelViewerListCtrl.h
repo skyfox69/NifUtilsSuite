@@ -33,8 +33,11 @@ class CModelViewerListCtrl : public CListCtrl
 		afx_msg void		OnMmvDisplayWireframe();
 		afx_msg void		OnMmvDisplaySolid();
 		afx_msg void		OnMmvDisplayTexture();
+		afx_msg BOOL		OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResult);
 
 		virtual	void		SetSelectedRenderMode(DirectXRenderMode renderMode);
+		virtual int			OnToolHitTest(CPoint point, TOOLINFO * pTI) const;
+		virtual	bool		CellRectFromPoint(CPoint& point, RECT& cellrect, int& row, int& col) const;
 
 		DECLARE_MESSAGE_MAP()
 
