@@ -27,7 +27,7 @@
 #include "obj/NiSourceTexture.h"
 #include "obj/BSLightingShaderProperty.h"
 #include "obj/BSShaderTextureSet.h"
-#include "obj/bhkRigidBody.h"
+#include "obj/bhkRigidBodyT.h"
 #include "obj/bhkMoppBvTreeShape.h"
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
@@ -476,17 +476,22 @@ unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pSha
 //-----  getGeometryFromCollisionObject()  ------------------------------------
 unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObjectRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
+	bool	isRidgidBodyT(DynamicCast<bhkRigidBodyT>(pShape->GetBody()) != NULL);
+
 	//  search for embedded bhkCompressedMeshShapeData
 	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pShape->GetBody()));
 	if (pRBody == NULL)		return meshList.size(); 
 
-	//  add own translation to list
-	Vector4		tVec4 (pRBody->GetTranslation());
-	Vector3		tVec3 (tVec4.x * 71.0f, tVec4.y * 71.0f, tVec4.z * 71.0f);
-	Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
-	Matrix44	tMat44(tVec3, tMat33, 1.0f);
-
-	transformAry.push_back(tMat44);
+	//  add own translation to list - if bhkRigidBodyT
+	if (isRidgidBodyT)
+	{
+		Vector4		tVec4 (pRBody->GetTranslation());
+		Vector3		tVec3 (tVec4.x * 71.0f, tVec4.y * 71.0f, tVec4.z * 71.0f);
+		Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
+		Matrix44	tMat44(tVec3, tMat33, 1.0f);
+	
+		transformAry.push_back(tMat44);
+	}
 
 	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
 	if (pMBTS == NULL)		return meshList.size();
@@ -714,8 +719,11 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 		}  //  for (auto pIter=chunkDataList.begin(), pEnd=chunkDataList.end(); pIter != pEnd; ++pIter)
 	}  //  if (!tBVecVec.empty() && !tBTriVec.empty())
 
-	//  remove own translation from list
-	transformAry.pop_back();
+	//  remove own translation from list - if set
+	if (isRidgidBodyT)
+	{
+		transformAry.pop_back();
+	}
 
 	return meshList.size();
 }
