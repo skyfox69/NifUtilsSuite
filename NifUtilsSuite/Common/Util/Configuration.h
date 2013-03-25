@@ -68,6 +68,7 @@ class Configuration
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;
+				bool					_ceScaleToModel;
 				bool					_mvShowGrid;
 				bool					_mvAlterRows;
 				bool					_mvForceDDS;

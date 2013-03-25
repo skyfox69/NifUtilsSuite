@@ -35,6 +35,7 @@ Configuration::Configuration(const string fileName)
 		_showToolTipps  (true),
 		_saveLastView   (false),
 		_ceGenNormals   (true),
+		_ceScaleToModel (true),
 		_mvShowGrid     (true),
 		_mvAlterRows    (true),
 		_mvForceDDS     (false),
@@ -302,6 +303,7 @@ bool Configuration::read()
 			readAttribute(content, "ShowToolTipps>",         _showToolTipps,     offset);
 			readAttribute(content, "NameHandling>",          _ceNameHandling,    offset);
 			readAttribute(content, "GenNormals>",            _ceGenNormals,      offset);
+			readAttribute(content, "ScaleToModel>",          _ceScaleToModel,    offset);
 			readAttribute(content, "DefaultBackColor>",      _mvDefBackColor,    offset);
 			readAttribute(content, "DefaultWireColor>",      _mvDefWireColor,    offset);
 			readAttribute(content, "DefaultCollColor>",      _mvDefCollColor,    offset);
@@ -372,6 +374,7 @@ bool Configuration::write()
 		oStr << "</ChunkMerge><ChunkExtract>";
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";
+		oStr << "<ScaleToModel>"          << _ceScaleToModel          << "</ScaleToModel>";
 		oStr << "</ChunkExtract><Materials>";
 		oStr << "<MatScanTag>"            << _matScanTag              << "</MatScanTag>";
 		oStr << "<MatScanName>"           << _matScanName             << "</MatScanName>";

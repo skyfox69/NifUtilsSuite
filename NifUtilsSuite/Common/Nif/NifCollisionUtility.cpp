@@ -36,7 +36,8 @@ NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 		_logCallback       (NULL),
 		_materialList      (materialList),
 		_defaultMaterial   (0),
-		_generateNormals   (true)
+		_generateNormals   (true),
+		_scaleToModel      (true)
 {}
 
 /*---------------------------------------------------------------------------*/
@@ -764,6 +765,12 @@ void NifCollisionUtility::setGenerateNormals(const bool genNormals)
 }
 
 /*---------------------------------------------------------------------------*/
+void NifCollisionUtility::setScaleToModel(const bool doScale)
+{
+	_scaleToModel = doScale;
+}
+
+/*---------------------------------------------------------------------------*/
 vector<string>& NifCollisionUtility::getUserMessages()
 {
 	return _userMessages;
@@ -827,7 +834,8 @@ unsigned int NifCollisionUtility::getGeometryFromCompressedMeshShape(bhkCompress
 {
 	vector<bhkCMSDChunk>		chunkGeoList(pShape->GetChunks());
 	vector<bhkCMSDMaterial>		chunkMatList(pShape->GetChunkMaterials());
-	unsigned short				idxChunk(0);
+	float						scaleFactor (_scaleToModel ? 70.0f : 1.0f);
+	unsigned short				idxChunk    (0);
 
 	//  for each chunk of shape
 	for (auto pIter=chunkGeoList.begin(), pEnd=chunkGeoList.end(); pIter != pEnd; ++pIter, ++idxChunk)
@@ -842,9 +850,9 @@ unsigned int NifCollisionUtility::getGeometryFromCompressedMeshShape(bhkCompress
 		//  get vertices from chunk
 		for (unsigned int idx(0); idx < pIter->numVertices; idx += 3)
 		{
-			tmpCData._vertices.push_back(Vector3((pIter->vertices[idx  ] / 1000.0f) + pIter->translation.x,
-				                                 (pIter->vertices[idx+1] / 1000.0f) + pIter->translation.y,
-											     (pIter->vertices[idx+2] / 1000.0f) + pIter->translation.z
+			tmpCData._vertices.push_back(Vector3(((pIter->vertices[idx  ] / 1000.0f) + pIter->translation.x) * scaleFactor,
+				                                 ((pIter->vertices[idx+1] / 1000.0f) + pIter->translation.y) * scaleFactor,
+											     ((pIter->vertices[idx+2] / 1000.0f) + pIter->translation.z) * scaleFactor
 												));
 		}
 
@@ -942,21 +950,21 @@ unsigned int NifCollisionUtility::getGeometryFromCompressedMeshShape(bhkCompress
 
 			//  vertices
 			short	idxP1(pTmpCData->_vertices.size());
-			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle1].x,
-												   tBVecVec[pIter->triangle1].y,
-												   tBVecVec[pIter->triangle1].z
+			pTmpCData->_vertices.push_back(Vector3((tBVecVec[pIter->triangle1].x) * scaleFactor,
+												   (tBVecVec[pIter->triangle1].y) * scaleFactor,
+												   (tBVecVec[pIter->triangle1].z) * scaleFactor
 												  ));
 
 			short	idxP2(pTmpCData->_vertices.size());
-			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle2].x,
-												   tBVecVec[pIter->triangle2].y,
-												   tBVecVec[pIter->triangle2].z
+			pTmpCData->_vertices.push_back(Vector3((tBVecVec[pIter->triangle2].x) * scaleFactor,
+												   (tBVecVec[pIter->triangle2].y) * scaleFactor,
+												   (tBVecVec[pIter->triangle2].z) * scaleFactor
 												  ));
 
 			short	idxP3(pTmpCData->_vertices.size());
-			pTmpCData->_vertices.push_back(Vector3(tBVecVec[pIter->triangle3].x,
-												   tBVecVec[pIter->triangle3].y,
-												   tBVecVec[pIter->triangle3].z
+			pTmpCData->_vertices.push_back(Vector3((tBVecVec[pIter->triangle3].x) * scaleFactor,
+												   (tBVecVec[pIter->triangle3].y) * scaleFactor,
+												   (tBVecVec[pIter->triangle3].z) * scaleFactor
 												  ));
 
 			//  triangle

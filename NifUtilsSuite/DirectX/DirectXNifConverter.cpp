@@ -486,7 +486,7 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 	if (isRidgidBodyT)
 	{
 		Vector4		tVec4 (pRBody->GetTranslation());
-		Vector3		tVec3 (tVec4.x * 71.0f, tVec4.y * 71.0f, tVec4.z * 71.0f);
+		Vector3		tVec3 (tVec4.x * 70.0f, tVec4.y * 70.0f, tVec4.z * 70.0f);
 		Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
 		Matrix44	tMat44(tVec3, tMat33, 1.0f);
 	
@@ -569,9 +569,9 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 
 		for (unsigned int i(0); i < countV; ++i)
 		{
-			pBufVertices[i]._x     = vecVertices[i].x * 71.0f;
-			pBufVertices[i]._y     = vecVertices[i].y * 71.0f;
-			pBufVertices[i]._z     = vecVertices[i].z * 71.0f;
+			pBufVertices[i]._x     = vecVertices[i].x * 70.0f;
+			pBufVertices[i]._y     = vecVertices[i].y * 70.0f;
+			pBufVertices[i]._z     = vecVertices[i].z * 70.0f;
 			pBufVertices[i]._color = _defCollisionColor;
 		}
 
@@ -683,9 +683,9 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 
 			for (unsigned int i(0); i < countV; ++i)
 			{
-				pBufVertices[i]._x     = pIter->_vertices[i].x * 71.0f;
-				pBufVertices[i]._y     = pIter->_vertices[i].y * 71.0f;
-				pBufVertices[i]._z     = pIter->_vertices[i].z * 71.0f;
+				pBufVertices[i]._x     = pIter->_vertices[i].x * 70.0f;
+				pBufVertices[i]._y     = pIter->_vertices[i].y * 70.0f;
+				pBufVertices[i]._z     = pIter->_vertices[i].z * 70.0f;
 				pBufVertices[i]._color = _defCollisionColor;
 			}
 

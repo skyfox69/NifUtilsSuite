@@ -19,6 +19,7 @@ class COptionsPageChunkExtract : public CPropertyPage
 
 				int				_nameHandling;
 				int				_genNormals;
+				int				_scaleToModel;
 
 	protected:
 		virtual	void			DoDataExchange(CDataExchange* pDX);

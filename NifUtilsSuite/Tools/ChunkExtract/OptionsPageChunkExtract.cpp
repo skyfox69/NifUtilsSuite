@@ -26,6 +26,7 @@ COptionsPageChunkExtract::COptionsPageChunkExtract(CWnd* pParent /*=NULL*/)
 
 	_nameHandling = pConfig->_ceNameHandling;
 	_genNormals   = pConfig->_ceGenNormals ? 1 : 0;
+	_scaleToModel = pConfig->_ceScaleToModel ? 1 : 0;
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -37,8 +38,9 @@ void COptionsPageChunkExtract::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 
-	DDX_Radio(pDX, IDC_RD_NAME_MAT,    _nameHandling);
-	DDX_Check(pDX, IDC_CK_GEN_NORMALS, _genNormals);
+	DDX_Radio(pDX, IDC_RD_NAME_MAT,       _nameHandling);
+	DDX_Check(pDX, IDC_CK_GEN_NORMALS,    _genNormals);
+	DDX_Check(pDX, IDC_CK_SCALE_TO_MODEL, _scaleToModel);
 }
 
 //-----  OnWizardNext()  ------------------------------------------------------
@@ -56,7 +58,8 @@ void COptionsPageChunkExtract::OnOK()
 	UpdateData(TRUE);
 
 	pConfig->_ceNameHandling = _nameHandling;
-	pConfig->_ceGenNormals   = (_genNormals == 1);
+	pConfig->_ceGenNormals   = (_genNormals   == 1);
+	pConfig->_ceScaleToModel = (_scaleToModel == 1);
 }
 
 //-----  OnInitDialog()  ------------------------------------------------------

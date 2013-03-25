@@ -123,6 +123,7 @@ public:
 
 	virtual void setGenerateNormals(const bool genNormals);
 
+	virtual void setScaleToModel(const bool doScale);
 
 
 protected:
@@ -177,6 +178,8 @@ protected:
 	ChunkNameHandling _cmHandling;
 
 	bool _generateNormals;
+
+	bool _scaleToModel;
 
 	/**
 	* Get geometry from NiTriShape

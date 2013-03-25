@@ -22,23 +22,24 @@
 extern void logCallback(const int type, const char* pMessage);
 
 //-----  DEFINES  -------------------------------------------------------------
-static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,   "Open source in NifSkope"},
-						                   {IDC_BT_NSCOPE_OUT,  "Open result in NifSkope"},
-						                   {IDC_BT_VIEW_IN,     "Display source on ModelView page"},
-						                   {IDC_BT_VIEW_OUT,    "Display collision model on ModelView page"},
-						                   {IDC_BT_VIEW_OUT2,   "Display collision model on ModelView page"},
-						                   {IDC_BT_FILE_IN,     "Choose source NIF-file to get collision data from"},
-						                   {IDC_BT_FILE_OUT,    "Choose target NIF-file to store collision data as Nif"},
-						                   {IDC_BT_FILE_OUT2,   "Choose target NIF-file to store collision data as Obj"},
-						                   {IDC_RE_LOG,         "Some log output"},
-						                   {IDC_BT_RESET_FORM,  "Reset form to default settings"},
-						                   {IDC_BT_CONVERT,     "Export collision data to target(s)"},
-						                   {IDC_ED_FILE_IN,     "Path to source NIF-file to get collision data from"},
-						                   {IDC_ED_FILE_OUT,    "Path to target NIF-file to store collision data to"},
-						                   {IDC_ED_FILE_OUT2,   "Path to target OBJ-file to store collision data to"},
-						                   {IDC_RD_NAME_MAT,    "Use material name (defined in nif.xml) for naming NiTriShape"},
-						                   {IDC_RD_NAME_CHUNK,  "Use index of chunk (Chunk_%d) for naming NiTriShape"},
-						                   {IDC_CK_GEN_NORMALS, "Generate normals from vertices on export if possible"},
+static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open source in NifSkope"},
+						                   {IDC_BT_NSCOPE_OUT,     "Open result in NifSkope"},
+						                   {IDC_BT_VIEW_IN,        "Display source on ModelView page"},
+						                   {IDC_BT_VIEW_OUT,       "Display collision model on ModelView page"},
+						                   {IDC_BT_VIEW_OUT2,      "Display collision model on ModelView page"},
+						                   {IDC_BT_FILE_IN,        "Choose source NIF-file to get collision data from"},
+						                   {IDC_BT_FILE_OUT,       "Choose target NIF-file to store collision data as Nif"},
+						                   {IDC_BT_FILE_OUT2,      "Choose target NIF-file to store collision data as Obj"},
+						                   {IDC_RE_LOG,            "Some log output"},
+						                   {IDC_BT_RESET_FORM,     "Reset form to default settings"},
+						                   {IDC_BT_CONVERT,        "Export collision data to target(s)"},
+						                   {IDC_ED_FILE_IN,        "Path to source NIF-file to get collision data from"},
+						                   {IDC_ED_FILE_OUT,       "Path to target NIF-file to store collision data to"},
+						                   {IDC_ED_FILE_OUT2,      "Path to target OBJ-file to store collision data to"},
+						                   {IDC_RD_NAME_MAT,       "Use material name (defined in nif.xml) for naming NiTriShape"},
+						                   {IDC_RD_NAME_CHUNK,     "Use index of chunk (Chunk_%d) for naming NiTriShape"},
+						                   {IDC_CK_GEN_NORMALS,    "Generate normals from vertices on export if possible"},
+						                   {IDC_CK_SCALE_TO_MODEL, "Scale exported mesh to fit model size (x70.0)"},
 						                   {-1, ""}
 						                  };
 
@@ -372,7 +373,8 @@ BOOL CFormChunkExtractView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_NAME_CHUNK))->SetCheck(selItem == IDC_RD_NAME_CHUNK);
 
 			//  various flags
-			((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))->SetCheck(pConfig->_ceGenNormals ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->SetCheck(pConfig->_ceGenNormals   ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->SetCheck(pConfig->_ceScaleToModel ? BST_CHECKED : BST_UNCHECKED);
 
 			break;
 		}
@@ -421,7 +423,8 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 
 	//  set flags
 	ncUtility.setChunkNameHandling((ChunkNameHandling) (GetCheckedRadioButton(IDC_RD_NAME_MAT, IDC_RD_NAME_CHUNK) - IDC_RD_NAME_MAT));
-	ncUtility.setGenerateNormals  (((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))->GetCheck() != FALSE);
+	ncUtility.setGenerateNormals  (((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->GetCheck() != FALSE);
+	ncUtility.setScaleToModel     (((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->GetCheck() != FALSE);
 
 	//  extract chunks from NIF
 	ncReturn = ncUtility.extractChunks(CStringA(_fileNameIn).GetString(), CStringA(_fileNameNif).GetString(), CStringA(_fileNameObj).GetString());
