@@ -1,47 +1,57 @@
+Version 1.0.5 (Beta3)
+====================
+
+* New:	ChunkExtract: add option 'scaling to model mesh'
+* New:	ModelViewer: tooltips for listview in ModelViewer
+* Chng:	Common: remove debug code
+* Fix:	ModelViewer: wrong tranlation/rotation to collision meshes in case of bhkRidgidBody
+
+
 Version 1.0.4 (Beta2)
 ====================
 
-* Added:	Settings: show full path names as tooltip on general tab
-* Added:	ModelViewer: shortcut F4 for toggling collision display as in CreationKit
-* Added:	ModelViewer: button 'Reload Model' + shortcut F5 as in CreationKit
-* Added:	ModelViewer: reset to users defaults when loading new model
-* Fixed:	ModelViewer: toggling 'row background' in settings has no effect
-* Fixed:	ModelViewer: display material name used at each Chunk/BigTri
-* Fixed:	ModelViewer: some nested blocks rendered at wrong position
-* Fixed:	ModelViewer: crash when attempt to render NIF without UV set
-* Fixed:	ModelViewer: translation/rotation of 'bhkRidgidBodyT' is ignored
+* New:	Settings: show full path names as tooltip on general tab
+* New:	ModelViewer: shortcut F4 for toggling collision display as in CreationKit
+* New:	ModelViewer: button 'Reload Model' + shortcut F5 as in CreationKit
+* New:	ModelViewer: reset to users defaults when loading new model
+* Fix:	ModelViewer: toggling 'row background' in settings has no effect
+* Fix:	ModelViewer: display material name used at each Chunk/BigTri
+* Fix:	ModelViewer: some nested blocks rendered at wrong position
+* Fix:	ModelViewer: crash when attempt to render NIF without UV set
+* Fix:	ModelViewer: translation/rotation of 'bhkRidgidBodyT' is ignored
+
 
 Version 1.0.3 (Beta1)
 ====================
 
-* Added:	first initial release of NIFUtilsSuite as Beta
-* Added:	Common: versioning system
-* Added:	Common: remember last visible tab on exit and open there
+* New:	first initial release of NIFUtilsSuite as Beta
+* New:	Common: versioning system
+* New:	Common: remember last visible tab on exit and open there
 
 
 Version 1.0.2 (Alpha3)
 ======================
 
-* Added:	ModelViewer: toggle 'force double sided' or 'single sided' mesh rendering
-* Change:	ModelViewer: reworked alpha blending and testing
-* Fixed:	Common: problem with space character in name of path to nif when opening NifSkope
-* Fixed:	ModelViewer: crash when getting NIF that has no UV set
-* Fixed:	ModelViewer: ticking 'Model' below the list don't turn-on nodes without texture
-* Fixed:	ModelViewer: supporting for BigTris and BigVerts in bhkCompressedMeshShapeData
+* New:	ModelViewer: toggle 'force double sided' or 'single sided' mesh rendering
+* Chng:	ModelViewer: reworked alpha blending and testing
+* Fix:	Common: problem with space character in name of path to nif when opening NifSkope
+* Fix:	ModelViewer: crash when getting NIF that has no UV set
+* Fix:	ModelViewer: ticking 'Model' below the list don't turn-on nodes without texture
+* Fix:	ModelViewer: supporting for BigTris and BigVerts in bhkCompressedMeshShapeData
 
 
 Version 1.0.1 (Alpha2)
 ======================
 
-* Fixed:	Common: multiple crashes due to Niflib.dll => static linking works
-* Fixed:	Common: showing default input directory on output file browsers
-* Fixed:	ChunkExtract: typo 'Namining' in ChunkExtract hints
+* Fix:	Common: multiple crashes due to Niflib.dll => static linking works
+* Fix:	Common: showing default input directory on output file browsers
+* Fix:	ChunkExtract: typo 'Namining' in ChunkExtract hints
 
 
 Version 1.0.0 (Alpha1)
 ======================
 
-* Added:	first initial release of NIFUtilsSuite as Alpha to limited audience
+* New:	first initial release of NIFUtilsSuite as Alpha to limited audience
 
 
 ------------------------------------------------------------------------------
@@ -50,47 +60,47 @@ Here's the changelog of old separated tools NifConvert and ChunkMerge:
 Version 0.1.55.*
 ================
 
-* Fixed:	ChunkMerge: set high-bit of bsNumUvSets (by-passing niflib 'feature')
-* Fixed:	ChunkMerge: command line parameter parsing when running from 'C:\Programs (x86)\...'
+* Fix:	ChunkMerge: set high-bit of bsNumUvSets (by-passing niflib 'feature')
+* Fix:	ChunkMerge: command line parameter parsing when running from 'C:\Programs (x86)\...'
 
 
 Version 0.1.54.*
 ================
 
-* Added:	Common: write default config file if not existing
-* Added:	ChunkMerge: support of new SkyrimHavokMaterial in Nif.xml
+* New:	Common: write default config file if not existing
+* New:	ChunkMerge: support of new SkyrimHavokMaterial in Nif.xml
 
 
 Version 0.1.53.*
 ================
 
-* Fixed:	Common: copy transform (translation, rotation and scale) from input root node to output root node
-* Fixed:	Common: don't consider root transformation for collision data
-* Fixed:	ChunkMerge: 'Mesh Data' as collision source was ignored
+* Fix:	Common: copy transform (translation, rotation and scale) from input root node to output root node
+* Fix:	Common: don't consider root transformation for collision data
+* Fix:	ChunkMerge: 'Mesh Data' as collision source was ignored
 
 
 Version 0.1.52.*
 ================
 
-* Added:	Common: configuration files (XML)
-* Added:	Common: context menu for saving actual settings and re-scan directories
-* Added:	Common: show tool tips for nearly all widgets
+* New:	Common: configuration files (XML)
+* New:	Common: context menu for saving actual settings and re-scan directories
+* New:	Common: show tool tips for nearly all widgets
 
 
 Version 0.1.51.*
 ================
 
-* Added:	Common: use OBJ-file material name as material type
-* Fixed:	Common: refactored (simplyfied) collision material handling using Havok geometry field
-* Fixed:	Common: removed internalMode - not needed anymore
-* Fixed:	Common: removed some memory-leaks; using local objects instead of heap
-* Added:	Common: replace HavokUtilities by simple Havok memory initialization
-* Added:	ChunkMerge: feature for autom. collision source selection depending on selected material handling
-* Added:	ChunkMerge: disable non-reachable material widgets
+* New:	Common: use OBJ-file material name as material type
+* Fix:	Common: refactored (simplyfied) collision material handling using Havok geometry field
+* Fix:	Common: removed internalMode - not needed anymore
+* Fix:	Common: removed some memory-leaks; using local objects instead of heap
+* New:	Common: replace HavokUtilities by simple Havok memory initialization
+* New:	ChunkMerge: feature for autom. collision source selection depending on selected material handling
+* New:	ChunkMerge: disable non-reachable material widgets
 
 
 Version 0.1.41.9
 ================
 
-* Added:	versioning system
-* Fixed:	typo in ReadMe.txt
+* New:	versioning system
+* Fix:	typo in ReadMe.txt
