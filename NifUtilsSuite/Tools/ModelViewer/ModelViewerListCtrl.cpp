@@ -366,9 +366,35 @@ BOOL CModelViewerListCtrl::OnToolTipText(UINT id, NMHDR* pNMHDR, LRESULT* pResul
 	//  automated created tooltips
 	if (pNMHDR->idFrom == 0)		return FALSE;
 
-	int		row    (((pNMHDR->idFrom - 1) >> 10) & 0x003fffff);
-	int		col    ((pNMHDR->idFrom - 1) & 0x000003ff);
-	CString	tipText(GetItemText(row, col));
+	int				row    (((pNMHDR->idFrom - 1) >> 10) & 0x003fffff);
+	int				col    ((pNMHDR->idFrom - 1) & 0x000003ff);
+	DirectXMesh*	pMesh  ((DirectXMesh*) GetItemData(row));
+	CString			tipText(GetItemText(row, col));
+
+	switch (col)
+	{
+		case 0:
+		{
+			switch (pMesh->GetRenderMode())
+			{
+				case DXRM_NONE:			{ tipText = "invisible"; break; }
+				case DXRM_WIREFRAME:	{ tipText = "show as wireframe"; break; }
+				case DXRM_SOLID:		{ tipText = "show as solid"; break; }
+				case DXRM_TEXTURE:		{ tipText = "show with textures"; break; }
+			}
+			break;
+		}
+
+		case 1:
+		{
+			COLORREF	color(pMesh->GetColorBackground());
+			char		cBuffer[100] = { 0 };
+
+			sprintf(cBuffer, "#%02x%02x%02x", (color & 0x000000ff), ((color & 0x0000ff00) >> 8), ((color & 0x00ff0000) >> 16));
+			tipText = cBuffer;
+			break;
+		}
+	}
 
 	//  set text for wide or ascii character set
 	if (pNMHDR->code == TTN_NEEDTEXTA)
