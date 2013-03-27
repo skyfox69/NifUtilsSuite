@@ -159,16 +159,6 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 	//  add own translation to list
 	transformAry.push_back(pNode->GetLocalTransform());
 
-	Matrix44	locTransform;
-	string		name = pNode->GetName();
-
-	for (vector<Matrix44>::iterator pIter=transformAry.begin(); pIter != transformAry.end(); ++pIter)
-	{
-		locTransform *= *pIter;
-	}
-
-	Vector3	trans = locTransform.GetTranslation();
-
 	//  iterate over children
 	for (auto pIter=childList.begin(), pEnd=childList.end(); pIter != pEnd; ++pIter)
 	{
@@ -745,20 +735,7 @@ bool DirectXNifConverter::ConvertModel(const string fileName, vector<DirectXMesh
 
 	//  parse geometry
 	getGeometryFromNode(pRootInput, meshList, transformAry, NULL);
-/*
-	//  RootCollisionNode
-	if (DynamicCast<bhkCollisionObject>(pRootInput->GetCollisionObject()) != NULL)
-	{
-		//  set collision flag
-		_isCollision = true;
 
-		//  recurse sub-tree
-		getGeometryFromCollisionObject(DynamicCast<bhkCollisionObject>(pRootInput->GetCollisionObject()), meshList, transformAry, NULL);
-
-		//  reset collision flag
-		_isCollision = false;
-	}
-*/
 	return true;
 }
 
