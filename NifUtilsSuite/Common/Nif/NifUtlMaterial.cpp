@@ -9,8 +9,12 @@
 //-----  INCLUDES  ------------------------------------------------------------
 #include "Common\Nif\NifUtlMaterial.h"
 #include "Common\Util\Configuration.h"
+#include "gen/enums.h"
 #include <fstream>
+#include <sstream>
 #include <string>
+
+using namespace Niflib;
 
 //-----  DEFINES  -------------------------------------------------------------
 NifUtlMaterialList*	NifUtlMaterialList::_pInstance = NULL;
@@ -39,7 +43,8 @@ bool NifUtlMaterialList::initInstance(const string fileName, const string matSca
 	if (_pInstance == NULL)
 	{
 		_pInstance = new NifUtlMaterialList();
-		_pInstance->initializeMaterialMap(fileName, matScanTag, matScanName);
+		_pInstance->initializeMaterialMap (fileName, matScanTag, matScanName);
+		_pInstance->initializeBodyPartList(fileName);
 
 	}  //  if (_pInstance == NULL)
 
@@ -151,6 +156,95 @@ void NifUtlMaterialList::initializeMaterialMap(const string fileName, const stri
 	streamIn.close();
 }
 
+//-----  initializeBodyPartList()  --------------------------------------------
+void NifUtlMaterialList::initializeBodyPartList(const string fileName)
+{
+	ifstream		streamIn;
+	char			cbuffer     [10000] = {0};
+	char			txtTag      [200]   = {0};
+	string			txtName;
+	string			txtDefine;
+	bool			isBdySection(false);
+
+	//  reset old list
+	_bodyPartMap.clear();
+
+	//  open nif.xml
+	streamIn.open(fileName.c_str(), ifstream::in);
+
+	sprintf(cbuffer, "^%cOpening '%s': %s", (streamIn.good() ? '2' : '4'), fileName.c_str(), (streamIn.good() ? "OK" : "FAILED"));
+	_userMessages.push_back(cbuffer);
+
+	sprintf(txtTag, "<enum name=\"BSDismemberBodyPartType\" storage=\"ushort\">");
+
+	//  on valid input
+	while (streamIn.good())
+	{
+		//  read next row
+		streamIn.getline(cbuffer, 10000);
+
+		//  search start of material definition
+		if (strstr(cbuffer, txtTag) != NULL)
+		{
+			isBdySection = true;
+		}
+
+		//  row within material definition section
+		if (isBdySection)
+		{
+			//  valid material definition for SKYrim?
+			if ((strstr(cbuffer, "<option value=\"") != NULL) &&
+				(strstr(cbuffer, " name=\"") != NULL))
+			{
+				char*			pStart(strstr(cbuffer, "value="));
+				char*			pEnd  (strstr(cbuffer, "\" name="));
+				stringstream	sStream;
+				unsigned short	value (0);
+				bool			doSkip(false);
+
+				//  read material code
+				value = (unsigned short) atoi(pStart + 7);
+
+				//  parse and read definition name
+				pStart = pEnd + 8;
+				pEnd   = strstr(pStart, "\">");
+				*pEnd  = 0;
+				if ((value > BP_BRAIN) && (strncmp(pStart, "BP_", 3) == 0))	continue;
+				txtDefine = pStart;
+
+				//  parse and read user readable name
+				pStart = pEnd + 2;
+				pEnd   = strstr(pStart, "</option>");
+				*pEnd  = 0;
+				if (strncmp(pStart, "Skyrim, ", 8) == 0)	pStart += 8;
+				txtName = pStart;
+				if (txtName.size() > 30)	txtName = txtName.substr(0, 30);
+
+				sStream << txtName << "  [" << txtDefine << "]";
+
+				//  append material to map
+				_bodyPartMap[value] = sStream.str();
+
+				sStream.str("");
+				sStream.clear();
+				sStream << value << " => " << txtDefine << "  [" << txtName << "]";
+
+				_userMessages.push_back("^3added: " + sStream.str());
+			}
+			//  early break at end of material definition
+			else if (strstr(cbuffer, "</enum>") != NULL)
+			{
+				break;
+			}
+		}  //  if (isBdySection)
+	}  //  while (streamIn.good())
+
+	sprintf(cbuffer, "^%cbody parts found: %d", ((_bodyPartMap.size() > 0) ? '2' : '5'), _bodyPartMap.size());
+	_userMessages.push_back(cbuffer);
+
+	streamIn.close();
+}
+
 //-----  reset()  -------------------------------------------------------------
 void NifUtlMaterialList::reset()
 {
@@ -184,3 +278,8 @@ string NifUtlMaterialList::getMaterialDefName(unsigned int material)
 	return "-UNKNOWN-";
 }
 
+//-----  getBodyPartName()  ---------------------------------------------------
+string NifUtlMaterialList::getBodyPartName(unsigned short index)
+{
+	return (_bodyPartMap.count(index) > 0) ? _bodyPartMap.at(index) : "-UNKNOWN-";
+}

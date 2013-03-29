@@ -31,10 +31,12 @@ class NifUtlMaterialList
 
 												NifUtlMaterialList();
 
-		virtual	void							initializeMaterialMap(const string pathToXML, const string matScanTag, const string matScanName);
+		virtual	void							initializeMaterialMap (const string pathToXML, const string matScanTag, const string matScanName);
+		virtual	void							initializeBodyPartList(const string pathToXML);
 
 	protected:
 		vector<string>							_userMessages;
+		map<unsigned short, string>				_bodyPartMap;
 		map<string, NifUtlMaterial>				_materialMap;
 
 	public:
@@ -49,4 +51,7 @@ class NifUtlMaterialList
 
 		static	NifUtlMaterialList*				getInstance();
 		static	bool							initInstance(const string pathToXML, const string matScanTag, const string matScanName);
+
+		virtual	string							getBodyPartName(const unsigned short index);
+		virtual	map<unsigned short, string>&	getBodyPartMap() { return _bodyPartMap; }
 };

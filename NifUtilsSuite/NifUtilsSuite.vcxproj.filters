@@ -73,6 +73,12 @@
     <Filter Include="Header Files\Tools\NifConvert">
       <UniqueIdentifier>{45d46216-f66f-4383-80b5-55fcbb9c28af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Tools\BlenderPrepare">
+      <UniqueIdentifier>{059bcfb6-2933-45dc-adc8-aace88c14861}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Tools\BlenderPrepare">
+      <UniqueIdentifier>{864c88b3-e4fe-4032-838d-ff647460bd74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\NifUtilsSuite.rc2">
@@ -269,6 +275,30 @@
     <ClInclude Include="version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tools\BlenderPrepare\FormBlenderPrepareView.h">
+      <Filter>Header Files\Tools\BlenderPrepare</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\BlenderPrepare\SubFormArmorBlender.h">
+      <Filter>Header Files\Tools\BlenderPrepare</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Util\FDSubFormList.h">
+      <Filter>Header Files\Common\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\GUI\SubFormBase.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\BlenderPrepare\SubFormBlenderArmor.h">
+      <Filter>Header Files\Tools\BlenderPrepare</Filter>
+    </ClInclude>
+    <ClInclude Include="Common\Nif\NifPrepareUtility.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\BlenderPrepare\BPMappingListCtrl.h">
+      <Filter>Header Files\Tools\BlenderPrepare</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools\BlenderPrepare\OptionsBlenderPrepareArmor.h">
+      <Filter>Header Files\Tools\BlenderPrepare</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NifUtilsSuite.cpp">
@@ -384,6 +414,30 @@
     </ClCompile>
     <ClCompile Include="Common\GUI\AboutPage2.cpp">
       <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\BlenderPrepare\FormBlenderPrepareView.cpp">
+      <Filter>Source Files\Tools\BlenderPrepare</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\BlenderPrepare\SubFormArmorBlender.cpp">
+      <Filter>Source Files\Tools\BlenderPrepare</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Util\FDSubFormList.cpp">
+      <Filter>Source Files\Common\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\SubFormBase.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\BlenderPrepare\SubFormBlenderArmor.cpp">
+      <Filter>Source Files\Tools\BlenderPrepare</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\Nif\NifPrepareUtility.cpp">
+      <Filter>Source Files\Common\Nif</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\BlenderPrepare\BPMappingListCtrl.cpp">
+      <Filter>Source Files\Tools\BlenderPrepare</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools\BlenderPrepare\OptionsBlenderPrepareArmor.cpp">
+      <Filter>Source Files\Tools\BlenderPrepare</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

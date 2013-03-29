@@ -22,6 +22,7 @@
 #include "Tools\NifConvert\FormNifConvertView.h"
 #include "Tools\ChunkMerge\FormChunkMergeView.h"
 #include "Tools\ChunkExtract\FormChunkExtractView.h"
+#include "Tools\BlenderPrepare\FormBlenderPrepareView.h"
 #ifndef NUS_LIGHT
 #include "Tools\ModelViewer\FormModelViewerView.h"
 #endif
@@ -36,6 +37,7 @@ BEGIN_MESSAGE_MAP(CNifUtilsSuiteFrame, CFrameWnd)
 	ON_COMMAND(ID_TOOLS_CHUNKMERGE,      &CNifUtilsSuiteFrame::SelectTabChunkMerge)
 	ON_COMMAND(ID_TOOLS_MODELVIEWER,     &CNifUtilsSuiteFrame::SelectTabModelViewer)
 	ON_COMMAND(ID_TOOLS_CHUNKEXTRACT,    &CNifUtilsSuiteFrame::SelectTabChunkExtract)
+	ON_COMMAND(ID_TOOLS_BLENDERPREPARE,  &CNifUtilsSuiteFrame::SelectTabBlenderPrepare)
 	ON_COMMAND(ID_OPTIONS_EDIT,          &CNifUtilsSuiteFrame::OnFileOptions)
 	ON_COMMAND(ID_OPTIONS_SAVECURRENT,   &CNifUtilsSuiteFrame::OnOptionsSavecurrent)
 	ON_COMMAND(ID_OPTIONS_SHOWTOOLTIPPS, &CNifUtilsSuiteFrame::OnOptionsShowtooltipps)
@@ -44,11 +46,12 @@ BEGIN_MESSAGE_MAP(CNifUtilsSuiteFrame, CFrameWnd)
 END_MESSAGE_MAP()
 
 //-----  STATICS  -------------------------------------------------------------
-static SFDToolEntry toolList[] = { SFDToolEntry(RUNTIME_CLASS(CFormNifConvertView),   ID_TOOLS_NIFCONVERT,   " NifConvert",   5),
-								   SFDToolEntry(RUNTIME_CLASS(CFormChunkMergeView),   ID_TOOLS_CHUNKMERGE,   " ChunkMerge",   6),
-								   SFDToolEntry(RUNTIME_CLASS(CFormChunkExtractView), ID_TOOLS_CHUNKEXTRACT, " ChunkExtract", 11),
+static SFDToolEntry toolList[] = { SFDToolEntry(RUNTIME_CLASS(CFormNifConvertView),     ID_TOOLS_NIFCONVERT,     " NifConvert",      5),
+								   SFDToolEntry(RUNTIME_CLASS(CFormChunkMergeView),     ID_TOOLS_CHUNKMERGE,     " ChunkMerge",      6),
+								   SFDToolEntry(RUNTIME_CLASS(CFormChunkExtractView),   ID_TOOLS_CHUNKEXTRACT,   " ChunkExtract",   11),
+								   SFDToolEntry(RUNTIME_CLASS(CFormBlenderPrepareView), ID_TOOLS_BLENDERPREPARE, " BlenderPrepare", 15),
 #ifndef NUS_LIGHT
-								   SFDToolEntry(RUNTIME_CLASS(CFormModelViewerView),  ID_TOOLS_MODELVIEWER,  " ModelViewer",  4),
+								   SFDToolEntry(RUNTIME_CLASS(CFormModelViewerView),    ID_TOOLS_MODELVIEWER,    " ModelViewer",     4),
 #endif
 								   SFDToolEntry(NULL, 0, "", 0)
 								};
@@ -79,7 +82,7 @@ void CNifUtilsSuiteFrame::OnClose()
 	int				selView(m_wndTabBar.GetCurSel());
 
 	//  ModelViewer is forbidden and doesn't make sense
-	if (pConfig->_saveLastView && (selView < 3) && (selView != pConfig->_lastOpenView))
+	if (pConfig->_saveLastView && (selView < 4) && (selView != pConfig->_lastOpenView))
 	{
 		pConfig->_lastOpenView = selView;
 		pConfig->write();
@@ -204,6 +207,12 @@ void CNifUtilsSuiteFrame::SelectTabModelViewer()
 void CNifUtilsSuiteFrame::SelectTabChunkExtract()
 {
 	SelectView(ID_TOOLS_CHUNKEXTRACT);
+}
+
+//-----  SelectTabBlenderPrepare()  -------------------------------------------
+void CNifUtilsSuiteFrame::SelectTabBlenderPrepare()
+{
+	SelectView(ID_TOOLS_BLENDERPREPARE);
 }
 
 //-----  SelectTabModelViewer()  ----------------------------------------------

@@ -17,32 +17,34 @@ Configuration*	Configuration::_pInstance = NULL;
 
 //-----  Configuration()  -----------------------------------------------------
 Configuration::Configuration(const string fileName)
-	:	_configName     (fileName),
-		_matScanTag     ("SkyrimHavokMaterial"),
-		_matScanName    ("SKY_HAV_"),
-		_hasFile        (false),
-		_ncVtFlagsRemove(0),
-		_cmMatHandling  (0),
-		_cmCollHandling (1),
-		_ceNameHandling (0),
-		_mvDefBackColor (0xFF000000),
-		_mvDefCollColor (0xFFFF0000),
-		_mvDefWireColor (0xFFFFFF00),
-		_mvDefLOD       (2),
-		_lastOpenView   (0),
-		_ncUpTangent    (true),
-		_ncReorderProp  (true),
-		_showToolTipps  (true),
-		_saveLastView   (false),
-		_ceGenNormals   (true),
-		_ceScaleToModel (true),
-		_mvShowGrid     (true),
-		_mvAlterRows    (true),
-		_mvForceDDS     (false),
-		_mvShowAxes     (true),
-		_mvShowCollision(true),
-		_mvShowModel    (true),
-		_mvDoubleSided  (true)
+	:	_configName      (fileName),
+		_matScanTag      ("SkyrimHavokMaterial"),
+		_matScanName     ("SKY_HAV_"),
+		_hasFile         (false),
+		_ncVtFlagsRemove (0),
+		_cmMatHandling   (0),
+		_cmCollHandling  (1),
+		_ceNameHandling  (0),
+		_mvDefBackColor  (0xFF000000),
+		_mvDefCollColor  (0xFFFF0000),
+		_mvDefWireColor  (0xFFFFFF00),
+		_mvDefLOD        (2),
+		_lastOpenView    (0),
+		_ncUpTangent     (true),
+		_ncReorderProp   (true),
+		_showToolTipps   (true),
+		_saveLastView    (false),
+		_ceGenNormals    (true),
+		_ceScaleToModel  (true),
+		_mvShowGrid      (true),
+		_mvAlterRows     (true),
+		_mvForceDDS      (false),
+		_mvShowAxes      (true),
+		_mvShowCollision (true),
+		_mvShowModel     (true),
+		_mvDoubleSided   (true),
+		_bpABRemInvMarker(true),
+		_bpABRemBSProp   (true)
 {
 	initLogView();
 }
@@ -94,6 +96,28 @@ void Configuration::initLogView()
 	_lvwColors[0x06] = RGB(0xA0, 0x00, 0xA0);
 	_lvwColors[0x07] = RGB(0xC0, 0x50, 0xFF);
 	_lvwColors[0x08] = RGB(0x50, 0x50, 0xFF);
+}
+
+//-----  readAttribute()  -----------------------------------------------------
+bool Configuration::readAttribute(const string& content, const string tag, map<unsigned short, unsigned short>& attribute, unsigned int& offsetOut, unsigned int offsetIn)
+{
+	string			tString;
+	unsigned int	offset(offsetIn);
+
+	attribute.clear();
+
+	while (readAttribute(content, tag, tString, offset, offset))
+	{
+		char*	pToken(strtok((char*) tString.c_str(), ","));
+		unsigned short	tmp1((unsigned short) atoi(pToken));
+
+		pToken = strtok(NULL, ",");
+		unsigned short	tmp2((unsigned short) atoi(pToken));
+
+		attribute[tmp1] = tmp2;
+	}
+
+	return !attribute.empty();
 }
 
 //-----  readAttribute()  -----------------------------------------------------
@@ -276,46 +300,50 @@ bool Configuration::read()
 			if (content.empty())	continue;
 
 			//  fetch attributes
-			readAttribute(content, "PathSkyrim>",            _pathTextures,      offset);
-			readAttribute(content, "PathNifXML>",            _pathNifXML,        offset);
-			readAttribute(content, "PathNifSkope>",          _pathNifSkope,      offset);
-			readAttribute(content, "PathTemplate>",          _pathTemplates,     offset);
-			readAttribute(content, "PathDefInput>",          _pathDefaultInput,  offset);
-			readAttribute(content, "PathDefOutput>",         _pathDefaultOutput, offset);
-			readAttribute(content, "SaveLastView>",          _saveLastView,      offset);
-			readAttribute(content, "LastOpenView>",          _lastOpenView,      offset);
-			readAttribute(content, "VertexColorHandling>",   _ncVtFlagsRemove,   offset);
-			readAttribute(content, "DefaultVertexColor>",    _ncDefColor,        offset);
-			readAttribute(content, "UpdateTangentSpace>",    _ncUpTangent,       offset);
-			readAttribute(content, "ReorderProperties>",     _ncReorderProp,     offset);
-			readAttribute(content, "DefaultTemplateNameNC>", _ncDefaultTemplate, offset);
-			readAttribute(content, "DefaultTextureNameNC>",  _ncDefaultTexture,  offset);
-			readAttribute(content, "DefaultTemplateNameCM>", _cmDefaultTemplate, offset);
-			readAttribute(content, "MaterialHandling>",      _cmMatHandling,     offset);
-			readAttribute(content, "CollisionHandling>",     _cmCollHandling,    offset);
-			readAttribute(content, "MaterialSingleType>",    _cmMatSingleType,   offset);
-			readAttribute(content, "MatScanTag>",            _matScanTag,        offset);
-			readAttribute(content, "MatScanName>",           _matScanName,       offset);
-			readAttribute(content, "MatScanPrefix>",         _matScanPrefix,     offset);
-			readAttribute(content, "MatScanIgnore>",         _matScanIgnore,     offset);
-			readAttribute(content, "LogVwEnabled>",          _lvwLogActive,      offset);
-			readAttribute(content, "LogVwColor>",            _lvwColors,         offset);
-			readAttribute(content, "ShowToolTipps>",         _showToolTipps,     offset);
-			readAttribute(content, "NameHandling>",          _ceNameHandling,    offset);
-			readAttribute(content, "GenNormals>",            _ceGenNormals,      offset);
-			readAttribute(content, "ScaleToModel>",          _ceScaleToModel,    offset);
-			readAttribute(content, "DefaultBackColor>",      _mvDefBackColor,    offset);
-			readAttribute(content, "DefaultWireColor>",      _mvDefWireColor,    offset);
-			readAttribute(content, "DefaultCollColor>",      _mvDefCollColor,    offset);
-			readAttribute(content, "MvShowGrid>",            _mvShowGrid,        offset);
-			readAttribute(content, "MvAlterRows>",           _mvAlterRows,       offset);
-			readAttribute(content, "MvForceDDS>",            _mvForceDDS,        offset);
-			readAttribute(content, "MvTexturePath>",         _mvTexturePathList, offset);
-			readAttribute(content, "MvShowAxes>",            _mvShowAxes,        offset);
-			readAttribute(content, "MvShowCollision>",       _mvShowCollision,   offset);
-			readAttribute(content, "MvShowModel>",           _mvShowModel,       offset);
-			readAttribute(content, "MvLevelOfDetail>",       _mvDefLOD,          offset);
-			readAttribute(content, "MvDoubleSided>",         _mvDoubleSided,     offset);
+			readAttribute(content, "PathSkyrim>",              _pathTextures,      offset);
+			readAttribute(content, "PathNifXML>",              _pathNifXML,        offset);
+			readAttribute(content, "PathNifSkope>",            _pathNifSkope,      offset);
+			readAttribute(content, "PathTemplate>",            _pathTemplates,     offset);
+			readAttribute(content, "PathDefInput>",            _pathDefaultInput,  offset);
+			readAttribute(content, "PathDefOutput>",           _pathDefaultOutput, offset);
+			readAttribute(content, "SaveLastView>",            _saveLastView,      offset);
+			readAttribute(content, "LastOpenView>",            _lastOpenView,      offset);
+			readAttribute(content, "VertexColorHandling>",     _ncVtFlagsRemove,   offset);
+			readAttribute(content, "DefaultVertexColor>",      _ncDefColor,        offset);
+			readAttribute(content, "UpdateTangentSpace>",      _ncUpTangent,       offset);
+			readAttribute(content, "ReorderProperties>",       _ncReorderProp,     offset);
+			readAttribute(content, "DefaultTemplateNameNC>",   _ncDefaultTemplate, offset);
+			readAttribute(content, "DefaultTextureNameNC>",    _ncDefaultTexture,  offset);
+			readAttribute(content, "DefaultTemplateNameCM>",   _cmDefaultTemplate, offset);
+			readAttribute(content, "MaterialHandling>",        _cmMatHandling,     offset);
+			readAttribute(content, "CollisionHandling>",       _cmCollHandling,    offset);
+			readAttribute(content, "MaterialSingleType>",      _cmMatSingleType,   offset);
+			readAttribute(content, "MatScanTag>",              _matScanTag,        offset);
+			readAttribute(content, "MatScanName>",             _matScanName,       offset);
+			readAttribute(content, "MatScanPrefix>",           _matScanPrefix,     offset);
+			readAttribute(content, "MatScanIgnore>",           _matScanIgnore,     offset);
+			readAttribute(content, "LogVwEnabled>",            _lvwLogActive,      offset);
+			readAttribute(content, "LogVwColor>",              _lvwColors,         offset);
+			readAttribute(content, "ShowToolTipps>",           _showToolTipps,     offset);
+			readAttribute(content, "NameHandling>",            _ceNameHandling,    offset);
+			readAttribute(content, "GenNormals>",              _ceGenNormals,      offset);
+			readAttribute(content, "ScaleToModel>",            _ceScaleToModel,    offset);
+			readAttribute(content, "DefaultBackColor>",        _mvDefBackColor,    offset);
+			readAttribute(content, "DefaultWireColor>",        _mvDefWireColor,    offset);
+			readAttribute(content, "DefaultCollColor>",        _mvDefCollColor,    offset);
+			readAttribute(content, "MvShowGrid>",              _mvShowGrid,        offset);
+			readAttribute(content, "MvAlterRows>",             _mvAlterRows,       offset);
+			readAttribute(content, "MvForceDDS>",              _mvForceDDS,        offset);
+			readAttribute(content, "MvTexturePath>",           _mvTexturePathList, offset);
+			readAttribute(content, "MvShowAxes>",              _mvShowAxes,        offset);
+			readAttribute(content, "MvShowCollision>",         _mvShowCollision,   offset);
+			readAttribute(content, "MvShowModel>",             _mvShowModel,       offset);
+			readAttribute(content, "MvLevelOfDetail>",         _mvDefLOD,          offset);
+			readAttribute(content, "MvDoubleSided>",           _mvDoubleSided,     offset);
+			readAttribute(content, "BpABRemInvMarker>",        _bpABRemInvMarker,  offset);
+			readAttribute(content, "BpABRemBSProp>",           _bpABRemBSProp,     offset);
+			readAttribute(content, "BpBAMapping>",             _bpBAMapping,       offset);
+			readAttribute(content, "DefaultTemplateNameBPBA>", _cmDefaultTemplate, offset);
 
 
 		}  //  while (iStr.good())
@@ -375,7 +403,19 @@ bool Configuration::write()
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";
 		oStr << "<ScaleToModel>"          << _ceScaleToModel          << "</ScaleToModel>";
-		oStr << "</ChunkExtract><Materials>";
+		oStr << "</ChunkExtract><BlenderPrepare>";
+		oStr << "<BpABRemInvMarker>"      << _bpABRemInvMarker        << "</BpABRemInvMarker>";
+		oStr << "<BpABRemBSProp>"         << _bpABRemBSProp           << "</BpABRemBSProp>";
+		oStr << "<BpBAMappingList>";
+		for (auto pIter=_bpBAMapping.begin(), pEnd=_bpBAMapping.end(); pIter != pEnd; ++pIter)
+		{
+			oStr << "<BpBAMapping>" << pIter->first << "," << pIter->second << "</BpBAMapping>";
+		}
+		oStr << "</BpBAMappingList>";
+		oStr << "<DefaultTemplateNameBPBA>" << _bpBADefaultTemplate   << "</DefaultTemplateNameBPBA>";
+
+
+		oStr << "</BlenderPrepare><Materials>";
 		oStr << "<MatScanTag>"            << _matScanTag              << "</MatScanTag>";
 		oStr << "<MatScanName>"           << _matScanName             << "</MatScanName>";
 		oStr << "<MatScanPrefixList>";

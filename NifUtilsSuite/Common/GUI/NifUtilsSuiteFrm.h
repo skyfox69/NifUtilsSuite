@@ -35,6 +35,7 @@ class CNifUtilsSuiteFrame : public CFrameWnd
 		afx_msg	void	SelectTabChunkMerge();
 		afx_msg	void	SelectTabModelViewer();
 		afx_msg	void	SelectTabChunkExtract();
+		afx_msg	void	SelectTabBlenderPrepare();
 		afx_msg void	OnHelpAbout();
 
 		DECLARE_DYNCREATE(CNifUtilsSuiteFrame)

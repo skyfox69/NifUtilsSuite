@@ -15,6 +15,7 @@
 #include "Tools\NifConvert\OptionsPageNifConvert.h"
 #include "Tools\ChunkMerge\OptionsPageChunkMerge.h"
 #include "Tools\ChunkExtract\OptionsPageChunkExtract.h"
+#include "Tools\BlenderPrepare\OptionsBlenderPrepareArmor.h"
 #ifndef NUS_LIGHT
 #include "Tools\ModelViewer\OptionsPageModelView.h"
 #endif
@@ -44,15 +45,16 @@ COptionsSheet::~COptionsSheet()
 //-----  DoModal()  -----------------------------------------------------------
 INT_PTR COptionsSheet::DoModal()
 {
-	COptionsPageGeneral			optPageGen;
-	COptionsPageMaterial		optPageMat;
-	COptionsPageNifConvert		optPageNif;
-	COptionsPageChunkMerge		optPageCMg;
-	COptionsPageChunkExtract	optPageCEx;
+	COptionsPageGeneral					optPageGen;
+	COptionsPageMaterial				optPageMat;
+	COptionsPageNifConvert				optPageNif;
+	COptionsPageChunkMerge				optPageCMg;
+	COptionsPageChunkExtract			optPageCEx;
+	COptionsPageBlenderPrepareArmor		optPageBlA;
 #ifndef NUS_LIGHT
-	COptionsPageModelView		optPageMVw;
+	COptionsPageModelView				optPageMVw;
 #endif
-	COptionsPageLogView			optPageLVw;
+	COptionsPageLogView					optPageLVw;
 
 	AddPage(&optPageGen);
 	AddPage(&optPageLVw);
@@ -60,6 +62,7 @@ INT_PTR COptionsSheet::DoModal()
 	AddPage(&optPageNif);
 	AddPage(&optPageCMg);
 	AddPage(&optPageCEx);
+	AddPage(&optPageBlA);
 #ifndef NUS_LIGHT
 	AddPage(&optPageMVw);
 #endif

@@ -10,6 +10,7 @@
 //-----  INCLUDES  ------------------------------------------------------------
 #include <vector>
 #include <set>
+#include <map>
 
 using namespace std;
 
@@ -27,6 +28,7 @@ class Configuration
 
 		virtual	void					initLogView();
 
+		virtual	bool					readAttribute(const string& content, const string tag, map<unsigned short, unsigned short>& attribute, unsigned int& offsetOut, unsigned int offsetIn=0);
 		virtual	bool					readAttribute(const string& content, const string tag, vector<unsigned int>& attribute, unsigned int& offsetOut, unsigned int offsetIn=0);
 		virtual	bool					readAttribute(const string& content, const string tag, vector<bool>& attribute, unsigned int& offsetOut, unsigned int offsetIn=0);
 		virtual	bool					readAttribute(const string& content, const string tag, vector<string>& attribute, unsigned int& offsetOut, unsigned int offsetIn=0);
@@ -44,11 +46,13 @@ class Configuration
 				string					_ncDefaultTemplate;
 				string					_ncDefaultTexture;
 				string					_cmDefaultTemplate;
+				string					_bpBADefaultTemplate;
 				string					_matScanTag;
 				string					_matScanName;
 				vector<string>			_matScanPrefix;
 				vector<string>			_matScanIgnore;
 				vector<string>			_mvTexturePathList;
+				map<unsigned short, unsigned short>	_bpBAMapping;
 				vector<unsigned int>	_lvwColors;
 				vector<bool>			_lvwLogActive;
 				unsigned int			_ncDefColor;
@@ -76,6 +80,8 @@ class Configuration
 				bool					_mvShowCollision;
 				bool					_mvShowModel;
 				bool					_mvDoubleSided;
+				bool					_bpABRemInvMarker;
+				bool					_bpABRemBSProp;
 
 		virtual							~Configuration();
 
