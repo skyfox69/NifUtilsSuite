@@ -32,6 +32,7 @@
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
 #include "obj/BSLODTriShape.h"
+#include "obj/BSDamageStage.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 
@@ -183,6 +184,11 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 
 			//  reset collision flag
 			_isCollision = false;
+		}
+		//  BSDamageStage
+		else if (DynamicCast<BSDamageStage>(*pIter) != NULL)
+		{
+			//  ignore these sub parts
 		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*pIter) != NULL)
