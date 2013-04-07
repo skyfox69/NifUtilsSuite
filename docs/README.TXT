@@ -19,8 +19,17 @@ THANKS TO:
 - and many others :-)
 
 
---------------
-PREREQUISITES:
+-------------------------
+PREREQUISITES - BINARIES:
+
+- MS DirectX9 Runtime (http://www.microsoft.com/en-us/download/details.aspx?id=8109)
+  directx_Jun2010_redist.exe
+
+Binaries are tested on MS Windows7-64 SP1 and MS WindowsXP SP3.
+
+
+----------------------------
+PREREQUISITES - DEVELOPMENT:
 
 - Havok SDK (http://software.intel.com/sites/havok/en/)
   Havok_Physics_Animation_2010-2-0_PC_XS_win32_VS2005_keycode_perpetual_20101115.zip
@@ -36,3 +45,4 @@ PREREQUISITES:
 - NIFUtilsSuite (https://github.com/skyfox69/NifUtilsSuite)
   git clone --recursive git://github.com/skyfox69/NifUtilsSuite.git
 
+Development is done on MS Windows7-64 SP1 (German) using MS Visual Studio 2010 (English)
