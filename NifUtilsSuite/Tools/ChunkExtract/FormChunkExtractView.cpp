@@ -40,6 +40,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open source in
 						                   {IDC_RD_NAME_CHUNK,     "Use index of chunk (Chunk_%d) for naming NiTriShape"},
 						                   {IDC_CK_GEN_NORMALS,    "Generate normals from vertices on export if possible"},
 						                   {IDC_CK_SCALE_TO_MODEL, "Scale exported mesh to fit model size (x70.0)"},
+						                   {IDC_CK_SAVEAS_20207,   "Save NIF as version 20.2.0.7 (UserV: 11, UserV2: 34) for Blender"},
 						                   {-1, ""}
 						                  };
 
@@ -375,6 +376,7 @@ BOOL CFormChunkExtractView::BroadcastEvent(WORD event, void* pParameter)
 			//  various flags
 			((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->SetCheck(pConfig->_ceGenNormals   ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->SetCheck(pConfig->_ceScaleToModel ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207)  )->SetCheck(pConfig->_ceSaveAs20207  ? BST_CHECKED : BST_UNCHECKED);
 
 			break;
 		}
@@ -425,6 +427,7 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 	ncUtility.setChunkNameHandling((ChunkNameHandling) (GetCheckedRadioButton(IDC_RD_NAME_MAT, IDC_RD_NAME_CHUNK) - IDC_RD_NAME_MAT));
 	ncUtility.setGenerateNormals  (((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->GetCheck() != FALSE);
 	ncUtility.setScaleToModel     (((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->GetCheck() != FALSE);
+	ncUtility.setSaveAs20207      (((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207))  ->GetCheck() != FALSE);
 
 	//  extract chunks from NIF
 	ncReturn = ncUtility.extractChunks(CStringA(_fileNameIn).GetString(), CStringA(_fileNameNif).GetString(), CStringA(_fileNameObj).GetString());

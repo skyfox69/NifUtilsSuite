@@ -73,6 +73,7 @@ class Configuration
 				bool					_saveLastView;
 				bool					_ceGenNormals;
 				bool					_ceScaleToModel;
+				bool					_ceSaveAs20207;
 				bool					_mvShowGrid;
 				bool					_mvAlterRows;
 				bool					_mvForceDDS;

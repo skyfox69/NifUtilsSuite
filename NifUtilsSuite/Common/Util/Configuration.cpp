@@ -36,6 +36,7 @@ Configuration::Configuration(const string fileName)
 		_saveLastView    (false),
 		_ceGenNormals    (true),
 		_ceScaleToModel  (true),
+		_ceSaveAs20207   (true),
 		_mvShowGrid      (true),
 		_mvAlterRows     (true),
 		_mvForceDDS      (false),
@@ -328,6 +329,7 @@ bool Configuration::read()
 			readAttribute(content, "NameHandling>",            _ceNameHandling,    offset);
 			readAttribute(content, "GenNormals>",              _ceGenNormals,      offset);
 			readAttribute(content, "ScaleToModel>",            _ceScaleToModel,    offset);
+			readAttribute(content, "SaveAs20207>",             _ceSaveAs20207,     offset);
 			readAttribute(content, "DefaultBackColor>",        _mvDefBackColor,    offset);
 			readAttribute(content, "DefaultWireColor>",        _mvDefWireColor,    offset);
 			readAttribute(content, "DefaultCollColor>",        _mvDefCollColor,    offset);
@@ -403,6 +405,7 @@ bool Configuration::write()
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";
 		oStr << "<ScaleToModel>"          << _ceScaleToModel          << "</ScaleToModel>";
+		oStr << "<SaveAs20207>"           << _ceSaveAs20207           << "</SaveAs20207>";
 		oStr << "</ChunkExtract><BlenderPrepare>";
 		oStr << "<BpABRemInvMarker>"      << _bpABRemInvMarker        << "</BpABRemInvMarker>";
 		oStr << "<BpABRemBSProp>"         << _bpABRemBSProp           << "</BpABRemBSProp>";
