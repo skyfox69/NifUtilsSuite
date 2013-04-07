@@ -43,7 +43,7 @@ COptionsSheet::~COptionsSheet()
 {}
 
 //-----  DoModal()  -----------------------------------------------------------
-INT_PTR COptionsSheet::DoModal()
+INT_PTR COptionsSheet::DoModal(const int cmdId)
 {
 	COptionsPageGeneral					optPageGen;
 	COptionsPageMaterial				optPageMat;
@@ -51,10 +51,10 @@ INT_PTR COptionsSheet::DoModal()
 	COptionsPageChunkMerge				optPageCMg;
 	COptionsPageChunkExtract			optPageCEx;
 	COptionsPageBlenderPrepareArmor		optPageBlA;
+	COptionsPageLogView					optPageLVw;
 #ifndef NUS_LIGHT
 	COptionsPageModelView				optPageMVw;
 #endif
-	COptionsPageLogView					optPageLVw;
 
 	AddPage(&optPageGen);
 	AddPage(&optPageLVw);
@@ -73,8 +73,23 @@ INT_PTR COptionsSheet::DoModal()
 	{
 		SetWizardMode();
 	}
+	else if (cmdId != -1)
+	{
+		//  get matching page to display in case of non-wizard mode
+		switch (cmdId)
+		{
+			default:						{ SetActivePage(0);           break; }
+			case ID_TOOLS_NIFCONVERT:		{ SetActivePage(&optPageNif); break; }
+			case ID_TOOLS_CHUNKMERGE:		{ SetActivePage(&optPageCMg); break; }
+			case ID_TOOLS_CHUNKEXTRACT:		{ SetActivePage(&optPageCEx); break; }
+			case ID_TOOLS_BLENDERPREPARE:	{ SetActivePage(&optPageBlA); break; }
+#ifndef NUS_LIGHT
+			case ID_TOOLS_MODELVIEWER:		{ SetActivePage(&optPageMVw); break; }
+#endif
+		}
+	}  //  else if (cmdId != -1)
 
-	INT_PTR	retVal(CPropertySheet::DoModal());
+	INT_PTR		retVal(CPropertySheet::DoModal());
 
 	if ((retVal == IDOK) || (retVal == ID_WIZFINISH))
 	{

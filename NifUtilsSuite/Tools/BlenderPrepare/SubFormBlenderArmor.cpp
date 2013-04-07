@@ -162,7 +162,7 @@ void CSubFormBlenderArmor::FillListView()
 //-----  OnBnClickedOpenSettings()  -------------------------------------------
 void CSubFormBlenderArmor::OnBnClickedOpenSettings()
 {
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_OPTIONS_EDIT);
+	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_BT_OPTIONS_EDIT);
 }
 
 //-----  PerformAction()  -----------------------------------------------------

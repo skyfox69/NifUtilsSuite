@@ -277,7 +277,7 @@ void CFormChunkMergeView::OnBnClickedBtNscopeColl()
 //-----  OnBnClickedOpenSettings()  -------------------------------------------
 void CFormChunkMergeView::OnBnClickedOpenSettings()
 {
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_OPTIONS_EDIT);
+	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_BT_OPTIONS_EDIT);
 }
 
 //-----  OnBnClickedRadioCollMat()  -------------------------------------------

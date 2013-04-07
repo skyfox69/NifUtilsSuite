@@ -23,5 +23,5 @@ class COptionsSheet : public CPropertySheet
 								COptionsSheet(LPCTSTR pszCaption, CWnd* pParentWnd = NULL, UINT iSelectPage = 0);
 		virtual					~COptionsSheet();
 
-		virtual	INT_PTR			DoModal();
+		virtual	INT_PTR			DoModal(const int cmdId=-1);
 };

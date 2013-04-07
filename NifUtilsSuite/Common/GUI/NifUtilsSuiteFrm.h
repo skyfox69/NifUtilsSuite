@@ -28,6 +28,7 @@ class CNifUtilsSuiteFrame : public CFrameWnd
 		afx_msg void	OnClose();
 		afx_msg	int		OnCreate(LPCREATESTRUCT lpCreateStruct);
 		afx_msg	void	OnFileOptions();
+		afx_msg	void	OnButtonOptions();
 		afx_msg void	OnOptionsSavecurrent();
 		afx_msg void	OnOptionsShowtooltipps();
 		afx_msg void	OnOptionsSaveopenview();

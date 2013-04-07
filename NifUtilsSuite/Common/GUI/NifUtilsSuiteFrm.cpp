@@ -39,6 +39,7 @@ BEGIN_MESSAGE_MAP(CNifUtilsSuiteFrame, CFrameWnd)
 	ON_COMMAND(ID_TOOLS_CHUNKEXTRACT,    &CNifUtilsSuiteFrame::SelectTabChunkExtract)
 	ON_COMMAND(ID_TOOLS_BLENDERPREPARE,  &CNifUtilsSuiteFrame::SelectTabBlenderPrepare)
 	ON_COMMAND(ID_OPTIONS_EDIT,          &CNifUtilsSuiteFrame::OnFileOptions)
+	ON_COMMAND(ID_BT_OPTIONS_EDIT,       &CNifUtilsSuiteFrame::OnButtonOptions)
 	ON_COMMAND(ID_OPTIONS_SAVECURRENT,   &CNifUtilsSuiteFrame::OnOptionsSavecurrent)
 	ON_COMMAND(ID_OPTIONS_SHOWTOOLTIPPS, &CNifUtilsSuiteFrame::OnOptionsShowtooltipps)
 	ON_COMMAND(ID_HELP_ABOUT,            &CNifUtilsSuiteFrame::OnHelpAbout)
@@ -215,8 +216,37 @@ void CNifUtilsSuiteFrame::SelectTabBlenderPrepare()
 	SelectView(ID_TOOLS_BLENDERPREPARE);
 }
 
-//-----  SelectTabModelViewer()  ----------------------------------------------
+//-----  OnFileOptions()  -----------------------------------------------------
 void CNifUtilsSuiteFrame::OnFileOptions()
+{
+	CRuntimeClass*	pClass(m_wndTabBar.GetItemView(m_wndTabBar.GetCurSel())->GetRuntimeClass());
+	int				cmdId (-1);
+
+	//  get matching id
+	for (short idx(0); ; ++idx)
+	{
+		//  reached end of list
+		if (toolList[idx]._pRTClass == NULL)	break;
+
+		if (toolList[idx]._pRTClass == pClass)
+		{
+			cmdId = toolList[idx]._cmdId;
+			break;
+		}
+	}  //  for (short idx(0); ; ++idx)
+
+	COptionsSheet	optSheet(_T("Settings"));
+	INT_PTR			retVal  (optSheet.DoModal(cmdId));
+
+	if ((retVal == IDOK) || (retVal == ID_WIZFINISH))
+	{
+		Configuration::getInstance()->write();
+		m_wndTabBar.BroadcastEvent(IBCE_CHANGED_SETTINGS);
+	}
+}
+
+//-----  OnButtonOptions()  ---------------------------------------------------
+void CNifUtilsSuiteFrame::OnButtonOptions()
 {
 	COptionsSheet	optSheet(_T("Settings"));
 	INT_PTR			retVal  (optSheet.DoModal());
