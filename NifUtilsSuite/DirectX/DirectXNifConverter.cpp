@@ -32,7 +32,6 @@
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
 #include "obj/BSLODTriShape.h"
-#include "obj/BSDamageStage.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 
@@ -184,11 +183,6 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 
 			//  reset collision flag
 			_isCollision = false;
-		}
-		//  BSDamageStage
-		else if (DynamicCast<BSDamageStage>(*pIter) != NULL)
-		{
-			//  ignore these sub parts
 		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*pIter) != NULL)
@@ -478,6 +472,15 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pShape->GetBody()));
 	if (pRBody == NULL)		return meshList.size(); 
 
+	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
+	if (pMBTS == NULL)		return meshList.size();
+
+	bhkCompressedMeshShapeRef	pCMShape(DynamicCast<bhkCompressedMeshShape>(pMBTS->GetShape()));
+	if (pCMShape == NULL)	return meshList.size();
+
+	bhkCompressedMeshShapeData*	pData(DynamicCast<bhkCompressedMeshShapeData>(pCMShape->GetData()));
+	if (pData == NULL)		return meshList.size();
+
 	//  add own translation to list - if bhkRigidBodyT
 	if (isRidgidBodyT)
 	{
@@ -488,15 +491,6 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 	
 		transformAry.push_back(tMat44);
 	}
-
-	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
-	if (pMBTS == NULL)		return meshList.size();
-
-	bhkCompressedMeshShapeRef	pCMShape(DynamicCast<bhkCompressedMeshShape>(pMBTS->GetShape()));
-	if (pCMShape == NULL)	return meshList.size();
-
-	bhkCompressedMeshShapeData*	pData(DynamicCast<bhkCompressedMeshShapeData>(pCMShape->GetData()));
-	if (pData == NULL)		return meshList.size();
 
 	//  hurray!!!
 	vector<bhkCMSDChunk>		chunkGeoList(pData->GetChunks());
