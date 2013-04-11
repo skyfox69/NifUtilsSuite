@@ -11,6 +11,7 @@
 #include "Common\GUI\AboutDialog.h"
 #include "Common\GUI\AboutPage1.h"
 #include "Common\GUI\AboutPage2.h"
+#include "Common\GUI\AboutPage3.h"
 #include "version.h"
 
 //-----  DEFINES  -------------------------------------------------------------
@@ -38,9 +39,11 @@ INT_PTR CAboutDialog::DoModal()
 {
 	CAboutPage1		page1;
 	CAboutPage2		page2;
+	CAboutPage3		page3;
 
 	AddPage(&page1);
 	AddPage(&page2);
+	AddPage(&page3);
 
 	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 

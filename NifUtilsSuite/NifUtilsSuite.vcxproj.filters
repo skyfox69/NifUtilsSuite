@@ -299,6 +299,9 @@
     <ClInclude Include="Tools\BlenderPrepare\OptionsBlenderPrepareArmor.h">
       <Filter>Header Files\Tools\BlenderPrepare</Filter>
     </ClInclude>
+    <ClInclude Include="Common\GUI\AboutPage3.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NifUtilsSuite.cpp">
@@ -438,6 +441,9 @@
     </ClCompile>
     <ClCompile Include="Tools\BlenderPrepare\OptionsBlenderPrepareArmor.cpp">
       <Filter>Source Files\Tools\BlenderPrepare</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\AboutPage3.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

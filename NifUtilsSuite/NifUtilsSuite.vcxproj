@@ -130,6 +130,7 @@
     <ClInclude Include="Common\GUI\AboutDialog.h" />
     <ClInclude Include="Common\GUI\AboutPage1.h" />
     <ClInclude Include="Common\GUI\AboutPage2.h" />
+    <ClInclude Include="Common\GUI\AboutPage3.h" />
     <ClInclude Include="Common\GUI\BCBrowseVSListBox.h" />
     <ClInclude Include="Common\GUI\BCTabBarCtrl.h" />
     <ClInclude Include="Common\GUI\NifUtilsSuiteFrm.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="Common\GUI\AboutDialog.cpp" />
     <ClCompile Include="Common\GUI\AboutPage1.cpp" />
     <ClCompile Include="Common\GUI\AboutPage2.cpp" />
+    <ClCompile Include="Common\GUI\AboutPage3.cpp" />
     <ClCompile Include="Common\GUI\BCBrowseVSListBox.cpp" />
     <ClCompile Include="Common\GUI\BCTabBarCtrl.cpp" />
     <ClCompile Include="Common\GUI\NifUtilsSuiteFrm.cpp" />
