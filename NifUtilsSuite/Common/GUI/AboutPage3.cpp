@@ -42,6 +42,15 @@ BOOL CAboutPage3::OnSetActive()
 	CString		tString;
 
 	tString  = "\r\n";
+	tString += "Version 1.1.0\r\n";
+	tString += "=============\r\n\r\n";
+	tString += "* New:	BlenderPrepare: (Beta) added new tool to prepare armor-NIFs from Skyrim to Blender and vicy versa\r\n";
+	tString += "* New:	Common: add new page on AboutDialog showing change-log\r\n";
+	tString += "* New:	Common: open settings dialog on matching page\r\n";
+	tString += "* New:	ChunkExtract: add flag saving NIF as version 20.2.0.7 (UserVersion 11, UserVerion2 34)\r\n";
+	tString += "* Chng:	Common: make UI descriptions more informative\r\n";
+	tString += "* Chng:	Common: different prerequisites for binaries and development environment\r\n";
+	tString += "* Fix:	ModelViewer: use correct translation/rotation for bhkRidgidBodyT\r\n\r\n\r\n";
 	tString += "Version 1.0.5 (Beta3)\r\n";
 	tString += "=====================\r\n\r\n";
 	tString += "* New:	ChunkExtract: add option 'scaling to model mesh'\r\n";

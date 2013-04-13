@@ -1,5 +1,17 @@
+Version 1.1.0
+=============
+
+* New:	BlenderPrepare: (Beta) added new tool to prepare armor-NIFs from Skyrim to Blender and vicy versa
+* New:	Common: add new page on AboutDialog showing change-log
+* New:	Common: open settings dialog on matching page
+* New:	ChunkExtract: add flag saving NIF as version 20.2.0.7 (UserVersion 11, UserVerion2 34)
+* Chng:	Common: make UI descriptions more informative
+* Chng:	Common: different prerequisites for binaries and development environment
+* Fix:	ModelViewer: use correct translation/rotation for bhkRidgidBodyT
+
+
 Version 1.0.5 (Beta3)
-====================
+=====================
 
 * New:	ChunkExtract: add option 'scaling to model mesh'
 * New:	ModelViewer: tooltips for listview in ModelViewer
@@ -8,7 +20,7 @@ Version 1.0.5 (Beta3)
 
 
 Version 1.0.4 (Beta2)
-====================
+=====================
 
 * New:	Settings: show full path names as tooltip on general tab
 * New:	ModelViewer: shortcut F4 for toggling collision display as in CreationKit
@@ -22,7 +34,7 @@ Version 1.0.4 (Beta2)
 
 
 Version 1.0.3 (Beta1)
-====================
+=====================
 
 * New:	first initial release of NIFUtilsSuite as Beta
 * New:	Common: versioning system
