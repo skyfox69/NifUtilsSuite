@@ -439,8 +439,11 @@ bool NifConvertUtility::updateTangentSpace(NiTriShapeDataRef pDataObj)
 {
 	vector<Vector3>		vecVertices (pDataObj->GetVertices());
 	vector<Vector3>		vecNormals  (pDataObj->GetNormals());
-	vector<TexCoord>	vecTexCoords(pDataObj->GetUVSet(0));
 	vector<Triangle>	vecTriangles(pDataObj->GetTriangles());
+	vector<TexCoord>	vecTexCoords;
+
+	//  get first uv-set if available
+	if (pDataObj->GetUVSetCount() > 0)		vecTexCoords = pDataObj->GetUVSet(0);
 
 	//  check on valid input data
 	if (vecVertices.empty() || vecTriangles.empty() || vecNormals.size() != vecVertices.size() || vecVertices.size() != vecTexCoords.size())
