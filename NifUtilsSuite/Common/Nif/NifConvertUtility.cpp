@@ -314,8 +314,8 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 		}
 	}
 
-	//  reorder properties
-	if (_reorderProperties)
+	//  reorder properties - only necessary in case of both are set
+	if (_reorderProperties && (pDstNode->GetBSProperty(0) != NULL) && (pDstNode->GetBSProperty(1) != NULL))
 	{
 		NiPropertyRef	tProp01(pDstNode->GetBSProperty(0));
 		NiPropertyRef	tProp02(pDstNode->GetBSProperty(1));
