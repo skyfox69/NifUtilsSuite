@@ -405,6 +405,7 @@ BOOL CFormNifConvertView::BroadcastEvent(WORD event, void* pParameter)
 			//- various flags
 			((CButton*) GetDlgItem(IDC_CK_UP_TANGENT))->SetCheck(pConfig->_ncUpTangent   ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_REORDER)   )->SetCheck(pConfig->_ncReorderProp ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_END_DDS)   )->SetCheck(pConfig->_ncForceDDS    ? BST_CHECKED : BST_UNCHECKED);
 
 			break;
 		}
@@ -456,6 +457,7 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 	ncUtility.setVertexColorHandling((VertexColorHandling) (GetCheckedRadioButton(IDC_RD_REM_FLAG, IDC_RD_GEN_COL) - IDC_RD_REM_FLAG));
 	ncUtility.setUpdateTangentSpace (((CButton*) GetDlgItem(IDC_CK_UP_TANGENT))->GetCheck() != FALSE);
 	ncUtility.setReorderProperties  (((CButton*) GetDlgItem(IDC_CK_REORDER)   )->GetCheck() != FALSE);
+	ncUtility.setForceDDS           (((CButton*) GetDlgItem(IDC_CK_END_DDS)   )->GetCheck() != FALSE);
 
 	//  convert NIF
 	ncReturn = ncUtility.convertShape(CStringA(_fileNameIn).GetString(), CStringA(_fileNameOut).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());

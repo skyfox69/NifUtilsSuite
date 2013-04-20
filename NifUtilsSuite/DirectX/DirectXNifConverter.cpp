@@ -854,7 +854,10 @@ string DirectXNifConverter::CheckTextureName(string texName)
 		//  test for forced dds ending
 		if (_forceDDS)
 		{
-			baseTexture = baseTexture.substr(0, baseTexture.length() - 3) + "dds";
+			string::size_type	result(baseTexture.rfind('.'));
+
+			if (result != string::npos)		baseTexture.erase(result);
+			baseTexture += ".dds";
 		}
 
 		//  test if texture file exists

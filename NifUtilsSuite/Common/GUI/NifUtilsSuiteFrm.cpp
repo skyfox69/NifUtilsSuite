@@ -98,7 +98,7 @@ BOOL CNifUtilsSuiteFrame::PreCreateWindow(CREATESTRUCT& cs)
 	if (!CFrameWnd::PreCreateWindow(cs))	return FALSE;
 
 	cs.cx = 646;
-	cs.cy = 465;
+	cs.cy = 485;
 	cs.style = WS_OVERLAPPED | WS_CAPTION | FWS_ADDTOTITLE | WS_MINIMIZEBOX | WS_SYSMENU;
 
 	return TRUE;

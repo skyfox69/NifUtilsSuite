@@ -24,8 +24,9 @@ COptionsPageNifConvert::COptionsPageNifConvert(CWnd* pParent /*=NULL*/)
 	Configuration*	pConfig(Configuration::getInstance());
 
 	_vertexColor = pConfig->_ncVtFlagsRemove;
-	_upTangent   = pConfig->_ncUpTangent ? 1 : 0;
+	_upTangent   = pConfig->_ncUpTangent   ? 1 : 0;
 	_reorderProp = pConfig->_ncReorderProp ? 1 : 0;
+	_forceDDS    = pConfig->_ncForceDDS    ? 1 : 0;
 	_defColor.SetColor((COLORREF) pConfig->_ncDefColor);
 }
 
@@ -41,6 +42,7 @@ void COptionsPageNifConvert::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio  (pDX, IDC_RD_REM_FLAG,   _vertexColor);
 	DDX_Check  (pDX, IDC_CK_UP_TANGENT, _upTangent);
 	DDX_Check  (pDX, IDC_CK_REORDER,    _reorderProp);
+	DDX_Check  (pDX, IDC_CK_END_DDS,    _forceDDS);
 	DDX_Control(pDX, IDC_BT_VTCOLOR,    _defColor);
 	DDX_Control(pDX, IDC_CB_TEMPLATE,   _defTemplate);
 	DDX_Control(pDX, IDC_CB_TEXTURE,    _defTexture);
@@ -62,8 +64,9 @@ void COptionsPageNifConvert::OnOK()
 	UpdateData(TRUE);
 
 	pConfig->_ncVtFlagsRemove   = _vertexColor;
-	pConfig->_ncUpTangent       = (_upTangent == 1);
+	pConfig->_ncUpTangent       = (_upTangent   == 1);
 	pConfig->_ncReorderProp     = (_reorderProp == 1);
+	pConfig->_ncForceDDS        = (_forceDDS    == 1);
 	pConfig->_ncDefColor        = _defColor.GetColor();
 	_defTemplate.GetLBText(_defTemplate.GetCurSel(), tString);
 	pConfig->_ncDefaultTemplate = CStringA(tString).GetString();

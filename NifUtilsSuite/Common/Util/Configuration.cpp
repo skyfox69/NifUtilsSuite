@@ -32,6 +32,7 @@ Configuration::Configuration(const string fileName)
 		_lastOpenView    (0),
 		_ncUpTangent     (true),
 		_ncReorderProp   (true),
+		_ncForceDDS      (true),
 		_showToolTipps   (true),
 		_saveLastView    (false),
 		_ceGenNormals    (true),
@@ -346,6 +347,7 @@ bool Configuration::read()
 			readAttribute(content, "BpABRemBSProp>",           _bpABRemBSProp,     offset);
 			readAttribute(content, "BpBAMapping>",             _bpBAMapping,       offset);
 			readAttribute(content, "DefaultTemplateNameBPBA>", _cmDefaultTemplate, offset);
+			readAttribute(content, "NcForceDDS>",              _ncForceDDS,        offset);
 
 
 		}  //  while (iStr.good())
@@ -396,6 +398,7 @@ bool Configuration::write()
 		oStr << "<ReorderProperties>"     << (_ncReorderProp ? 1 : 0) << "</ReorderProperties>";
 		oStr << "<DefaultTemplateNameNC>" << _ncDefaultTemplate       << "</DefaultTemplateNameNC>";
 		oStr << "<DefaultTextureNameNC>"  << _ncDefaultTexture        << "</DefaultTextureNameNC>";
+		oStr << "<NcForceDDS>"            << _ncForceDDS              << "</NcForceDDS>";
 		oStr << "</NifConvert><ChunkMerge>";
 		oStr << "<MaterialHandling>"      << _cmMatHandling           << "</MaterialHandling>";
 		oStr << "<CollisionHandling>"     << _cmCollHandling          << "</CollisionHandling>";

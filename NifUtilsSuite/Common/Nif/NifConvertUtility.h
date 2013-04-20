@@ -101,6 +101,12 @@ public:
 	virtual void setReorderProperties(bool doReorder);
 
 	/**
+		* 
+		* @param doForce    in: true: force texture names having DDS ending
+		*/
+	virtual void setForceDDS(bool doForce);
+
+	/**
 		* Get list of user messages
 		*/
 	virtual vector<string>& getUserMessages();
@@ -168,6 +174,11 @@ protected:
 		* reorder NiTriShape properties
 		*/
 	bool _reorderProperties;
+
+	/**
+		* force texture names having DDS ending
+		*/
+	bool _forceDDS;
 
 	/**
 		* Get NiNode from NIF-file

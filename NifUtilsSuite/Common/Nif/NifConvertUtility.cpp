@@ -10,6 +10,7 @@
 #include "Common\Nif\NifConvertUtility.h"
 #include "Common\Util\DefLogMessageTypes.h"
 #include <algorithm>
+#include <string>
 
 //  Niflib includes
 #include "niflib.h"
@@ -23,6 +24,7 @@
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
 using namespace Niflib;
+using namespace std;
 
 /*---------------------------------------------------------------------------*/
 NifConvertUtility::NifConvertUtility()
@@ -30,6 +32,7 @@ NifConvertUtility::NifConvertUtility()
 		_vcHandling        (NCU_VC_REMOVE_FLAG),
 		_updateTangentSpace(true),
 		_reorderProperties (true),
+		_forceDDS          (true),
 		_logCallback       (NULL)
 {}
 
@@ -201,8 +204,8 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 			char*						pTextPos (NULL);
 			BSShaderTextureSetRef		pDstSText(new BSShaderTextureSet());
 			TexDesc						baseTex  ((DynamicCast<NiTexturingProperty>(*ppIter))->GetTexture(BASE_MAP));
-			char						fileName[1000] = {0};
-			char						textName[1000] = {0};
+			string						texture  (baseTex.source->GetTextureFileName());
+			string::size_type			result   (string::npos);
 
 			//  clone shader property from template
 			pDstLShader = cloneBSLightingShaderProperty(pTmplLShader);
@@ -210,43 +213,51 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 			//  copy textures from template to copy
 			pDstSText->SetTextures(pTmplLShader->GetTextureSet()->GetTextures());
 
-			//  set new texture names
-			sprintf(fileName, "%s", (const char*) _pathTexture.c_str());
-			baseTex.source->GetTextureFileName().copy(textName, 1000, 0);
-			pTextPos = strrchr(textName, '\\');
-			if (pTextPos == NULL)
+			//  separate filename from path
+			result = texture.rfind('\\');
+			if (result == string::npos)			result  = texture.find_last_of('/');
+			if (result != string::npos)			texture = texture.substr(result + 1);
+
+			//  build texture name
+			if (_forceDDS)
 			{
-				pTextPos = strrchr(textName, '/');
+				result = texture.rfind('.');
+				if (result != string::npos)		texture.erase(result);
+				texture += ".dds";
 			}
-			if (pTextPos != NULL)
+
+			//  build full path
+			texture = _pathTexture + texture;
+
+			//  set new texture map
+			pDstSText->SetTexture(0, texture);
+
+			logMessage(NCU_MSG_TYPE_TEXTURE, string("Txt-Used: ") + texture);
+			if (!checkFileExists(texture))
 			{
-				strcat(fileName, ++pTextPos);
+				_newTextures.insert(string("Txt-Missed: ") + texture);
+			}
+
+			//  build normal map name
+			result = texture.rfind('.');
+			if (result == string::npos)
+			{
+				texture += "_n";
 			}
 			else
 			{
-				strcat(fileName, textName);
+				string	extension(texture.substr(result));
+
+				texture.erase(result);
+				texture += "_n" + extension;
 			}
-			fileName[strlen(fileName) - 3] = 0;
-			strcat(fileName, "dds");
-
-			//  set new texture map
-			pDstSText->SetTexture(0, fileName);
-
-			logMessage(NCU_MSG_TYPE_TEXTURE, string("Txt-Used: ") + fileName);
-			if (!checkFileExists(fileName))
-			{
-				_newTextures.insert(string("Txt-Missed: ") + fileName);
-			}
-
-			fileName[strlen(fileName) - 4] = 0;
-			strcat(fileName, "_n.dds");
 
 			//  set new normal map
-			pDstSText->SetTexture(1, fileName);
+			pDstSText->SetTexture(1, texture);
 
-			if (!checkFileExists(fileName))
+			if (!checkFileExists(texture))
 			{
-				_newTextures.insert(string("Txt-Missed: ") + fileName);
+				_newTextures.insert(string("Txt-Missed: ") + texture);
 			}
 
 			//  add texture set to texture property
@@ -558,6 +569,12 @@ void NifConvertUtility::setUpdateTangentSpace(bool doUpdate)
 void NifConvertUtility::setReorderProperties(bool doReorder)
 {
 	_reorderProperties = doReorder;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setForceDDS(bool doForce)
+{
+	_forceDDS = doForce;
 }
 
 /*---------------------------------------------------------------------------*/

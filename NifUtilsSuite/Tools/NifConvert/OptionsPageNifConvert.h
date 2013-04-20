@@ -23,6 +23,7 @@ class COptionsPageNifConvert : public CPropertyPage
 				int				_vertexColor;
 				int				_upTangent;
 				int				_reorderProp;
+				int				_forceDDS;
 
 	protected:
 		virtual	void			DoDataExchange(CDataExchange* pDX);

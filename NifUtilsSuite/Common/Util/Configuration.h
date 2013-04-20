@@ -69,6 +69,7 @@ class Configuration
 				bool					_hasFile;
 				bool					_ncUpTangent;
 				bool					_ncReorderProp;
+				bool					_ncForceDDS;
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;
