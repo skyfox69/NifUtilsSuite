@@ -27,7 +27,7 @@ COptionsPageChunkExtract::COptionsPageChunkExtract(CWnd* pParent /*=NULL*/)
 	_nameHandling = pConfig->_ceNameHandling;
 	_genNormals   = pConfig->_ceGenNormals   ? 1 : 0;
 	_scaleToModel = pConfig->_ceScaleToModel ? 1 : 0;
-	_saveAs20207  = pConfig->_ceSaveAs20207  ? 1 : 0;
+	_saveAs1134   = pConfig->_ceSaveVersion == NUS_USERVER_1134;
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -42,7 +42,7 @@ void COptionsPageChunkExtract::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RD_NAME_MAT,       _nameHandling);
 	DDX_Check(pDX, IDC_CK_GEN_NORMALS,    _genNormals);
 	DDX_Check(pDX, IDC_CK_SCALE_TO_MODEL, _scaleToModel);
-	DDX_Check(pDX, IDC_CK_SAVEAS_20207,   _saveAs20207);
+	DDX_Check(pDX, IDC_CK_SAVEAS_20207,   _saveAs1134);
 }
 
 //-----  OnWizardNext()  ------------------------------------------------------
@@ -62,7 +62,7 @@ void COptionsPageChunkExtract::OnOK()
 	pConfig->_ceNameHandling = _nameHandling;
 	pConfig->_ceGenNormals   = (_genNormals   == 1);
 	pConfig->_ceScaleToModel = (_scaleToModel == 1);
-	pConfig->_ceSaveAs20207  = (_saveAs20207  == 1);
+	pConfig->_ceSaveVersion  = (_saveAs1134   == 1) ? NUS_USERVER_1134 : NUS_USERVER_1283;
 }
 
 //-----  OnInitDialog()  ------------------------------------------------------

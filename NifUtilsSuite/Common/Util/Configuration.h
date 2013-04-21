@@ -12,6 +12,11 @@
 #include <set>
 #include <map>
 
+//-----  DEFINES  -------------------------------------------------------------
+#define	NUS_USERVER_1134		0x000B0022
+#define	NUS_USERVER_1283		0x000C0053
+
+
 using namespace std;
 
 //-----  CLASS  ---------------------------------------------------------------
@@ -60,6 +65,7 @@ class Configuration
 				unsigned int			_mvDefWireColor;
 				unsigned int			_mvDefBackColor;
 				unsigned int			_mvDefLOD;
+				unsigned int			_ceSaveVersion;
 				int						_ncVtFlagsRemove;
 				int						_cmMatHandling;
 				int						_cmCollHandling;
@@ -74,7 +80,6 @@ class Configuration
 				bool					_saveLastView;
 				bool					_ceGenNormals;
 				bool					_ceScaleToModel;
-				bool					_ceSaveAs20207;
 				bool					_mvShowGrid;
 				bool					_mvAlterRows;
 				bool					_mvForceDDS;

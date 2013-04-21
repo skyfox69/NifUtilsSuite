@@ -125,7 +125,7 @@ public:
 
 	virtual void setScaleToModel(const bool doScale);
 
-	virtual void setSaveAs20207(const bool doSave);
+	virtual void setSaveAsVersion(const unsigned int version);
 
 protected:
 
@@ -182,7 +182,7 @@ protected:
 
 	bool _scaleToModel;
 
-	bool _saveAs20207;
+	unsigned int _saveAsVersion;
 
 	/**
 	* Get geometry from NiTriShape

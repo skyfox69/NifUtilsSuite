@@ -771,9 +771,9 @@ void NifCollisionUtility::setScaleToModel(const bool doScale)
 }
 
 /*---------------------------------------------------------------------------*/
-void NifCollisionUtility::setSaveAs20207(const bool doSave)
+void NifCollisionUtility::setSaveAsVersion(const unsigned int version)
 {
-	_saveAs20207 = doSave;
+	_saveAsVersion = version;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1192,14 +1192,7 @@ bool NifCollisionUtility::writeChunkDataAsNif(string fileName, vector<NifChunkDa
 	}  //  for (auto pIterC=chunkDataList.begin(), pEndC=chunkDataList.end(); pIterC != pEndC; ++pIterC)
 
 	//  write nif to file using Skyrim version
-	if (_saveAs20207)
-	{
-		WriteNifTree((const char*) fileName.c_str(), pRootNode, NifInfo(VER_20_2_0_7, 11, 34));
-	}
-	else
-	{
-		WriteNifTree((const char*) fileName.c_str(), pRootNode, NifInfo(VER_20_2_0_7, 12, 83));
-	}
+	WriteNifTree((const char*) fileName.c_str(), pRootNode, NifInfo(VER_20_2_0_7, ((_saveAsVersion >> 16) & 0x0000FFFF), (_saveAsVersion & 0x0000FFFF)));
 
 	return true;
 }

@@ -376,7 +376,7 @@ BOOL CFormChunkExtractView::BroadcastEvent(WORD event, void* pParameter)
 			//  various flags
 			((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->SetCheck(pConfig->_ceGenNormals   ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->SetCheck(pConfig->_ceScaleToModel ? BST_CHECKED : BST_UNCHECKED);
-			((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207)  )->SetCheck(pConfig->_ceSaveAs20207  ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207)  )->SetCheck((pConfig->_ceSaveVersion == NUS_USERVER_1134)  ? BST_CHECKED : BST_UNCHECKED);
 
 			break;
 		}
@@ -427,7 +427,7 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 	ncUtility.setChunkNameHandling((ChunkNameHandling) (GetCheckedRadioButton(IDC_RD_NAME_MAT, IDC_RD_NAME_CHUNK) - IDC_RD_NAME_MAT));
 	ncUtility.setGenerateNormals  (((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->GetCheck() != FALSE);
 	ncUtility.setScaleToModel     (((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->GetCheck() != FALSE);
-	ncUtility.setSaveAs20207      (((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207))  ->GetCheck() != FALSE);
+	ncUtility.setSaveAsVersion    ((((CButton*) GetDlgItem(IDC_CK_SAVEAS_20207)) ->GetCheck() != FALSE) ? NUS_USERVER_1134 : NUS_USERVER_1283);
 
 	//  extract chunks from NIF
 	ncReturn = ncUtility.extractChunks(CStringA(_fileNameIn).GetString(), CStringA(_fileNameNif).GetString(), CStringA(_fileNameObj).GetString());
