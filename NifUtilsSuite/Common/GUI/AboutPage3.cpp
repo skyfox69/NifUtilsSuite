@@ -42,6 +42,12 @@ BOOL CAboutPage3::OnSetActive()
 	CString		tString;
 
 	tString  = "\r\n";
+	tString += "Version 1.1.1\r\n";
+	tString += "=============\r\n\r\n";
+	tString += "* Chng:	ChunkExtract: handling of version number to be saved to\r\n";
+	tString += "* Fix:	NifConvert: crash when reorder non existing properties\r\n";
+	tString += "* Fix:	NifConvert: crash on missing UV-Sets\r\n";
+	tString += "* Fix:	NifConvert: bad texture filename when having no externsion\r\n\r\n\r\n";
 	tString += "Version 1.1.0\r\n";
 	tString += "=============\r\n\r\n";
 	tString += "* New:	BlenderPrepare: (Beta) added new tool to prepare armor-NIFs from Skyrim to Blender and vicy versa\r\n";
