@@ -28,6 +28,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,  "Open source in Nif
 						                   {IDC_BT_VIEW_OUT,   "Display result on ModelView page"},
 						                   {IDC_CK_UP_TANGENT, "Calculate normals and binormals in NiTriShapeData"},
 						                   {IDC_CK_REORDER,    "Make sure properties of NiTriShape are in valid order"},
+						                   {IDC_CK_END_DDS,    "Force texture names with ending .DDS"},
 						                   {IDC_RD_GEN_COL,    "Add default vertext color in case of set flag SLSF2_Vertex_Colors"},
 						                   {IDC_RD_REM_FLAG,   "Remove flag SLSF2_Vertex_Colors in case of missing vertex colors"},
 						                   {IDC_CB_TEXTURE,    "Define path to texture files written to BSShaderTextureSet"},
