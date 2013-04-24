@@ -32,6 +32,8 @@
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
 #include "obj/BSLODTriShape.h"
+#include "obj/NiTriStrips.h"
+#include "obj/NiTriStripsData.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 
@@ -172,6 +174,11 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 		{
 			getGeometryFromTriShape(DynamicCast<NiTriBasedGeom>(*pIter), meshList, transformAry, pTmplAlphaProp);
 		}
+		//  NiTriStrips
+		else if (DynamicCast<NiTriStrips>(*pIter) != NULL)
+		{
+			getGeometryFromTriStrips(DynamicCast<NiTriBasedGeom>(*pIter), meshList, transformAry, pTmplAlphaProp);
+		}
 		//  RootCollisionNode
 		else if (DynamicCast<RootCollisionNode>(*pIter) != NULL)
 		{
@@ -219,244 +226,277 @@ unsigned int DirectXNifConverter::getGeometryFromNode(NiNodeRef pNode, vector<Di
 	return meshList.size();
 }
 
-//-----  getGeometryFromTriShape()  -------------------------------------------
-unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+//-----  getGeometryFromData()  -----------------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromData(vector<Vector3>& vecVertices, vector<Triangle>& vecTriangles, vector<Vector3>& vecNormals, vector<Color4>& vecColors, vector<TexCoord>& vecTexCoords, NiTriBasedGeomRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
-	NiTriShapeDataRef	pData    (DynamicCast<NiTriShapeData>(pShape->GetData()));
-	BSLODTriShapeRef	pShapeLOD(DynamicCast<BSLODTriShape> (pShape));
+	BSLODTriShapeRef		pShapeLOD    (DynamicCast<BSLODTriShape> (pShape));
+	DirectXAlphaState*		pAlpha       (NULL);
+	DirectXMesh*			pAddModel    (NULL);
+	D3DMATERIAL9			material;
+	vector<NiPropertyRef>	propList    (pShape->GetProperties());
+	array<2, NiPropertyRef>	propListBS  (pShape->GetBSProperties());
+	Matrix44				locTransform(pShape->GetLocalTransform());
+	string					name        (pShape->GetName());
+	string					type        (pShape->GetType().GetTypeName());
+	string					baseTexture;
+	unsigned int			texCoordSize(vecTexCoords.size());
+	bool					hasMaterial (false);
+
+	//  parse properties (old style)
+	for (auto pIter=propList.begin(), pEnd=propList.end(); pIter != pEnd; ++pIter)
+	{
+		//  NiTexturingProperty
+		if (DynamicCast<NiTexturingProperty>(*pIter) != NULL)
+		{
+			TexDesc		baseTex((DynamicCast<NiTexturingProperty>(*pIter))->GetTexture(BASE_MAP));
+
+			baseTexture = CheckTextureName(baseTex.source->GetTextureFileName());
+		}
+		//  NiAlphaProperty
+		else if (DynamicCast<NiAlphaProperty>(*pIter) != NULL)
+		{
+			pAlpha = DecodeAlphaProperty(DynamicCast<NiAlphaProperty>(*pIter));
+		}
+		//  NiMaterialProperty
+		else if (DynamicCast<NiMaterialProperty>(*pIter) != NULL)
+		{
+			NiMaterialProperty*	pProp(DynamicCast<NiMaterialProperty>(*pIter));
+			Color3				tColor;
+
+			tColor = pProp->GetAmbientColor();		material.Ambient  = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
+			tColor = pProp->GetDiffuseColor();		material.Diffuse  = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
+			tColor = pProp->GetEmissiveColor();		material.Emissive = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
+			tColor = pProp->GetSpecularColor();		material.Specular = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
+													material.Power    = pProp->GetGlossiness();
+
+			hasMaterial = true;
+		}
+	}  //  for (auto pIter=propList.begin(), pEnd=propList.end(); pIter != pEnd; ++pIter)
+
+	//  parse properties (new style)
+	for (short idx(0); idx < 2; ++idx)
+	{
+		//  BSLightingShaderProperty
+		if (DynamicCast<BSLightingShaderProperty>(propListBS[idx]) != NULL)
+		{
+			BSShaderTextureSet*	pTexSet((DynamicCast<BSLightingShaderProperty>(propListBS[idx]))->GetTextureSet());
+
+			if (pTexSet != NULL)
+			{
+				baseTexture = CheckTextureName(pTexSet->GetTexture(0));
+			}
+		}
+		//  NiAlphaProperty
+		else if (DynamicCast<NiAlphaProperty>(propListBS[idx]) != NULL)
+		{
+			pAlpha = DecodeAlphaProperty(DynamicCast<NiAlphaProperty>(propListBS[idx]));
+		}
+	}  //  for (short idx(0); idx < 2; ++idx)
+
+	//  collected all data needed => convert to DirectX
+	//  - transformation matrix
+	for (auto pIter=transformAry.rbegin(), pEnd=transformAry.rend(); pIter != pEnd; ++pIter)
+	{
+		locTransform *= *pIter;
+	}
+
+	if (_isBillboard)
+	{
+		float		scale(locTransform.GetScale());
+		Vector3		trans(locTransform.GetTranslation());
+
+		locTransform = Matrix44(trans, Matrix33(), scale);
+	}
+
+	//  - indices
+	unsigned int		countI     (vecTriangles.size()*3);
+	unsigned short*		pBufIndices(new unsigned short[countI]);
+
+	for (unsigned int i(0); i < countI; i+=3)
+	{
+		pBufIndices[i]   = vecTriangles[i/3].v1;
+		pBufIndices[i+1] = vecTriangles[i/3].v2;
+		pBufIndices[i+2] = vecTriangles[i/3].v3;
+	}
+
+	//  in case of non-collision
+	if (!_isCollision)
+	{
+		//  - vertices
+		unsigned int							countV      (vecVertices.size());
+		DirectXMeshModel::D3DCustomVertexFull*	pBufVertices(new DirectXMeshModel::D3DCustomVertexFull[countV]);
+		DirectXMeshModel*						pNewModel   (NULL);
+
+		for (unsigned int i(0); i < countV; ++i)
+		{
+			pBufVertices[i]._x        = vecVertices[i].x;
+			pBufVertices[i]._y        = vecVertices[i].y;
+			pBufVertices[i]._z        = vecVertices[i].z;
+			pBufVertices[i]._normal.x = vecNormals[i].x;
+			pBufVertices[i]._normal.y = vecNormals[i].y;
+			pBufVertices[i]._normal.z = vecNormals[i].z;
+			pBufVertices[i]._color    = !vecColors.empty() ? D3DXCOLOR(vecColors[i].r, vecColors[i].g, vecColors[i].b, 1.0f) : D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+			pBufVertices[i]._u        = (i < texCoordSize) ? vecTexCoords[i].u : 0.0f;
+			pBufVertices[i]._v        = (i < texCoordSize) ? vecTexCoords[i].v : 0.0f;
+		}
+
+		//  - material
+		if (!hasMaterial)
+		{
+			ZeroMemory(&material, sizeof(material));
+			material.Ambient = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+			material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+
+		//  - alpha
+		if ((pAlpha == NULL) && (pTmplAlphaProp != NULL))
+		{
+			pAlpha = DecodeAlphaProperty(pTmplAlphaProp);
+		}
+
+		//  create new model
+		if (pShapeLOD == NULL)
+		{
+			pNewModel = new DirectXMeshModel(Matrix44ToD3DXMATRIX(locTransform),
+																	material,
+																	pBufVertices,
+																	countV,
+																	pBufIndices,
+																	countI,
+																	baseTexture,
+																	pAlpha,
+																	_isBillboard,
+																	_defWireframeColor,
+																	_doubleSided
+																	);
+		}
+		else
+		{
+			unsigned int	lodLevel[3] = { 0 };
+
+			lodLevel[0] = pShapeLOD->GetLODLevelSize(0);
+			lodLevel[1] = pShapeLOD->GetLODLevelSize(1) + lodLevel[0];
+			lodLevel[2] = pShapeLOD->GetLODLevelSize(2) + lodLevel[1];
+
+			pNewModel = new DirectXMeshModelLOD(Matrix44ToD3DXMATRIX(locTransform),
+																		material,
+																		pBufVertices,
+																		countV,
+																		pBufIndices,
+																		countI,
+																		baseTexture,
+																		pAlpha,
+																		_isBillboard,
+																		_defWireframeColor,
+																		_doubleSided,
+																		lodLevel
+																	);
+
+			//  seet default render LOD
+			pNewModel->SetLODRenderLevel(_lodRenderLevel);
+		}
+
+		//  model view data
+		if (type.empty())		type = "- unknown -";
+		if (name.empty())
+		{
+			stringstream	sStream;
+
+			sStream << "Block-ID: " << pShape->internal_block_number;
+			name = sStream.str();
+		}
+
+		//  set visibility
+		if (!_showModel)	pNewModel->SetRenderMode(DXRM_NONE);
+
+		//  set model to add
+		pAddModel = pNewModel;
+	}
+	else  //  if (!_isCollision)
+	{
+		//  - vertices
+		unsigned int							countV      (vecVertices.size());
+		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+
+		for (unsigned int i(0); i < countV; ++i)
+		{
+			pBufVertices[i]._x     = vecVertices[i].x;
+			pBufVertices[i]._y     = vecVertices[i].y;
+			pBufVertices[i]._z     = vecVertices[i].z;
+			pBufVertices[i]._color = _defCollisionColor;
+		}
+
+		//  create new model
+		DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																		pBufVertices,
+																		countV,
+																		pBufIndices,
+																		countI,
+																		_defCollisionColor
+																	);
+		//  model view data
+		if (type.empty())		type = "- unknown -";
+		if (name.empty())		name = "Collision";
+
+		//  set visibility
+		if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+		//  set model to add
+		pAddModel = pNewModel;
+
+	}  //  else [if (!_isCollision)]
+
+	//  add model view data
+	pAddModel->SetNifData(name, type, pShape->internal_block_number);
+
+	//  append model to list
+	meshList.push_back(pAddModel);
+
+	return meshList.size();
+}
+
+//-----  getGeometryFromTriStrips()  ------------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromTriStrips(NiTriBasedGeomRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	NiTriStripsDataRef	pData(DynamicCast<NiTriStripsData>(pShape->GetData()));
 
 	if (pData != NULL)
 	{
-		DirectXAlphaState*		pAlpha       (NULL);
-		DirectXMesh*			pAddModel    (NULL);
-		D3DMATERIAL9			material;
-		vector<TexCoord>		vecTexCoords;
-		vector<Vector3>			vecVertices (pData->GetVertices());
-		vector<Triangle>		vecTriangles(pData->GetTriangles());
-		vector<Vector3>			vecNormals  (pData->GetNormals());
-		vector<Color4>			vecColors   (pData->GetColors());
-		vector<NiPropertyRef>	propList    (pShape->GetProperties());
-		array<2, NiPropertyRef>	propListBS  (pShape->GetBSProperties());
-		Matrix44				locTransform(pShape->GetLocalTransform());
-		string					name        (pShape->GetName());
-		string					type        (pShape->GetType().GetTypeName());
-		string					baseTexture;
-		unsigned int			texCoordSize(0);
-		bool					hasMaterial (false);
+		vector<TexCoord>	vecTexCoords;
+		vector<Vector3>		vecVertices (pData->GetVertices());
+		vector<Triangle>	vecTriangles(pData->GetTriangles());
+		vector<Vector3>		vecNormals  (pData->GetNormals());
+		vector<Color4>		vecColors   (pData->GetColors());
 
 		//  get uv set
 		if (pData->GetUVSetCount() > 0)			vecTexCoords = pData->GetUVSet(0);
-		texCoordSize = vecTexCoords.size();
 
-		//  parse properties (old style)
-		for (auto pIter=propList.begin(), pEnd=propList.end(); pIter != pEnd; ++pIter)
-		{
-			//  NiTexturingProperty
-			if (DynamicCast<NiTexturingProperty>(*pIter) != NULL)
-			{
-				TexDesc		baseTex((DynamicCast<NiTexturingProperty>(*pIter))->GetTexture(BASE_MAP));
+		//  get geometry from data
+		getGeometryFromData(vecVertices, vecTriangles, vecNormals, vecColors, vecTexCoords, pShape, meshList, transformAry, pTmplAlphaProp);
 
-				baseTexture = CheckTextureName(baseTex.source->GetTextureFileName());
-			}
-			//  NiAlphaProperty
-			else if (DynamicCast<NiAlphaProperty>(*pIter) != NULL)
-			{
-				pAlpha = DecodeAlphaProperty(DynamicCast<NiAlphaProperty>(*pIter));
-			}
-			//  NiMaterialProperty
-			else if (DynamicCast<NiMaterialProperty>(*pIter) != NULL)
-			{
-				NiMaterialProperty*	pProp(DynamicCast<NiMaterialProperty>(*pIter));
-				Color3				tColor;
+	}  //  if (pData != NULL)
 
-				tColor = pProp->GetAmbientColor();		material.Ambient  = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
-				tColor = pProp->GetDiffuseColor();		material.Diffuse  = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
-				tColor = pProp->GetEmissiveColor();		material.Emissive = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
-				tColor = pProp->GetSpecularColor();		material.Specular = D3DXCOLOR(tColor.r, tColor.g, tColor.b, 1.0f);
-														material.Power    = pProp->GetGlossiness();
+	return meshList.size();
+}
 
-				hasMaterial = true;
-			}
-		}  //  for (auto pIter=propList.begin(), pEnd=propList.end(); pIter != pEnd; ++pIter)
+//-----  getGeometryFromTriShape()  -------------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromTriShape(NiTriBasedGeomRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	NiTriShapeDataRef	pData(DynamicCast<NiTriShapeData>(pShape->GetData()));
 
-		//  parse properties (new style)
-		for (short idx(0); idx < 2; ++idx)
-		{
-			//  BSLightingShaderProperty
-			if (DynamicCast<BSLightingShaderProperty>(propListBS[idx]) != NULL)
-			{
-				BSShaderTextureSet*	pTexSet((DynamicCast<BSLightingShaderProperty>(propListBS[idx]))->GetTextureSet());
+	if (pData != NULL)
+	{
+		vector<TexCoord>	vecTexCoords;
+		vector<Vector3>		vecVertices (pData->GetVertices());
+		vector<Triangle>	vecTriangles(pData->GetTriangles());
+		vector<Vector3>		vecNormals  (pData->GetNormals());
+		vector<Color4>		vecColors   (pData->GetColors());
 
-				if (pTexSet != NULL)
-				{
-					baseTexture = CheckTextureName(pTexSet->GetTexture(0));
-				}
-			}
-			//  NiAlphaProperty
-			else if (DynamicCast<NiAlphaProperty>(propListBS[idx]) != NULL)
-			{
-				pAlpha = DecodeAlphaProperty(DynamicCast<NiAlphaProperty>(propListBS[idx]));
-			}
-		}  //  for (short idx(0); idx < 2; ++idx)
+		//  get uv set
+		if (pData->GetUVSetCount() > 0)			vecTexCoords = pData->GetUVSet(0);
 
-		//  collected all data needed => convert to DirectX
-		//  - transformation matrix
-		for (auto pIter=transformAry.rbegin(), pEnd=transformAry.rend(); pIter != pEnd; ++pIter)
-		{
-			locTransform *= *pIter;
-		}
-
-		if (_isBillboard)
-		{
-			float		scale(locTransform.GetScale());
-			Vector3		trans(locTransform.GetTranslation());
-
-			locTransform = Matrix44(trans, Matrix33(), scale);
-		}
-
-		//  - indices
-		unsigned int		countI     (vecTriangles.size()*3);
-		unsigned short*		pBufIndices(new unsigned short[countI]);
-
-		for (unsigned int i(0); i < countI; i+=3)
-		{
-			pBufIndices[i]   = vecTriangles[i/3].v1;
-			pBufIndices[i+1] = vecTriangles[i/3].v2;
-			pBufIndices[i+2] = vecTriangles[i/3].v3;
-		}
-
-		//  in case of non-collision
-		if (!_isCollision)
-		{
-			//  - vertices
-			unsigned int							countV      (vecVertices.size());
-			DirectXMeshModel::D3DCustomVertexFull*	pBufVertices(new DirectXMeshModel::D3DCustomVertexFull[countV]);
-			DirectXMeshModel*						pNewModel   (NULL);
-
-			for (unsigned int i(0); i < countV; ++i)
-			{
-				pBufVertices[i]._x        = vecVertices[i].x;
-				pBufVertices[i]._y        = vecVertices[i].y;
-				pBufVertices[i]._z        = vecVertices[i].z;
-				pBufVertices[i]._normal.x = vecNormals[i].x;
-				pBufVertices[i]._normal.y = vecNormals[i].y;
-				pBufVertices[i]._normal.z = vecNormals[i].z;
-				pBufVertices[i]._color    = !vecColors.empty() ? D3DXCOLOR(vecColors[i].r, vecColors[i].g, vecColors[i].b, 1.0f) : D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-				pBufVertices[i]._u        = (i < texCoordSize) ? vecTexCoords[i].u : 0.0f;
-				pBufVertices[i]._v        = (i < texCoordSize) ? vecTexCoords[i].v : 0.0f;
-			}
-
-			//  - material
-			if (!hasMaterial)
-			{
-				ZeroMemory(&material, sizeof(material));
-				material.Ambient = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-				material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-			}
-
-			//  - alpha
-			if ((pAlpha == NULL) && (pTmplAlphaProp != NULL))
-			{
-				pAlpha = DecodeAlphaProperty(pTmplAlphaProp);
-			}
-
-			//  create new model
-			if (pShapeLOD == NULL)
-			{
-				pNewModel = new DirectXMeshModel(Matrix44ToD3DXMATRIX(locTransform),
-																	   material,
-																	   pBufVertices,
-																	   countV,
-																	   pBufIndices,
-																	   countI,
-																	   baseTexture,
-																	   pAlpha,
-																	   _isBillboard,
-																	   _defWireframeColor,
-																	   _doubleSided
-																	 );
-			}
-			else
-			{
-				unsigned int	lodLevel[3] = { 0 };
-
-				lodLevel[0] = pShapeLOD->GetLODLevelSize(0);
-				lodLevel[1] = pShapeLOD->GetLODLevelSize(1) + lodLevel[0];
-				lodLevel[2] = pShapeLOD->GetLODLevelSize(2) + lodLevel[1];
-
-				pNewModel = new DirectXMeshModelLOD(Matrix44ToD3DXMATRIX(locTransform),
-																		 material,
-																		 pBufVertices,
-																		 countV,
-																		 pBufIndices,
-																		 countI,
-																		 baseTexture,
-																		 pAlpha,
-																		 _isBillboard,
-																		 _defWireframeColor,
-																		 _doubleSided,
-																		 lodLevel
-																		);
-
-				//  seet default render LOD
-				pNewModel->SetLODRenderLevel(_lodRenderLevel);
-			}
-
-			//  model view data
-			if (type.empty())		type = "- unknown -";
-			if (name.empty())
-			{
-				stringstream	sStream;
-
-				sStream << "Block-ID: " << pShape->internal_block_number;
-				name = sStream.str();
-			}
-
-			//  set visibility
-			if (!_showModel)	pNewModel->SetRenderMode(DXRM_NONE);
-
-			//  set model to add
-			pAddModel = pNewModel;
-		}
-		else  //  if (!_isCollision)
-		{
-			//  - vertices
-			unsigned int							countV      (vecVertices.size());
-			DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
-
-			for (unsigned int i(0); i < countV; ++i)
-			{
-				pBufVertices[i]._x     = vecVertices[i].x;
-				pBufVertices[i]._y     = vecVertices[i].y;
-				pBufVertices[i]._z     = vecVertices[i].z;
-				pBufVertices[i]._color = _defCollisionColor;
-			}
-
-			//  create new model
-			DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
-																		 pBufVertices,
-																		 countV,
-																		 pBufIndices,
-																		 countI,
-																		 _defCollisionColor
-																		);
-			//  model view data
-			if (type.empty())		type = "- unknown -";
-			if (name.empty())		name = "Collision";
-
-			//  set visibility
-			if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
-
-			//  set model to add
-			pAddModel = pNewModel;
-
-		}  //  else [if (!_isCollision)]
-
-		//  add model view data
-		pAddModel->SetNifData(name, type, pShape->internal_block_number);
-
-		//  append model to list
-		meshList.push_back(pAddModel);
+		//  get geometry from data
+		getGeometryFromData(vecVertices, vecTriangles, vecNormals, vecColors, vecTexCoords, pShape, meshList, transformAry, pTmplAlphaProp);
 
 	}  //  if (pData != NULL)
 
