@@ -25,6 +25,7 @@
 #include "obj/bhkMoppBvTreeShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
 #include "obj/bhkRigidBody.h"
+#include "obj/NiTriStrips.h"
 
 //  Havok includes
 #include "Common/Base/Types/Geometry/hkGeometry.h"
@@ -192,6 +193,17 @@ protected:
 	* are inserted in
 	*/
 	virtual unsigned int getGeometryFromTriShape(NiTriShapeRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	/**
+	* Get geometry from NiTriStrips
+	* 
+	* @param pShape    in: ptr. to NiTriStrips
+	* @param geometryAry    out: reference to vector of hkGeometry read geometries
+	* are inserted in
+	*/
+	virtual unsigned int getGeometryFromTriStrips(NiTriStripsRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	virtual unsigned int getGeometryFromShapeData(vector<Vector3>& vertices, vector<Triangle>& triangles, float factor, NiTriBasedGeomRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
 
 	/**
 	* Get geometry from NiNode

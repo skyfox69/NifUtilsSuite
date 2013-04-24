@@ -16,6 +16,7 @@
 //  Niflib includes
 #include "niflib.h"
 #include "obj/NiTriShapeData.h"
+#include "obj/NiTriStripsData.h"
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/rootcollisionnode.h"
 
@@ -51,79 +52,97 @@ unsigned int NifCollisionUtility::getGeometryFromTriShape(NiTriShapeRef pShape, 
 
 	if (pData != NULL)
 	{
-		hkGeometry						tmpGeo;
-		vector<Vector3>					vertices (pData->GetVertices());
-		vector<Triangle>				triangles(pData->GetTriangles());
-		hkArray<hkVector4>&				vertAry  (tmpGeo.m_vertices);
-		hkArray<hkGeometry::Triangle>&	triAry   (tmpGeo.m_triangles);
-		Vector3							tVector;
-		unsigned int					material (_defaultMaterial);
+		getGeometryFromShapeData(pData->GetVertices(), pData->GetTriangles(), 0.0143f, &(*pShape), geometryMap, transformAry);
+	}
 
-		//  add local transformation to list
-		transformAry.push_back(pShape->GetLocalTransform());
+	return geometryMap.size();
+}
 
-		//  clear arrays
-		vertAry.clear();
-		triAry.clear();
+/*---------------------------------------------------------------------------*/
+unsigned int NifCollisionUtility::getGeometryFromTriStrips(NiTriStripsRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry)
+{
+	NiTriStripsDataRef	pData(DynamicCast<NiTriStripsData>(pShape->GetData()));
 
-		//  get vertices
-		for (unsigned int idx(0); idx < vertices.size(); ++idx)
+	if (pData != NULL)
+	{
+		getGeometryFromShapeData(pData->GetVertices(), pData->GetTriangles(), 0.0143f, &(*pShape), geometryMap, transformAry);
+	}
+
+	return geometryMap.size();
+}
+
+/*---------------------------------------------------------------------------*/
+unsigned int NifCollisionUtility::getGeometryFromShapeData(vector<Vector3>& vertices, vector<Triangle>& triangles, float factor, NiTriBasedGeomRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry)
+{
+	hkGeometry						tmpGeo;
+	hkArray<hkVector4>&				vertAry (tmpGeo.m_vertices);
+	hkArray<hkGeometry::Triangle>&	triAry  (tmpGeo.m_triangles);
+	Vector3							tVector;
+	unsigned int					material(_defaultMaterial);
+
+	//  add local transformation to list
+	transformAry.push_back(pShape->GetLocalTransform());
+
+	//  clear arrays
+	vertAry.clear();
+	triAry.clear();
+
+	//  get vertices
+	for (unsigned int idx(0); idx < vertices.size(); ++idx)
+	{
+		//  get vertex
+		tVector = vertices[idx];
+
+		//  transform vertex to global coordinates
+		for (int t((int) (transformAry.size())-1); t >= 0; --t)
 		{
-			//  get vertex
-			tVector = vertices[idx];
-
-			//  transform vertex to global coordinates
-			for (int t((int) (transformAry.size())-1); t >= 0; --t)
-			{
-				tVector = transformAry[t] * tVector;
-			}
-
-			//  scale final vertex
-			tVector *= 0.0143f;
-
-			//  add vertex to tmp. array
-			vertAry.pushBack(hkVector4(tVector.x, tVector.y, tVector.z));
-
-		}  //  for (unsigned int idx(0); idx < vertices.size(); ++idx)
-
-		//  map material to geometry/triangles
-		switch (_mtHandling)
-		{
-			case NCU_MT_SINGLE:				//  one material for all
-			{
-				material = _mtMapping[-1];
-				break;
-			}
-
-			case NCU_MT_MATMAP:				//  material defined by node id
-			{
-				material = _mtMapping[pShape->internal_block_number];
-				break;
-			}
-
-			case NCU_MT_NITRISHAPE_NAME:	//  material defined by node name
-			{
-				material = _materialList.getMaterialCode(pShape->GetName());
-				break;
-			}
+			tVector = transformAry[t] * tVector;
 		}
 
-		//  get triangles
-		for (unsigned int idx(0); idx < triangles.size(); ++idx)
-		{
-			hkGeometry::Triangle	tTri;
+		//  scale final vertex
+		tVector *= factor;
 
-			tTri.set(triangles[idx].v1, triangles[idx].v2, triangles[idx].v3, material);
-			triAry.pushBack(tTri);
+		//  add vertex to tmp. array
+		vertAry.pushBack(hkVector4(tVector.x, tVector.y, tVector.z));
+
+	}  //  for (unsigned int idx(0); idx < vertices.size(); ++idx)
+
+	//  map material to geometry/triangles
+	switch (_mtHandling)
+	{
+		case NCU_MT_SINGLE:				//  one material for all
+		{
+			material = _mtMapping[-1];
+			break;
 		}
 
-		//  add geometry to result array
-		geometryMap.push_back(tmpGeo);
+		case NCU_MT_MATMAP:				//  material defined by node id
+		{
+			material = _mtMapping[pShape->internal_block_number];
+			break;
+		}
 
-		//  remove local transformation from array
-		transformAry.pop_back();
+		case NCU_MT_NITRISHAPE_NAME:	//  material defined by node name
+		{
+			material = _materialList.getMaterialCode(pShape->GetName());
+			break;
+		}
+	}
 
-	}  //  if (pData != NULL)
+	//  get triangles
+	for (unsigned int idx(0); idx < triangles.size(); ++idx)
+	{
+		hkGeometry::Triangle	tTri;
+
+		tTri.set(triangles[idx].v1, triangles[idx].v2, triangles[idx].v3, material);
+		triAry.pushBack(tTri);
+	}
+
+	//  add geometry to result array
+	geometryMap.push_back(tmpGeo);
+
+	//  remove local transformation from array
+	transformAry.pop_back();
 
 	return geometryMap.size();
 }
@@ -143,6 +162,11 @@ unsigned int NifCollisionUtility::getGeometryFromNode(NiNodeRef pNode, vector<hk
 		if (DynamicCast<NiTriShape>(*ppIter) != NULL)
 		{
 			getGeometryFromTriShape(DynamicCast<NiTriShape>(*ppIter), geometryMap, transformAry);
+		}
+		//  NiTriStrips
+		else if (DynamicCast<NiTriStrips>(*ppIter) != NULL)
+		{
+			getGeometryFromTriStrips(DynamicCast<NiTriStrips>(*ppIter), geometryMap, transformAry);
 		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
@@ -289,6 +313,11 @@ unsigned int NifCollisionUtility::getGeometryFromNifFile(string fileName, vector
 		if (DynamicCast<NiTriShape>(*ppIter) != NULL)
 		{
 			getGeometryFromTriShape(DynamicCast<NiTriShape>(*ppIter), geometryMapShape, transformAry);
+		}
+		//  NiTriStrips
+		else if (DynamicCast<NiTriStrips>(*ppIter) != NULL)
+		{
+			getGeometryFromTriStrips(DynamicCast<NiTriStrips>(*ppIter), geometryMapShape, transformAry);
 		}
 		//  RootCollisionNode
 		else if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
