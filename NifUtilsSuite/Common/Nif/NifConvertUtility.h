@@ -21,6 +21,7 @@
 #include "obj/nialphaproperty.h"
 #include "obj/NiTriShapeData.h"
 #include "obj/BSLightingShaderProperty.h"
+#include "obj/NiTriStrips.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  return codes
@@ -207,6 +208,15 @@ protected:
 		* @param tmplAlphaProp    in: Template for alpha properties
 		*/
 	virtual NiTriShapeRef convertNiTriShape(NiTriShapeRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
+
+	/**
+		* Convert NiTriStrips and properties/geometry
+		* 
+		* @param srcNode    in: Source NiTriStrips node
+		* @param tmplNode    in: Template NiTriShape node
+		* @param tmplAlphaProp    in: Template for alpha properties
+		*/
+	virtual NiTriShapeRef convertNiTriStrips(NiTriStripsRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
 	/**
 		* Create tangent space data
