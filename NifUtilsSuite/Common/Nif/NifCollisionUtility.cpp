@@ -19,6 +19,8 @@
 #include "obj/NiTriStripsData.h"
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/rootcollisionnode.h"
+#include "obj/bhkPackedNiTriStripsShape.h"
+#include "obj/hkPackedNiTriStripsData.h"
 
 //  Havok includes
 #include "Physics/Collide/Shape/Compound/Tree/Mopp/hkpMoppBvTreeShape.h"
@@ -148,12 +150,121 @@ unsigned int NifCollisionUtility::getGeometryFromShapeData(vector<Vector3>& vert
 }
 
 /*---------------------------------------------------------------------------*/
-unsigned int NifCollisionUtility::getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry)
+unsigned int NifCollisionUtility::getGeometryFromCollObject(bhkCollisionObjectRef pModel, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry)
+{
+	//  search for embedded bhkCompressedMeshShapeData
+	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pModel->GetBody()));
+	if (pRBody == NULL)		return geometryMap.size(); 
+
+	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
+	if (pMBTS == NULL)		return geometryMap.size();
+
+	bhkPackedNiTriStripsShapeRef	pShape(DynamicCast<bhkPackedNiTriStripsShape>(pMBTS->GetShape()));
+	if (pShape == NULL)		return geometryMap.size();
+
+	hkPackedNiTriStripsData*	pData(DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
+	if (pData == NULL)		return geometryMap.size();
+
+	//  found some known collision data
+	hkGeometry						tmpGeo;
+	hkArray<hkVector4>&				vertAry  (tmpGeo.m_vertices);
+	hkArray<hkGeometry::Triangle>&	triAry   (tmpGeo.m_triangles);
+	vector<OblivionSubShape>		subShapes(pShape->GetSubShapes());
+	vector<Vector3>					vertices (pData->GetVertices());
+	vector<hkTriangle>				triangles(pData->GetHavokTriangles());
+	hkTriangle&						triangle (triangles[0]);
+	Vector3							tVector;
+	unsigned int					material (_defaultMaterial);
+	unsigned int					verOffset(0);
+	unsigned int					triIndex (0);
+
+	//  for each sub shape
+	for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+	{
+		//  reset array
+		vertAry.clear();
+		triAry.clear();
+
+		//  get vertices
+		for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+		{
+			tVector = vertices[idx];
+
+			//  transform vertex to global coordinates
+			for (int t((int) (transformAry.size())-1); t >= 0; --t)
+			{
+				tVector = transformAry[t] * tVector;
+			}
+
+			//  scale final vertex
+			tVector /= 10.0f;
+
+			//  add vertex to tmp. array
+			vertAry.pushBack(hkVector4(tVector.x, tVector.y, tVector.z));
+
+		}  //  for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+
+		//  map material to geometry/triangles
+		switch (_mtHandling)
+		{
+			case NCU_MT_NITRISHAPE_NAME:	//  material defined by node name
+			case NCU_MT_SINGLE:				//  one material for all
+			{
+				material = _mtMapping[-1];
+				break;
+			}
+
+			case NCU_MT_MATMAP:				//  material defined by node id
+			{
+				material = _mtMapping[pShape->internal_block_number];
+				break;
+			}
+		}
+
+		//  get triangles
+		for (; triIndex < triangles.size(); ++triIndex)
+		{
+			hkGeometry::Triangle	tTri;
+
+			//  check vertex bounds
+			triangle = triangles[triIndex];
+			if ((triangle.triangle.v1 >= (pIter->numVertices + verOffset)) ||
+				(triangle.triangle.v2 >= (pIter->numVertices + verOffset)) ||
+				(triangle.triangle.v3 >= (pIter->numVertices + verOffset))
+			   )
+			{
+				break;
+			}
+
+			//  add triangle
+			tTri.set(triangle.triangle.v1-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v3-verOffset, material);
+			triAry.pushBack(tTri);
+		}
+
+		//  add geometry to result array
+		geometryMap.push_back(tmpGeo);
+
+		//  increase vertex offset
+		verOffset += pIter->numVertices;
+
+	}  //  for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+
+	return geometryMap.size();
+}
+
+/*---------------------------------------------------------------------------*/
+unsigned int NifCollisionUtility::getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry)
 {
 	vector<NiAVObjectRef>	childList(pNode->GetChildren());
 
 	//  add own translation to list
 	transformAry.push_back(pNode->GetLocalTransform());
+
+	//  check for node collision object
+	if (DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()) != NULL)
+	{
+		getGeometryFromCollObject(DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()), geometryMapColl, transformAry);
+	}
 
 	//  iterate over children
 	for (vector<NiAVObjectRef>::iterator ppIter = childList.begin(); ppIter != childList.end(); ppIter++)
@@ -171,7 +282,7 @@ unsigned int NifCollisionUtility::getGeometryFromNode(NiNodeRef pNode, vector<hk
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
-			getGeometryFromNode(DynamicCast<NiNode>(*ppIter), geometryMap, transformAry);
+			getGeometryFromNode(DynamicCast<NiNode>(*ppIter), geometryMap, geometryMapColl, transformAry);
 		}
 	}  //  for (vector<NiAVObjectRef>::iterator ppIter = childList.begin(); ppIter != childList.end(); ppIter++)
 
@@ -306,6 +417,12 @@ unsigned int NifCollisionUtility::getGeometryFromNifFile(string fileName, vector
 	//  BUGFIX:  don't consider transform of root node for collision 'cause used for both: collision AND shapes
 	//transformAry.push_back(pRootInput->GetLocalTransform());
 
+	//  check for root collision object
+	if (DynamicCast<bhkCollisionObject>(pRootInput->GetCollisionObject()) != NULL)
+	{
+		getGeometryFromCollObject(DynamicCast<bhkCollisionObject>(pRootInput->GetCollisionObject()), geometryMapColl, transformAry);
+	}
+
 	//  iterate over source nodes and get geometry
 	for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ppIter != srcChildList.end(); ppIter++)
 	{
@@ -322,14 +439,14 @@ unsigned int NifCollisionUtility::getGeometryFromNifFile(string fileName, vector
 		//  RootCollisionNode
 		else if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
 		{
-			getGeometryFromNode(&(*DynamicCast<RootCollisionNode>(*ppIter)), geometryMapColl, transformAry);
+			getGeometryFromNode(&(*DynamicCast<RootCollisionNode>(*ppIter)), geometryMapColl, geometryMapColl, transformAry);
 		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
-			getGeometryFromNode(DynamicCast<NiNode>(*ppIter), geometryMapShape, transformAry);
+			getGeometryFromNode(DynamicCast<NiNode>(*ppIter), geometryMapShape, geometryMapColl, transformAry);
 		}
-	}
+	}  //  for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ppIter != srcChildList.end(); ppIter++)
 
 	//  which geomertry should be used?
 	if ((_cnHandling == NCU_CN_COLLISION) || (_cnHandling == NCU_CN_FALLBACK))

@@ -205,6 +205,8 @@ protected:
 
 	virtual unsigned int getGeometryFromShapeData(vector<Vector3>& vertices, vector<Triangle>& triangles, float factor, NiTriBasedGeomRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
 
+	virtual unsigned int getGeometryFromCollObject(bhkCollisionObjectRef pModel, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
 	/**
 	* Get geometry from NiNode
 	* 
@@ -212,7 +214,7 @@ protected:
 	* @param geometryAry    out: reference to vector of hkGeometry read geometries
 	* are inserted in
 	*/
-	virtual unsigned int getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+	virtual unsigned int getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry);
 
 	/**
 	* Get geometry from OBJ-file
