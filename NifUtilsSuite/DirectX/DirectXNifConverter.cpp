@@ -41,6 +41,9 @@
 DirectXNifConverter::DirectXNifConverter()
 	:	_defWireframeColor(0x00FFFFFF),
 		_defCollisionColor(0x00FFFF00),
+		_defAmbientColor  (0x00707070),
+		_defDiffuseColor  (0x00E5E5E5),
+		_defSpecularColor (0x00FFFFFF),
 		_lodRenderLevel   (2),
 		_isBillboard      (false),
 		_isCollision      (false),
@@ -102,6 +105,33 @@ DWORD DirectXNifConverter::SetDefaultCollisionColor(const DWORD color)
 	DWORD	oldColor(_defCollisionColor);
 
 	_defCollisionColor = color;
+	return oldColor;
+}
+
+//-----  SetDefaultAmbientColor()  --------------------------------------------
+DWORD DirectXNifConverter::SetDefaultAmbientColor(const DWORD color)
+{
+	DWORD	oldColor(_defAmbientColor);
+
+	_defAmbientColor = color;
+	return oldColor;
+}
+
+//-----  SetDefaultDiffuseColor()  --------------------------------------------
+DWORD DirectXNifConverter::SetDefaultDiffuseColor(const DWORD color)
+{
+	DWORD	oldColor(_defDiffuseColor);
+
+	_defDiffuseColor = color;
+	return oldColor;
+}
+
+//-----  SetDefaultSpecularColor()  -------------------------------------------
+DWORD DirectXNifConverter::SetDefaultSpecularColor(const DWORD color)
+{
+	DWORD	oldColor(_defSpecularColor);
+
+	_defSpecularColor = color;
 	return oldColor;
 }
 
@@ -392,8 +422,9 @@ unsigned int DirectXNifConverter::getGeometryFromData(vector<Vector3>& vecVertic
 		if (!hasMaterial)
 		{
 			ZeroMemory(&material, sizeof(material));
-			material.Ambient = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-			material.Diffuse = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+			material.Ambient  = D3DXCOLOR(_defAmbientColor);
+			material.Diffuse  = D3DXCOLOR(_defDiffuseColor);
+			material.Specular = D3DXCOLOR(_defSpecularColor);
 		}
 
 		//  - alpha

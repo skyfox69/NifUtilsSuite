@@ -49,6 +49,7 @@ class CDirectXGraphics
 		virtual	void					dxCreate      (CRect rect, CWnd* pParent, CWnd* pSelf);
 		virtual bool					dxShutdown    ();
 		virtual void					dxSetCameraPos(const DirecXCameraPos pos);
+		virtual	void					dxResetColors ();
 
 		virtual	vector<DirectXMesh*>&	dxGetMeshList  () { return _meshList; }
 		virtual void					dxResetMeshList();

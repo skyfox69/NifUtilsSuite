@@ -27,6 +27,9 @@ COptionsPageModelView::COptionsPageModelView(CWnd* pParent /*=NULL*/)
 	_defColorBack.SetColor(argb2bgr(pConfig->_mvDefBackColor));
 	_defColorWire.SetColor(argb2bgr(pConfig->_mvDefWireColor));
 	_defColorColl.SetColor(argb2bgr(pConfig->_mvDefCollColor));
+	_defColorAmbi.SetColor(argb2bgr(pConfig->_mvDefAmbiColor));
+	_defColorDiff.SetColor(argb2bgr(pConfig->_mvDefDiffColor));
+	_defColorSpec.SetColor(argb2bgr(pConfig->_mvDefSpecColor));
 	_showAxes      = pConfig->_mvShowAxes      ? 1 : 0;
 	_showModel     = pConfig->_mvShowModel     ? 1 : 0;
 	_showCollision = pConfig->_mvShowCollision ? 1 : 0;
@@ -55,6 +58,9 @@ void COptionsPageModelView::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_BT_COL_BACKGROUND, _defColorBack);
 	DDX_Control(pDX, IDC_BT_COL_COLLISION,  _defColorColl);
 	DDX_Control(pDX, IDC_BT_COL_WIREFRAME,  _defColorWire);
+	DDX_Control(pDX, IDC_BT_COL_AMBIENT,    _defColorAmbi);
+	DDX_Control(pDX, IDC_BT_COL_DIFFUSE,    _defColorDiff);
+	DDX_Control(pDX, IDC_BT_COL_SPECULAR,   _defColorSpec);
 	DDX_Control(pDX, IDC_VLB_TEXT_PATH,     _vsListBox);
 	DDX_Control(pDX, IDC_CB_LOD,            _levelLOD);
 }
@@ -83,6 +89,9 @@ void COptionsPageModelView::OnOK()
 	pConfig->_mvDefBackColor  = bgr2argb(_defColorBack.GetColor());
 	pConfig->_mvDefWireColor  = bgr2argb(_defColorWire.GetColor());
 	pConfig->_mvDefCollColor  = bgr2argb(_defColorColl.GetColor());
+	pConfig->_mvDefAmbiColor  = bgr2argb(_defColorAmbi.GetColor());
+	pConfig->_mvDefDiffColor  = bgr2argb(_defColorDiff.GetColor());
+	pConfig->_mvDefSpecColor  = bgr2argb(_defColorSpec.GetColor());
 	pConfig->_mvTexturePathList.clear();
 	for (int i(0), count(_vsListBox.GetCount()); i < count; ++i)
 	{

@@ -28,6 +28,9 @@ Configuration::Configuration(const string fileName)
 		_mvDefBackColor  (0xFF000000),
 		_mvDefCollColor  (0xFFFF0000),
 		_mvDefWireColor  (0xFFFFFF00),
+		_mvDefAmbiColor  (0xFF707070),
+		_mvDefDiffColor  (0xFFE5E5E5),
+		_mvDefSpecColor  (0xFFFFFFFF),
 		_ceSaveVersion   (NUS_USERVER_1134),
 		_mvDefLOD        (2),
 		_lastOpenView    (0),
@@ -334,6 +337,9 @@ bool Configuration::read()
 			readAttribute(content, "DefaultBackColor>",        _mvDefBackColor,    offset);
 			readAttribute(content, "DefaultWireColor>",        _mvDefWireColor,    offset);
 			readAttribute(content, "DefaultCollColor>",        _mvDefCollColor,    offset);
+			readAttribute(content, "DefaultAmbiColor>",        _mvDefAmbiColor,    offset);
+			readAttribute(content, "DefaultDiffColor>",        _mvDefDiffColor,    offset);
+			readAttribute(content, "DefaultSpecColor>",        _mvDefSpecColor,    offset);
 			readAttribute(content, "MvShowGrid>",              _mvShowGrid,        offset);
 			readAttribute(content, "MvAlterRows>",             _mvAlterRows,       offset);
 			readAttribute(content, "MvForceDDS>",              _mvForceDDS,        offset);
@@ -453,6 +459,9 @@ bool Configuration::write()
 		oStr << "<DefaultBackColor>"      << _mvDefBackColor          << "</DefaultBackColor>";
 		oStr << "<DefaultWireColor>"      << _mvDefWireColor          << "</DefaultWireColor>";
 		oStr << "<DefaultCollColor>"      << _mvDefCollColor          << "</DefaultCollColor>";
+		oStr << "<DefaultAmbiColor>"      << _mvDefAmbiColor          << "</DefaultAmbiColor>";
+		oStr << "<DefaultDiffColor>"      << _mvDefDiffColor          << "</DefaultDiffColor>";
+		oStr << "<DefaultSpecColor>"      << _mvDefSpecColor          << "</DefaultSpecColor>";
 		oStr << "<MvShowGrid>"            << _mvShowGrid              << "</MvShowGrid>";
 		oStr << "<MvAlterRows>"           << _mvAlterRows             << "</MvAlterRows>";
 		oStr << "<MvForceDDS>"            << _mvForceDDS              << "</MvForceDDS>";

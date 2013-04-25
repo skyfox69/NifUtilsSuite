@@ -38,6 +38,9 @@ class DirectXNifConverter
 		vector<string>				_texturePathList;
 		DWORD						_defWireframeColor;
 		DWORD						_defCollisionColor;
+		DWORD						_defAmbientColor;
+		DWORD						_defDiffuseColor;
+		DWORD						_defSpecularColor;
 		unsigned short				_lodRenderLevel;
 		bool						_isBillboard;
 		bool						_isCollision;
@@ -76,5 +79,8 @@ class DirectXNifConverter
 		virtual	bool				SetDoubleSided          (const bool doubleSided);
 		virtual	DWORD				SetDefaultWireframeColor(const DWORD color);
 		virtual	DWORD				SetDefaultCollisionColor(const DWORD color);
+		virtual	DWORD				SetDefaultAmbientColor  (const DWORD color);
+		virtual	DWORD				SetDefaultDiffuseColor  (const DWORD color);
+		virtual	DWORD				SetDefaultSpecularColor (const DWORD color);
 		virtual	unsigned int		SetDefaultLODRenderLevel(const unsigned int level);
 };

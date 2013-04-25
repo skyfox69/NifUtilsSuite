@@ -64,6 +64,9 @@ class Configuration
 				unsigned int			_mvDefCollColor;
 				unsigned int			_mvDefWireColor;
 				unsigned int			_mvDefBackColor;
+				unsigned int			_mvDefAmbiColor;
+				unsigned int			_mvDefDiffColor;
+				unsigned int			_mvDefSpecColor;
 				unsigned int			_mvDefLOD;
 				unsigned int			_ceSaveVersion;
 				int						_ncVtFlagsRemove;

@@ -240,6 +240,9 @@ BOOL CFormModelViewerView::BroadcastEvent(WORD event, void* pParameter)
 			_snprintf(cBuffer, 10, "%d", pConfig->_mvDefLOD);
 			GetDlgItem(IDC_ST_LOD)->SetWindowText(CString(cBuffer));
 
+			//  DXColors
+			_directXView.dxResetColors();
+
 			break;
 		}
 
@@ -304,6 +307,9 @@ void CFormModelViewerView::LoadModel(const string fileName)
 		dxConverter.SetForceDDS             (pConfig->_mvForceDDS);
 		dxConverter.SetDefaultWireframeColor(pConfig->_mvDefWireColor);
 		dxConverter.SetDefaultCollisionColor(pConfig->_mvDefCollColor);
+		dxConverter.SetDefaultAmbientColor  (pConfig->_mvDefAmbiColor);
+		dxConverter.SetDefaultDiffuseColor  (pConfig->_mvDefDiffColor);
+		dxConverter.SetDefaultSpecularColor (pConfig->_mvDefSpecColor);
 		dxConverter.SetTexturePathList      (pConfig->_mvTexturePathList);
 		dxConverter.SetDoubleSided          (pConfig->_mvDoubleSided);
 
