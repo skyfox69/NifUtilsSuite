@@ -34,6 +34,7 @@ NifConvertUtility::NifConvertUtility()
 		_updateTangentSpace(true),
 		_reorderProperties (true),
 		_forceDDS          (true),
+		_cleanTreeCollision(true),
 		_logCallback       (NULL)
 {}
 
@@ -114,12 +115,20 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 		{
 			pDstNode->AddChild(&(*convertNiTriStrips(DynamicCast<NiTriStrips>(*ppIter), pTmplNode, pTmplAlphaProp)));
 		}
+		//  RootCollisionNode
+		else if ((DynamicCast<RootCollisionNode>(*ppIter) != NULL) && _cleanTreeCollision)
+		{
+			//  ignore node
+		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
 			pDstNode->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pTmplNode, pRootNode, pTmplAlphaProp)));
 		}
 	}
+
+	//  remove collision object if set
+	if (_cleanTreeCollision)	pDstNode->SetCollisionObject(NULL);
 
 	return pDstNode;
 }
@@ -661,7 +670,7 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 			pRootOutput->AddChild(&(*convertNiTriStrips(DynamicCast<NiTriStrips>(*ppIter), pNiTriShapeTmpl)));
 		}
 		//  RootCollisionNode
-		else if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
+		else if ((DynamicCast<RootCollisionNode>(*ppIter) != NULL) && _cleanTreeCollision)
 		{
 			//  ignore node
 		}
@@ -671,6 +680,9 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 			pRootOutput->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pNiTriShapeTmpl, pRootOutput)));
 		}
 	}
+
+	//  remove collision object if set
+	if (_cleanTreeCollision)	pRootOutput->SetCollisionObject(NULL);
 
 	//  write missing textures to log - as block
 	for (auto pIter=_newTextures.begin(), pEnd=_newTextures.end(); pIter != pEnd; ++pIter)
@@ -814,6 +826,12 @@ void NifConvertUtility::setReorderProperties(bool doReorder)
 void NifConvertUtility::setForceDDS(bool doForce)
 {
 	_forceDDS = doForce;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setCleanTreeCollision(bool doClean)
+{
+	_cleanTreeCollision = doClean;
 }
 
 /*---------------------------------------------------------------------------*/

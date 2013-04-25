@@ -29,6 +29,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,  "Open source in Nif
 						                   {IDC_CK_UP_TANGENT, "Calculate normals and binormals in NiTriShapeData"},
 						                   {IDC_CK_REORDER,    "Make sure properties of NiTriShape are in valid order"},
 						                   {IDC_CK_END_DDS,    "Force texture names with ending .DDS"},
+										   {IDC_CK_CLEAN_COLL, "Remove all known collision nodes from target NIF"},
 						                   {IDC_RD_GEN_COL,    "Add default vertext color in case of set flag SLSF2_Vertex_Colors"},
 						                   {IDC_RD_REM_FLAG,   "Remove flag SLSF2_Vertex_Colors in case of missing vertex colors"},
 						                   {IDC_CB_TEXTURE,    "Define path to texture files written to BSShaderTextureSet"},
@@ -407,6 +408,7 @@ BOOL CFormNifConvertView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_CK_UP_TANGENT))->SetCheck(pConfig->_ncUpTangent   ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_REORDER)   )->SetCheck(pConfig->_ncReorderProp ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_END_DDS)   )->SetCheck(pConfig->_ncForceDDS    ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_CLEAN_COLL))->SetCheck(pConfig->_ncRemoveColl  ? BST_CHECKED : BST_UNCHECKED);
 
 			break;
 		}
@@ -459,6 +461,7 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 	ncUtility.setUpdateTangentSpace (((CButton*) GetDlgItem(IDC_CK_UP_TANGENT))->GetCheck() != FALSE);
 	ncUtility.setReorderProperties  (((CButton*) GetDlgItem(IDC_CK_REORDER)   )->GetCheck() != FALSE);
 	ncUtility.setForceDDS           (((CButton*) GetDlgItem(IDC_CK_END_DDS)   )->GetCheck() != FALSE);
+	ncUtility.setCleanTreeCollision (((CButton*) GetDlgItem(IDC_CK_CLEAN_COLL))->GetCheck() != FALSE);
 
 	//  convert NIF
 	ncReturn = ncUtility.convertShape(CStringA(_fileNameIn).GetString(), CStringA(_fileNameOut).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());

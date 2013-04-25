@@ -24,6 +24,7 @@ class COptionsPageNifConvert : public CPropertyPage
 				int				_upTangent;
 				int				_reorderProp;
 				int				_forceDDS;
+				int				_removeColl;
 
 	protected:
 		virtual	void			DoDataExchange(CDataExchange* pDX);

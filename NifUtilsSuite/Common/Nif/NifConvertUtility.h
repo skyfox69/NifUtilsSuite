@@ -108,6 +108,12 @@ public:
 	virtual void setForceDDS(bool doForce);
 
 	/**
+		* 
+		* @param doClean    in: true: remove all collision nodes before saving
+		*/
+	virtual void setCleanTreeCollision(bool doClean);
+
+	/**
 		* Get list of user messages
 		*/
 	virtual vector<string>& getUserMessages();
@@ -180,6 +186,8 @@ protected:
 		* force texture names having DDS ending
 		*/
 	bool _forceDDS;
+
+	bool _cleanTreeCollision;
 
 	/**
 		* Get NiNode from NIF-file

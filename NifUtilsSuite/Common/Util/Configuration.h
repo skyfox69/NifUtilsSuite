@@ -79,6 +79,7 @@ class Configuration
 				bool					_ncUpTangent;
 				bool					_ncReorderProp;
 				bool					_ncForceDDS;
+				bool					_ncRemoveColl;
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;
