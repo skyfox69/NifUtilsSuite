@@ -187,8 +187,6 @@ protected:
 
 	bool _mergeCollision;
 
-	bool _replaceCollision;
-
 	unsigned int _saveAsVersion;
 
 	/**
@@ -283,4 +281,6 @@ protected:
 	virtual bool writeChunkDataAsNif(string fileName, vector<NifChunkData>& chunkDataList);
 
 	virtual void cleanTreeCollision(NiNodeRef pNode);
+
+	virtual bool parseTreeCollision(NiNodeRef pNode, bhkCollisionObjectRef pCollNodeTmpl, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry);
 };

@@ -42,8 +42,7 @@ NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 		_defaultMaterial   (0),
 		_generateNormals   (true),
 		_scaleToModel      (true),
-		_mergeCollision    (true),
-		_replaceCollision  (false)
+		_mergeCollision    (true)
 {}
 
 /*---------------------------------------------------------------------------*/
@@ -416,10 +415,6 @@ unsigned int NifCollisionUtility::getGeometryFromNifFile(string fileName, vector
 	//  get list of children from input node
 	srcChildList = pRootInput->GetChildren();
 
-	//  add own transform to list
-	//  BUGFIX:  don't consider transform of root node for collision 'cause used for both: collision AND shapes
-	//transformAry.push_back(pRootInput->GetLocalTransform());
-
 	//  check for root collision object
 	if (DynamicCast<bhkCollisionObject>(pRootInput->GetCollisionObject()) != NULL)
 	{
@@ -515,6 +510,7 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 	bhkCollisionObjectRef	pCollNodeTmpl(NULL);
 	vector<hkGeometry>		geometryMap;
 	bool					fakedRoot    (false);
+	bool					wasReplaced  (false);
 
 	//  test on existing file names
 	if (fileNameCollSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
@@ -527,49 +523,11 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 		_mtMapping.clear();
 	}
 
-	//  detect if source is target for special handling
-	_replaceCollision = !_mergeCollision && (fileNameCollSrc == fileNameNifDst);
-
 	//  initialize user messages
 	_userMessages.clear();
 	logMessage(NCU_MSG_TYPE_INFO, "CollSource:  "   + (fileNameCollSrc.empty() ? "- none -" : fileNameCollSrc));
 	logMessage(NCU_MSG_TYPE_INFO, "CollTemplate:  " + (fileNameCollTmpl.empty() ? "- none -" : fileNameCollTmpl));
 	logMessage(NCU_MSG_TYPE_INFO, "Destination:  "  + (fileNameNifDst.empty() ? "- none -" : fileNameNifDst));
-
-	//  get geometry data
-	switch (fileNameCollSrc[fileNameCollSrc.size() - 3])
-	{
-		//  from OBJ file
-		case 'O':
-		case 'o':
-		{
-			logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from OBJ.");
-			getGeometryFromObjFile(fileNameCollSrc, geometryMap);
-			break;
-		}
-		//  from NIF file
-		case 'N':
-		case 'n':
-		{
-			logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from NIF.");
-			getGeometryFromNifFile(fileNameCollSrc, geometryMap);
-			break;
-		}
-		//  from 3DS file
-		case '3':
-		{
-			//  would be nice ;-)
-			logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from 3DS.");
-			break;
-		}
-	}  //  switch (fileNameCollSrc[fileNameCollSrc.size() - 3])
-
-	//  early break on missing geometry data
-	if (geometryMap.size() <= 0)
-	{
-		logMessage(NCU_MSG_TYPE_ERROR, "Can't get geometry from input file.");
-		return NCU_ERROR_CANT_GET_GEOMETRY;
-	}
 
 	//  get template nif
 	pRootTemplate = DynamicCast<BSFadeNode>(ReadNifTree((const char*) fileNameCollTmpl.c_str()));
@@ -595,14 +553,65 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 		return NCU_ERROR_CANT_OPEN_INPUT;
 	}
 
-	//  create collision node
-	bhkCollisionObjectRef	pCollNodeDest(createCollNode(geometryMap, pCollNodeTmpl, pRootInput));
+	//  detect if source is target for replacement handling
+	if (!_mergeCollision && (fileNameCollSrc == fileNameNifDst))
+	{
+		vector<hkGeometry>		geometryMapCollLocal;
+		vector<Matrix44>		transformAry;
 
-	//  remove all collision sub nodes when not replacing local collisions
-	if (!_replaceCollision)		cleanTreeCollision(pRootInput);
+		logMessage(NCU_MSG_TYPE_INFO, "!!! Using replace-node-method due to target is source !!!");
 
-	//  add collision node to target
-	pRootInput->SetCollisionObject(pCollNodeDest);
+		//  replace each collision node with new style one
+		wasReplaced = parseTreeCollision(pRootInput, pCollNodeTmpl, geometryMapCollLocal, transformAry);
+	}
+
+	if (!wasReplaced)
+	{
+		//  get geometry data
+		switch (fileNameCollSrc[fileNameCollSrc.size() - 3])
+		{
+			//  from OBJ file
+			case 'O':
+			case 'o':
+			{
+				logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from OBJ.");
+				getGeometryFromObjFile(fileNameCollSrc, geometryMap);
+				break;
+			}
+			//  from NIF file
+			case 'N':
+			case 'n':
+			{
+				logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from NIF.");
+				getGeometryFromNifFile(fileNameCollSrc, geometryMap);
+				break;
+			}
+			//  from 3DS file
+			case '3':
+			{
+				//  would be nice ;-)
+				logMessage(NCU_MSG_TYPE_INFO, "Getting geometry from 3DS.");
+				break;
+			}
+		}  //  switch (fileNameCollSrc[fileNameCollSrc.size() - 3])
+
+		//  early break on missing geometry data
+		if (geometryMap.size() <= 0)
+		{
+			logMessage(NCU_MSG_TYPE_ERROR, "Can't get geometry from input file.");
+			return NCU_ERROR_CANT_GET_GEOMETRY;
+		}
+
+		//  create collision node
+		bhkCollisionObjectRef	pCollNodeDest(createCollNode(geometryMap, pCollNodeTmpl, pRootInput));
+
+		//  remove all collision sub nodes
+		cleanTreeCollision(pRootInput);
+
+		//  add collision node to target
+		pRootInput->SetCollisionObject(pCollNodeDest);
+
+	}  //  if (!wasReplaced)
 
 	//  write modified nif file
 	WriteNifTree((const char*) fileNameNifDst.c_str(), pRootInput, NifInfo(VER_20_2_0_7, 12, 83));
@@ -1370,4 +1379,76 @@ void NifCollisionUtility::cleanTreeCollision(NiNodeRef pNode)
 			(*ppIter)->SetCollisionObject(NULL);
 		}
 	}  //  for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ....
+}
+
+/*---------------------------------------------------------------------------*/
+bool NifCollisionUtility::parseTreeCollision(NiNodeRef pNode, bhkCollisionObjectRef pCollNodeTmpl, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry)
+{
+	vector<NiAVObjectRef>	srcChildList (pNode->GetChildren());	//  get list of children from input node
+	bool					haveCollision(false);
+
+	//  add own translation to list
+	transformAry.push_back(pNode->GetLocalTransform());
+
+	//  check for own collision object
+	if (DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()) != NULL)
+	{
+		vector<hkGeometry>		geometryMapCollLocal;
+		Matrix44				tTransform(transformAry[0]);
+
+		//  remove root transformation
+		transformAry.erase(transformAry.begin());
+
+		//  get geometry from collision object
+		getGeometryFromCollObject(DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()), geometryMapCollLocal, transformAry);
+
+		//  replace collision object
+		pNode->SetCollisionObject(createCollNode(geometryMapCollLocal, pCollNodeTmpl, pNode));
+
+		transformAry.insert(transformAry.begin(), tTransform);
+		haveCollision = true;
+	}
+
+	//  iterate over source nodes and get geometry
+	for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ppIter != srcChildList.end(); ppIter++)
+	{
+		//  NiTriShape
+		if (DynamicCast<NiTriShape>(*ppIter) != NULL)
+		{
+			getGeometryFromTriShape(DynamicCast<NiTriShape>(*ppIter), geometryMapColl, transformAry);
+		}
+		//  NiTriStrips
+		else if (DynamicCast<NiTriStrips>(*ppIter) != NULL)
+		{
+			getGeometryFromTriStrips(DynamicCast<NiTriStrips>(*ppIter), geometryMapColl, transformAry);
+		}
+		//  RootCollisionNode
+		else if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
+		{
+			vector<hkGeometry>		geometryMapCollLocal;
+			Matrix44				tTransform(transformAry[0]);
+
+			//  remove root transformation
+			transformAry.erase(transformAry.begin());
+
+			//  get collision data from sub-nodes
+			haveCollision |= parseTreeCollision(DynamicCast<NiNode>(*ppIter), pCollNodeTmpl, geometryMapCollLocal, transformAry);
+
+			//  replace collision object
+			pNode->SetCollisionObject(createCollNode(geometryMapCollLocal, pCollNodeTmpl, pNode));
+
+			transformAry.insert(transformAry.begin(), tTransform);
+			haveCollision = true;
+		}
+		//  NiNode (and derived classes?)
+		else if (DynamicCast<NiNode>(*ppIter) != NULL)
+		{
+			haveCollision |= parseTreeCollision(DynamicCast<NiNode>(*ppIter), pCollNodeTmpl, geometryMapColl, transformAry);
+		}
+	}  //  for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ppIter != srcChildList.end(); ppIter++)
+
+	//  remove own translation from list
+	transformAry.pop_back();
+
+	return haveCollision;
 }
