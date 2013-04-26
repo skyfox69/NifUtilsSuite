@@ -21,6 +21,11 @@
 #include "obj/NiSourceTexture.h"
 #include "obj/NiMaterialProperty.h"
 #include "obj/NiTriStripsData.h"
+#include "obj/bhkPackedNiTriStripsShape.h"
+#include "obj/bhkMoppBvTreeShape.h"
+#include "obj/bhkRigidBody.h"
+#include "obj/bhkCollisionObject.h"
+#include "obj/hkPackedNiTriStripsData.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -82,10 +87,14 @@ NiNodeRef NifConvertUtility::getRootNodeFromNifFile(string fileName, string logP
 }
 
 /*---------------------------------------------------------------------------*/
-NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, NiAlphaPropertyRef pTmplAlphaProp)
+NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
 	NiNodeRef				pDstNode    (pSrcNode);
+	NiCollisionObjectRef	pCollObject (pSrcNode->GetCollisionObject());
 	vector<NiAVObjectRef>	srcShapeList(pDstNode->GetChildren());
+
+	//  add local transformation to list
+	transformAry.push_back(pDstNode->GetLocalTransform());
 
 	//  find NiAlphaProperty and use as template in sub-nodes
 	if (DynamicCast<NiAlphaProperty>(pDstNode->GetPropertyByType(NiAlphaProperty::TYPE)) != NULL)
@@ -95,6 +104,7 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 
 	//  unlink protperties -> not used in new format
 	pDstNode->ClearProperties();
+	pDstNode->SetCollisionObject(NULL);
 
 	//  shift extra data to new version
 	pDstNode->ShiftExtraData(VER_20_2_0_7);
@@ -123,12 +133,31 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
-			pDstNode->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pTmplNode, pRootNode, pTmplAlphaProp)));
+			pDstNode->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pTmplNode, pRootNode, transformAry, pTmplAlphaProp)));
 		}
 	}
 
-	//  remove collision object if set
-	if (_cleanTreeCollision)	pDstNode->SetCollisionObject(NULL);
+	//  add collision object in case of holding
+	if (!_cleanTreeCollision && (pCollObject != NULL))
+	{
+		NiNodeRef	pCollNode(convertCollObjectToCollNode(pCollObject, transformAry));
+
+		//  remove old target
+		pCollObject->SetTarget(NULL);
+
+		//  add old-style collision if available
+		if (pCollNode != NULL)
+		{
+			pDstNode->AddChild(&(*pCollNode));
+		}
+		else
+		{
+			pDstNode->SetCollisionObject(pCollObject);
+		}
+	}  //  if (!_cleanTreeCollision && (pCollObject != NULL))
+
+	//  remove local transformation from array
+	transformAry.pop_back();
 
 	return pDstNode;
 }
@@ -594,7 +623,9 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 	NiNodeRef				pRootOutput    (NULL);
 	NiNodeRef				pRootTemplate  (NULL);
 	NiTriShapeRef			pNiTriShapeTmpl(NULL);
+	NiCollisionObjectRef	pRootCollObject(NULL);
 	vector<NiAVObjectRef>	srcChildList;
+	vector<Matrix44>		transformAry;
 	bool					fakedRoot      (false);
 
 	//  test on existing file names
@@ -637,12 +668,13 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 	}
 
 	//  template root is used as root of output
-	pRootOutput = pRootTemplate;
+	pRootOutput     = pRootTemplate;
+	pRootCollObject = pRootInput->GetCollisionObject();
 
 	//   get rid of unwanted subnodes
 	pRootOutput->ClearChildren();           //  remove all children
-	pRootOutput->SetCollisionObject(NULL);  //  unlink collision object
-	//  hold extra data and property nodes
+	pRootOutput->SetCollisionObject(NULL);	//  remove collision object
+	pRootInput ->SetCollisionObject(NULL);
 
 	//  copy translation from input node
 	pRootOutput->SetLocalTransform(pRootInput->GetLocalTransform());
@@ -655,6 +687,9 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 
 	//  unlink children 'cause moved to output
 	pRootInput->ClearChildren();
+
+	//  add local transformation to list
+	transformAry.push_back(pRootInput->GetLocalTransform());
 
 	//  iterate over source nodes and convert using template
 	for (auto ppIter=srcChildList.begin(), pEnd=srcChildList.end(); ppIter != pEnd; ppIter++)
@@ -677,12 +712,28 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
-			pRootOutput->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pNiTriShapeTmpl, pRootOutput)));
+			pRootOutput->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pNiTriShapeTmpl, pRootOutput, transformAry)));
 		}
 	}
 
-	//  remove collision object if set
-	if (_cleanTreeCollision)	pRootOutput->SetCollisionObject(NULL);
+	//  add collision object in case of holding
+	if (!_cleanTreeCollision && (pRootCollObject != NULL))
+	{
+		NiNodeRef	pCollNode(convertCollObjectToCollNode(pRootCollObject, transformAry));
+
+		//  remove old target
+		pRootCollObject->SetTarget(NULL);
+
+		//  add old-style collision if available
+		if (pCollNode != NULL)
+		{
+			pRootOutput->AddChild(&(*pCollNode));
+		}
+		else
+		{
+			pRootOutput->SetCollisionObject(pRootCollObject);
+		}
+	}  //  if (!_cleanTreeCollision && (pRootCollObject != NULL))
 
 	//  write missing textures to log - as block
 	for (auto pIter=_newTextures.begin(), pEnd=_newTextures.end(); pIter != pEnd; ++pIter)
@@ -919,4 +970,98 @@ BSLightingShaderPropertyRef NifConvertUtility::cloneBSLightingShaderProperty(BSL
 	pSource->SetTextureSet(pTSet);
 
 	return pDest;
+}
+
+/*---------------------------------------------------------------------------*/
+NiNodeRef NifConvertUtility::convertCollObjectToCollNode(NiCollisionObjectRef pCollObject, vector<Matrix44>& transformAry)
+{
+	NiNodeRef	pCollNode(NULL);
+
+	if (pCollObject == NULL)			return NULL;
+
+	//  search for embedded hkPackedNiTriStripsData
+	bhkCollisionObjectRef	pModel(DynamicCast<bhkCollisionObject>(pCollObject));
+	if (pModel == NULL)		return NULL; 
+
+	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pModel->GetBody()));
+	if (pRBody == NULL)		return NULL; 
+
+	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
+	if (pMBTS == NULL)		return NULL;
+
+	bhkPackedNiTriStripsShapeRef	pShape(DynamicCast<bhkPackedNiTriStripsShape>(pMBTS->GetShape()));
+	if (pShape == NULL)		return NULL;
+
+	hkPackedNiTriStripsData*	pData(DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
+	if (pData == NULL)		return NULL;
+
+	//  found bhkPackedNiTriStripsShape and data => convert each sub-shape to NiTriShape
+	NiTriShapeRef				pTriShape   (NULL);
+	NiTriShapeDataRef			pTriData    (NULL);
+	vector<Vector3>				vertices    (pData->GetVertices());
+	vector<Vector3>				verticesTmp;
+	vector<hkTriangle>			triangles   (pData->GetHavokTriangles());
+	vector<Triangle>			trianglesTmp;
+	vector<OblivionSubShape>	subShapes(pShape->GetSubShapes());
+	hkTriangle&					triangle    (triangles[0]);
+	Vector3						tVector;
+	unsigned int				verOffset   (0);
+	unsigned int				triIndex    (0);
+
+	pCollNode = new RootCollisionNode();
+
+	for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+	{
+		//  reset arrays
+		verticesTmp.clear();
+		trianglesTmp.clear();
+
+		//  get vertices
+		for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+		{
+			tVector = vertices[idx];
+
+			//  transform vertex to global coordinates
+			for (int t((int) (transformAry.size())-1); t >= 0; --t)
+			{
+				tVector = transformAry[t] * tVector;
+			}
+
+			//  scale final vertex
+			tVector *= 7.0f;
+
+			//  add vertex to tmp. array
+			verticesTmp.push_back(tVector);
+
+		}  //  for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+
+		//  get triangles
+		for (; triIndex < triangles.size(); ++triIndex)
+		{
+			//  check vertex bounds
+			triangle = triangles[triIndex];
+			if ((triangle.triangle.v1 >= (pIter->numVertices + verOffset)) ||
+				(triangle.triangle.v2 >= (pIter->numVertices + verOffset)) ||
+				(triangle.triangle.v3 >= (pIter->numVertices + verOffset))
+			   )
+			{
+				break;
+			}
+
+			//  add triangle
+			trianglesTmp.push_back(Triangle(triangle.triangle.v1-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v3-verOffset));
+		}
+
+		pTriData = new NiTriShapeData();
+		pTriData->SetVertices (verticesTmp);
+		pTriData->SetTriangles(trianglesTmp);
+
+		pTriShape = new NiTriShape();
+		pTriShape->SetData(pTriData);
+
+		pCollNode->AddChild(&(*pTriShape));
+
+	}  //  for (auto pIter=pShape->GetSubShapes().begin(), pEnd=pShape->GetSubShapes().end(); pIter != pEnd; ++pIter)
+
+	return	pCollNode;
 }

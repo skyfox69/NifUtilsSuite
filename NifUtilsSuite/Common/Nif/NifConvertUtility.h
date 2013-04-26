@@ -22,6 +22,7 @@
 #include "obj/NiTriShapeData.h"
 #include "obj/BSLightingShaderProperty.h"
 #include "obj/NiTriStrips.h"
+#include "obj/NiCollisionObject.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  return codes
@@ -206,7 +207,7 @@ protected:
 		* @param rootNode    in: Root node of destination NIF tree
 		* @param tmplAlphaProp    tmplAlphaProp
 		*/
-	virtual NiNodeRef convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
+	virtual NiNodeRef convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
 	/**
 		* Convert NiTriShape and properties/geometry
@@ -254,4 +255,6 @@ protected:
 		* @param fileName    in: path and name of file to check
 		*/
 	virtual bool checkFileExists(string fileName);
+
+	virtual NiNodeRef convertCollObjectToCollNode(NiCollisionObjectRef pCollObject, vector<Matrix44>& transformAry);
 };

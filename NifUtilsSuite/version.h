@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define	MASTER_FILE_VERSION_STR			"1.1.2.902"
 #define	MASTER_PRODUCT_VERSION_STR		"1.1.2"
 #define	MASTER_FILE_VERSION_VAL			1,1,2,902
@@ -23,7 +24,10 @@
 =======
 #define	MASTER_FILE_VERSION_STR			"1.1.1.971"
 >>>>>>> a680c4c... added collision node removement to NifConvert
+=======
+#define	MASTER_FILE_VERSION_STR			"1.1.1.978"
+>>>>>>> b02c1da... convert bhkPackedNiStripsShape to simple RootCollisionNode and NiTriShapes
 #define	MASTER_PRODUCT_VERSION_STR		"1.1.1"
-#define	MASTER_FILE_VERSION_VAL			1,1,1,971
+#define	MASTER_FILE_VERSION_VAL			1,1,1,978
 #define	MASTER_PRODUCT_VERSION_VAL		1,1,1
 >>>>>>> 095a4d8... added NiTriStrips support for NifConvert
