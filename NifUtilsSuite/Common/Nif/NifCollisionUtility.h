@@ -282,5 +282,5 @@ protected:
 
 	virtual void cleanTreeCollision(NiNodeRef pNode);
 
-	virtual bool parseTreeCollision(NiNodeRef pNode, bhkCollisionObjectRef pCollNodeTmpl, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry);
+	virtual bool parseTreeCollision(NiNodeRef pNode, string fileNameCollTmpl, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry);
 };
