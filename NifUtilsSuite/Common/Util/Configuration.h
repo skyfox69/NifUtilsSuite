@@ -80,6 +80,7 @@ class Configuration
 				bool					_ncReorderProp;
 				bool					_ncForceDDS;
 				bool					_ncRemoveColl;
+				bool					_cmMergeColl;
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;

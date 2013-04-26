@@ -36,6 +36,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in
 						                   {IDC_RD_MAT_DEFINE,     "Use multiple materials defined by additional dialog for collision data"},
 						                   {IDC_CB_TEMPLATE,       "Define NIF file used as template for creating collision data"},
 						                   {IDC_CB_MAT_SINGLE,     "Define material used for all collision shapes"},
+										   {IDC_CK_MERGE_COLL,     "Collect all collision nodes within collision source NIF and merge them into one collision node at root of target"},
 						                   {IDC_ED_FILE_IN,        "Path to target NIF-file to add collision data to"},
 						                   {IDC_ED_FILE_COLL,      "Path to NIF-file defining collision data"},
 						                   {IDC_BT_FILE_IN,        "Choose target NIF-file to add collision data to"},
@@ -111,9 +112,10 @@ void CFormChunkMergeView::OnInitialUpdate()
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_HINTS)    ->GetSafeHwnd(), _T(""), _T(""));
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_COLLISION)->GetSafeHwnd(), _T(""), _T(""));
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_MATERIAL) ->GetSafeHwnd(), _T(""), _T(""));
+	::SetWindowTheme(GetDlgItem(IDC_GBOX_FLAGS)    ->GetSafeHwnd(), _T(""), _T(""));
 
 	pImageList = CFDResourceManager::getInstance()->getImageListNumbers();
-	for (short i(1); i < 5; ++i)
+	for (short i(1); i < 6; ++i)
 	{
 		((CStatic*) GetDlgItem(IDC_PC_NUM_0+i)) ->SetIcon(pImageList->ExtractIcon(i));
 		((CStatic*) GetDlgItem(IDC_PC_HINT_0+i))->SetIcon(pImageList->ExtractIcon(i));
@@ -191,6 +193,7 @@ HBRUSH CFormChunkMergeView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 		case IDC_GBOX_COLLISION:
 		case IDC_GBOX_MATERIAL:
 		case IDC_GBOX_HINTS:
+		case IDC_GBOX_FLAGS:
 		{
 			pDC->SetTextColor(RGB(0,0,255));
 			pDC->SetBkMode(TRANSPARENT);
@@ -412,6 +415,9 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_COLL_FBACK))->SetCheck(selItem == IDC_RD_COLL_FBACK);
 			((CButton*) GetDlgItem(IDC_RD_COLL_MESH)) ->SetCheck(selItem == IDC_RD_COLL_MESH);
 
+			//  other flags
+			((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->SetCheck(pConfig->_cmMergeColl ? BST_CHECKED : BST_UNCHECKED);
+
 			break;
 		}
 
@@ -475,6 +481,7 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	ncUtility.setCollisionNodeHandling((CollisionNodeHandling) (GetCheckedRadioButton(IDC_RD_COLL_CDATA, IDC_RD_COLL_MESH) - IDC_RD_COLL_CDATA));
 	ncUtility.setMaterialTypeHandling (matHandling, materialMap);
 	ncUtility.setDefaultMaterial      (materialMap[-1]);
+	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->GetCheck() != FALSE);
 
 	//  add collision data to nif
 	ncReturn = ncUtility.addCollision(CStringA(_fileNameColl).GetString(), CStringA(_fileNameIn).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());

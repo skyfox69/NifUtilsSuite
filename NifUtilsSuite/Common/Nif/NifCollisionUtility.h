@@ -128,6 +128,8 @@ public:
 
 	virtual void setSaveAsVersion(const unsigned int version);
 
+	virtual void setMergeCollision(const bool doMerge);
+
 protected:
 
 	void (*_logCallback) (const int, const char*);
@@ -182,6 +184,10 @@ protected:
 	bool _generateNormals;
 
 	bool _scaleToModel;
+
+	bool _mergeCollision;
+
+	bool _replaceCollision;
 
 	unsigned int _saveAsVersion;
 
@@ -275,4 +281,6 @@ protected:
 	virtual bool writeChunkDataAsObj(string fileName, vector<NifChunkData>& chunkDataList);
 
 	virtual bool writeChunkDataAsNif(string fileName, vector<NifChunkData>& chunkDataList);
+
+	virtual void cleanTreeCollision(NiNodeRef pNode);
 };

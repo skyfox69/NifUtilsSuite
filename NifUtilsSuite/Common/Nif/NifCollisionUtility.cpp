@@ -9,6 +9,7 @@
 //  Common includes
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 #include "Common\Nif\NifCollisionUtility.h"
 #include "Common\Util\DefLogMessageTypes.h"
@@ -40,7 +41,9 @@ NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 		_materialList      (materialList),
 		_defaultMaterial   (0),
 		_generateNormals   (true),
-		_scaleToModel      (true)
+		_scaleToModel      (true),
+		_mergeCollision    (true),
+		_replaceCollision  (false)
 {}
 
 /*---------------------------------------------------------------------------*/
@@ -511,7 +514,6 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 	NiNodeRef				pRootTemplate(NULL);
 	bhkCollisionObjectRef	pCollNodeTmpl(NULL);
 	vector<hkGeometry>		geometryMap;
-	vector<NiAVObjectRef>	srcChildList;
 	bool					fakedRoot    (false);
 
 	//  test on existing file names
@@ -524,6 +526,9 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 	{
 		_mtMapping.clear();
 	}
+
+	//  detect if source is target for special handling
+	_replaceCollision = !_mergeCollision && (fileNameCollSrc == fileNameNifDst);
 
 	//  initialize user messages
 	_userMessages.clear();
@@ -590,21 +595,14 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 		return NCU_ERROR_CANT_OPEN_INPUT;
 	}
 
-	//  create and add collision node to target
-	pRootInput->SetCollisionObject(createCollNode(geometryMap, pCollNodeTmpl, pRootInput));
+	//  create collision node
+	bhkCollisionObjectRef	pCollNodeDest(createCollNode(geometryMap, pCollNodeTmpl, pRootInput));
 
-	//  get list of children from input node
-	srcChildList = pRootInput->GetChildren();
+	//  remove all collision sub nodes when not replacing local collisions
+	if (!_replaceCollision)		cleanTreeCollision(pRootInput);
 
-	//  iterate over source nodes and remove possible old-style collision node
-	for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ppIter != srcChildList.end(); ppIter++)
-	{
-		//  RootCollisionNode
-		if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
-		{
-			pRootInput->RemoveChild(*ppIter);
-		}
-	}  //  for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ....
+	//  add collision node to target
+	pRootInput->SetCollisionObject(pCollNodeDest);
 
 	//  write modified nif file
 	WriteNifTree((const char*) fileNameNifDst.c_str(), pRootInput, NifInfo(VER_20_2_0_7, 12, 83));
@@ -916,6 +914,12 @@ void NifCollisionUtility::setScaleToModel(const bool doScale)
 void NifCollisionUtility::setSaveAsVersion(const unsigned int version)
 {
 	_saveAsVersion = version;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifCollisionUtility::setMergeCollision(const bool doMerge)
+{
+	_mergeCollision = doMerge;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -1337,4 +1341,33 @@ bool NifCollisionUtility::writeChunkDataAsNif(string fileName, vector<NifChunkDa
 	WriteNifTree((const char*) fileName.c_str(), pRootNode, NifInfo(VER_20_2_0_7, ((_saveAsVersion >> 16) & 0x0000FFFF), (_saveAsVersion & 0x0000FFFF)));
 
 	return true;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifCollisionUtility::cleanTreeCollision(NiNodeRef pNode)
+{
+	vector<NiAVObjectRef>	srcChildList(pNode->GetChildren());		//  children of node
+
+	//  remove collision object (new style [>= Oblivion])
+	pNode->SetCollisionObject(NULL);
+
+	//  iterate over source nodes and remove possible old-style [Morrowind] collision node
+	for (auto  ppIter=srcChildList.begin(), pEnd=srcChildList.end(); ppIter != pEnd; ppIter++)
+	{
+		//  RootCollisionNode
+		if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
+		{
+			pNode->RemoveChild(*ppIter);
+		}
+		//  NiNode
+		else if (DynamicCast<NiNode>(*ppIter) != NULL)
+		{
+			cleanTreeCollision(DynamicCast<NiNode>(*ppIter));
+		}
+		//  other children
+		else
+		{
+			(*ppIter)->SetCollisionObject(NULL);
+		}
+	}  //  for (vector<NiAVObjectRef>::iterator  ppIter = srcChildList.begin(); ....
 }

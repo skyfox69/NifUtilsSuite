@@ -38,6 +38,7 @@ Configuration::Configuration(const string fileName)
 		_ncReorderProp   (true),
 		_ncForceDDS      (true),
 		_ncRemoveColl    (true),
+		_cmMergeColl     (true),
 		_showToolTipps   (true),
 		_saveLastView    (false),
 		_ceGenNormals    (true),
@@ -356,6 +357,7 @@ bool Configuration::read()
 			readAttribute(content, "DefaultTemplateNameBPBA>", _cmDefaultTemplate, offset);
 			readAttribute(content, "NcForceDDS>",              _ncForceDDS,        offset);
 			readAttribute(content, "NcRemoveColl>",            _ncRemoveColl,      offset);
+			readAttribute(content, "CmMergeColl>",             _cmMergeColl,       offset);
 
 
 		}  //  while (iStr.good())
@@ -413,6 +415,7 @@ bool Configuration::write()
 		oStr << "<CollisionHandling>"     << _cmCollHandling          << "</CollisionHandling>";
 		oStr << "<MaterialSingleType>"    << _cmMatSingleType         << "</MaterialSingleType>";
 		oStr << "<DefaultTemplateNameCM>" << _cmDefaultTemplate       << "</DefaultTemplateNameCM>";
+		oStr << "<CmMergeColl>"           << _cmMergeColl             << "</CmMergeColl>";
 		oStr << "</ChunkMerge><ChunkExtract>";
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";
