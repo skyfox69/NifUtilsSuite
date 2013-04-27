@@ -160,6 +160,7 @@ void CFormNifConvertView::OnInitialUpdate()
 			_toolTipCtrl.AddTool(GetDlgItem(glToolTiplist[i]._uid), CString(glToolTiplist[i]._text.c_str()));
 		}
 
+		_toolTipCtrl.SetMaxTipWidth(260);
 		_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
 	}
 

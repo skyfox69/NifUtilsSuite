@@ -36,7 +36,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in
 						                   {IDC_RD_MAT_DEFINE,     "Use multiple materials defined by additional dialog for collision data"},
 						                   {IDC_CB_TEMPLATE,       "Define NIF file used as template for creating collision data"},
 						                   {IDC_CB_MAT_SINGLE,     "Define material used for all collision shapes"},
-										   {IDC_CK_MERGE_COLL,     "Collect all collision nodes within collision source NIF and merge them into one collision node at root of target"},
+										   {IDC_CK_MERGE_COLL,     "Don't generate one root collision node for all meshes but replace existing single collision node with new one, independent of locatgion in NIF tree"},
 						                   {IDC_ED_FILE_IN,        "Path to target NIF-file to add collision data to"},
 						                   {IDC_ED_FILE_COLL,      "Path to NIF-file defining collision data"},
 						                   {IDC_BT_FILE_IN,        "Choose target NIF-file to add collision data to"},
@@ -161,6 +161,7 @@ void CFormChunkMergeView::OnInitialUpdate()
 			_toolTipCtrl.AddTool(GetDlgItem(glToolTiplist[i]._uid), CString(glToolTiplist[i]._text.c_str()));
 		}
 
+		_toolTipCtrl.SetMaxTipWidth(260);
 		_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
 	}
 
@@ -416,7 +417,7 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_COLL_MESH)) ->SetCheck(selItem == IDC_RD_COLL_MESH);
 
 			//  other flags
-			((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->SetCheck(pConfig->_cmMergeColl ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->SetCheck(pConfig->_cmMergeColl ? BST_UNCHECKED : BST_CHECKED);
 
 			break;
 		}
@@ -481,7 +482,7 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	ncUtility.setCollisionNodeHandling((CollisionNodeHandling) (GetCheckedRadioButton(IDC_RD_COLL_CDATA, IDC_RD_COLL_MESH) - IDC_RD_COLL_CDATA));
 	ncUtility.setMaterialTypeHandling (matHandling, materialMap);
 	ncUtility.setDefaultMaterial      (materialMap[-1]);
-	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->GetCheck() != FALSE);
+	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_CK_MERGE_COLL))->GetCheck() == FALSE);
 
 	//  add collision data to nif
 	ncReturn = ncUtility.addCollision(CStringA(_fileNameColl).GetString(), CStringA(_fileNameIn).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());

@@ -28,7 +28,7 @@ COptionsPageChunkMerge::COptionsPageChunkMerge(CWnd* pParent /*=NULL*/)
 	_colHandling    = pConfig->_cmCollHandling;
 	_matHandling    = pConfig->_cmMatHandling;
 	_matSingle      = pConfig->_cmMatSingleType;
-	_mergeCollision = pConfig->_cmMergeColl ? 1 : 0;
+	_mergeCollision = pConfig->_cmMergeColl ? 0 : 1;
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -62,7 +62,7 @@ void COptionsPageChunkMerge::OnOK()
 	pConfig->_cmCollHandling  = _colHandling;
 	pConfig->_cmMatHandling   = _matHandling;
 	pConfig->_cmMatSingleType = _matSingle;
-	pConfig->_cmMergeColl     = (_mergeCollision == 1);
+	pConfig->_cmMergeColl     = (_mergeCollision == 0);
 }
 
 //-----  OnInitDialog()  ------------------------------------------------------
