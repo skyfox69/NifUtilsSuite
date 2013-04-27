@@ -1061,6 +1061,9 @@ NiNodeRef NifConvertUtility::convertCollObjectToCollNode(NiCollisionObjectRef pC
 
 		pCollNode->AddChild(&(*pTriShape));
 
+		//  increase vertex offset
+		verOffset += pIter->numVertices;
+
 	}  //  for (auto pIter=pShape->GetSubShapes().begin(), pEnd=pShape->GetSubShapes().end(); pIter != pEnd; ++pIter)
 
 	return	pCollNode;
