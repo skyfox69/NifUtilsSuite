@@ -36,7 +36,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in
 						                   {IDC_RD_MAT_DEFINE,     "Use multiple materials defined by additional dialog for collision data"},
 						                   {IDC_CB_TEMPLATE,       "Define NIF file used as template for creating collision data"},
 						                   {IDC_CB_MAT_SINGLE,     "Define material used for all collision shapes"},
-										   {IDC_CK_MERGE_COLL,     "Don't generate one root collision node for all meshes but replace existing single collision node with new one, independent of locatgion in NIF tree"},
+										   {IDC_CK_MERGE_COLL,     "Don't generate one root collision node for all meshes but replace each existing single collision node with new one, independent of location in NIF tree"},
 						                   {IDC_ED_FILE_IN,        "Path to target NIF-file to add collision data to"},
 						                   {IDC_ED_FILE_COLL,      "Path to NIF-file defining collision data"},
 						                   {IDC_BT_FILE_IN,        "Choose target NIF-file to add collision data to"},
@@ -135,6 +135,7 @@ void CFormChunkMergeView::OnInitialUpdate()
 	GetDlgItem(IDC_BT_NSCOPE_IN)  ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_NSCOPE_COLL)->EnableWindow(FALSE);
+	GetDlgItem(IDC_CK_MERGE_COLL) ->EnableWindow(FALSE);
 
 	//  initialize log view
 	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
@@ -314,6 +315,7 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 	{
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
+		GetDlgItem(IDC_CK_MERGE_COLL)->EnableWindow(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
@@ -342,6 +344,7 @@ void CFormChunkMergeView::OnBnClickedBtFileColl()
 	{
 		_fileNameColl = fileName;
 		UpdateData(FALSE);
+		GetDlgItem(IDC_CK_MERGE_COLL)->EnableWindow(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(!_fileNameColl.IsEmpty());
