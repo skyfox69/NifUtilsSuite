@@ -178,6 +178,7 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 
 	//  force some data in destination shape
 	pDstNode->SetCollisionObject(NULL);  //  no collision object here
+	pDstNode->ClearExtraData();
 	pDstNode->SetFlags          (14);    //  ???
 
 	//  data node
