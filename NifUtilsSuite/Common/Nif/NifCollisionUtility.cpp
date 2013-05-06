@@ -159,10 +159,10 @@ unsigned int NifCollisionUtility::getGeometryFromCollObject(bhkCollisionObjectRe
 	if (pRBody == NULL)		return geometryMap.size(); 
 
 	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
-	if (pMBTS == NULL)		return geometryMap.size();
+	if (pMBTS == NULL)		return -1;	//  mark not beeing bhkMoppBvTreeShape
 
 	bhkPackedNiTriStripsShapeRef	pShape(DynamicCast<bhkPackedNiTriStripsShape>(pMBTS->GetShape()));
-	if (pShape == NULL)		return geometryMap.size();
+	if (pShape == NULL)		return -1;	//  mark not beeing bhkMoppBvTreeShape
 
 	hkPackedNiTriStripsData*	pData(DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
 	if (pData == NULL)		return geometryMap.size();
@@ -1413,10 +1413,11 @@ bool NifCollisionUtility::parseTreeCollision(NiNodeRef pNode, string fileNameCol
 				transformAry.erase(transformAry.begin());
 
 				//  get geometry from collision object
-				getGeometryFromCollObject(DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()), geometryMapCollLocal, transformAry);
-
-				//  replace collision object
-				pNode->SetCollisionObject(createCollNode(geometryMapCollLocal, pCollNodeTmpl, pNode));
+				if (getGeometryFromCollObject(DynamicCast<bhkCollisionObject>(pNode->GetCollisionObject()), geometryMapCollLocal, transformAry) != -1)
+				{
+					//  replace collision object
+					pNode->SetCollisionObject(createCollNode(geometryMapCollLocal, pCollNodeTmpl, pNode));
+				}
 
 				transformAry.insert(transformAry.begin(), tTransform);
 				haveCollision |= true;
