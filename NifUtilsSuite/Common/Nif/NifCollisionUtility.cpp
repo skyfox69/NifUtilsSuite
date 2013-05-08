@@ -158,6 +158,15 @@ unsigned int NifCollisionUtility::getGeometryFromCollObject(bhkCollisionObjectRe
 	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pModel->GetBody()));
 	if (pRBody == NULL)		return geometryMap.size(); 
 
+	//  modify bhkRigidBody matching Skyrim version
+	array<7, unsigned short>	unknown7(pRBody->GetUnknown7Shorts());
+
+	unknown7[3] = 0;
+	unknown7[4] = 0;
+	unknown7[5] = 1;
+	unknown7[6] = 65535;
+	pRBody->SetUnknown7Shorts(unknown7);
+
 	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
 	if (pMBTS == NULL)		return -1;	//  mark not beeing bhkMoppBvTreeShape
 

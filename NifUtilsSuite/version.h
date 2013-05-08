@@ -5,6 +5,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #define	MASTER_FILE_VERSION_STR			"1.1.2.902"
 #define	MASTER_PRODUCT_VERSION_STR		"1.1.2"
 #define	MASTER_FILE_VERSION_VAL			1,1,2,902
@@ -23,7 +24,10 @@
 =======
 #define	MASTER_FILE_VERSION_STR			"1.1.1.999"
 >>>>>>> 4077480... added support for simple collision objects into ChunkMerge (copy them ;-) )
+=======
+#define	MASTER_FILE_VERSION_STR			"1.1.1.1003"
+>>>>>>> e4d8c43... changed unknown7shorts of bhkRigidBody to Skyrim version
 #define	MASTER_PRODUCT_VERSION_STR		"1.1.1"
-#define	MASTER_FILE_VERSION_VAL			1,1,1,999
+#define	MASTER_FILE_VERSION_VAL			1,1,1,1003
 #define	MASTER_PRODUCT_VERSION_VAL		1,1,1
 >>>>>>> c83d23c... bugfix: use correct triangle index
