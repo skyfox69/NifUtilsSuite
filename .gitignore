@@ -94,3 +94,11 @@ Thumbs.db
 
 # Folder config file
 Desktop.ini
+
+
+#######################
+## Enterprise Architect
+#######################
+*.eap
+
+
