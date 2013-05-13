@@ -227,6 +227,8 @@ protected:
 		*/
 	virtual NiTriShapeRef convertNiTriStrips(NiTriStripsRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
+	virtual NiTriShapeRef convertNiTri(NiTriShapeRef pDstNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp);
+
 	/**
 		* Create tangent space data
 		* 
