@@ -22,6 +22,7 @@
 #include "obj/bhkCollisionObject.h"
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkPackedNiTriStripsShape.h"
+#include "obj/bhkConvexVerticesShape.h"
 #include "gen/QuaternionXYZW.h"
 
 //-----  DEFINES  -------------------------------------------------------------
@@ -59,6 +60,7 @@ class DirectXNifConverter
 		virtual	unsigned int		getGeometryFromCollisionObject(bhkCollisionObjectRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 		virtual	unsigned int		getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 		virtual	unsigned int		getGeometryFromPackedTriStripsShape(bhkPackedNiTriStripsShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 
 		virtual	void				BlendFuncToDXBlend     (const NiAlphaProperty::BlendFunc value, DWORD& dxBlend, DWORD& dxArg);
 		virtual D3DXMATRIX			Matrix44ToD3DXMATRIX   (const Matrix44& matrixIn);

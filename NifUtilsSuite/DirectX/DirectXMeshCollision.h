@@ -30,6 +30,7 @@ class DirectXMeshCollision : public DirectXMesh
 		unsigned short*			_pIndices;		//  raw index buffer
 		unsigned int			_countVertices;	//  number of vertices
 		unsigned int			_countIndices;	//  number of indices
+		D3DPRIMITIVETYPE		_primitiveType;	//  primitive type
 
 	public:
 								DirectXMeshCollision(D3DXMATRIX transform,
@@ -39,6 +40,8 @@ class DirectXMeshCollision : public DirectXMesh
 													 const unsigned int countI,
 													 DWORD wireframeColor);
 		virtual					~DirectXMeshCollision();
+
+		virtual	D3DPRIMITIVETYPE	SetPrimitiveType  (const D3DPRIMITIVETYPE type);
 
 		//  IfcDirectXRenderObject
 		virtual	bool				Render            (LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worldMatrix);
