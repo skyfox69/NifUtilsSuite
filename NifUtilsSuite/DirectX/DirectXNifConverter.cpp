@@ -34,6 +34,8 @@
 #include "obj/NiTriStrips.h"
 #include "obj/NiTriStripsData.h"
 #include "obj/hkPackedNiTriStripsData.h"
+#include "obj/bhkConvexTransformShape.h"
+#include "obj/bhkListShape.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 
@@ -44,6 +46,7 @@ DirectXNifConverter::DirectXNifConverter()
 		_defAmbientColor  (0x00707070),
 		_defDiffuseColor  (0x00E5E5E5),
 		_defSpecularColor (0x00FFFFFF),
+		_factor           (70.0f),
 		_lodRenderLevel   (2),
 		_isBillboard      (false),
 		_isCollision      (false),
@@ -158,9 +161,10 @@ NiNodeRef DirectXNifConverter::getRootNodeFromNifFile(string fileName)
 {
 	NiObjectRef		pRootTree (NULL);
 	NiNodeRef		pRootInput(NULL);
+	NifInfo			nifInfo;
 
 	//  get input nif
-	pRootTree = ReadNifTree((const char*) fileName.c_str());
+	pRootTree = ReadNifTree((const char*) fileName.c_str(), &nifInfo);
 
 	//  NiNode as root
 	if (DynamicCast<NiNode>(pRootTree) != NULL)
@@ -176,6 +180,9 @@ NiNodeRef DirectXNifConverter::getRootNodeFromNifFile(string fileName)
 		//  add root as child
 		pRootInput->AddChild(DynamicCast<NiAVObject>(pRootTree));
 	}
+
+	//  check NIF versions
+	_factor = (nifInfo.userVersion >= 12) ? 71.0f : 7.1f;
 
 	return pRootInput;
 }
@@ -541,56 +548,227 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionObject(bhkCollisionObj
 	bhkRigidBodyRef		pRBody(DynamicCast<bhkRigidBody>(pShape->GetBody()));
 	if (pRBody == NULL)		return meshList.size(); 
 
-	//  check on extra bhkMoppBvTreeShape
-	bhkShapeRef		pTShape(pRBody->GetShape());
-	if (DynamicCast<bhkMoppBvTreeShape>(pTShape))
+	//  add RigidBody translation to list - if bhkRigidBodyT
+	bhkRigidBodyT*		pRBodyT(DynamicCast<bhkRigidBodyT>(pRBody));
+	if (pRBodyT != NULL)
 	{
-		pTShape = DynamicCast<bhkMoppBvTreeShape>(pTShape)->GetShape();
+		Vector4		tVec4 (pRBodyT->GetTranslation());
+		Vector3		tVec3 (tVec4.x * _factor, tVec4.y * _factor, tVec4.z * _factor);
+		Matrix33	tMat33(QuaternionToMatrix33(pRBodyT->GetRotation()));
+		Matrix44	tMat44(tVec3, tMat33, 1.0f);
+	
+		transformAry.push_back(tMat44);
 	}
 
-	//  check type of collision mesh
-	//bhkCompressedMeshShape
-	if (DynamicCast<bhkCompressedMeshShape>(pTShape) != NULL)
+	//  get geometry from meshes/lists
+	getGeometryFromCollisionShape(pRBody->GetShape(), meshList, transformAry, pTmplAlphaProp);
+
+	//  remove RigidBody translation from list - if set
+	if (pRBodyT != NULL)
 	{
-		getGeometryFromCompressedMeshShape(DynamicCast<bhkCompressedMeshShape>(pTShape), pShape->GetBody(), meshList, transformAry, pTmplAlphaProp);
+		transformAry.pop_back();
+	}
+
+	return meshList.size();
+}
+
+//-----  getGeometryFromCollisionShape()  -------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromCollisionShape(bhkShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	//  check type of collision mesh
+	//bhkMoppBvTreeShape
+	if (DynamicCast<bhkMoppBvTreeShape>(pShape) != NULL)
+	{
+		getGeometryFromCollisionShape(DynamicCast<bhkMoppBvTreeShape>(pShape)->GetShape(), meshList, transformAry, pTmplAlphaProp);
+	}
+	//bhkCompressedMeshShape
+	else if (DynamicCast<bhkCompressedMeshShape>(pShape) != NULL)
+	{
+		getGeometryFromCompressedMeshShape(DynamicCast<bhkCompressedMeshShape>(pShape), meshList, transformAry, pTmplAlphaProp);
 	}
 	//bhkPackedNiTriStripsShape
-	else if (DynamicCast<bhkPackedNiTriStripsShape>(pTShape) != NULL)
+	else if (DynamicCast<bhkPackedNiTriStripsShape>(pShape) != NULL)
 	{
-		getGeometryFromPackedTriStripsShape(DynamicCast<bhkPackedNiTriStripsShape>(pTShape), pShape->GetBody(), meshList, transformAry, pTmplAlphaProp);
+		getGeometryFromPackedTriStripsShape(DynamicCast<bhkPackedNiTriStripsShape>(pShape), meshList, transformAry, pTmplAlphaProp);
+	}
+	//bhkNiTriStripsShape
+	else if (DynamicCast<bhkNiTriStripsShape>(pShape) != NULL)
+	{
+		getGeometryFromTriStripsShape(DynamicCast<bhkNiTriStripsShape>(pShape), meshList, transformAry, pTmplAlphaProp);
 	}
 	//bhkConvexVerticesShape
-	else if (DynamicCast<bhkConvexVerticesShape>(pTShape) != NULL)
+	else if (DynamicCast<bhkConvexVerticesShape>(pShape) != NULL)
 	{
-		getGeometryFromConvexVerticesShape(DynamicCast<bhkConvexVerticesShape>(pTShape), pShape->GetBody(), meshList, transformAry, pTmplAlphaProp);
+		getGeometryFromConvexVerticesShape(DynamicCast<bhkConvexVerticesShape>(pShape), meshList, transformAry, pTmplAlphaProp);
+	}
+	//bhkBoxShape
+	else if (DynamicCast<bhkBoxShape>(pShape) != NULL)
+	{
+		getGeometryFromBoxShape(DynamicCast<bhkBoxShape>(pShape), meshList, transformAry, pTmplAlphaProp);
+	}
+	//bhkSphereShape
+	else if (DynamicCast<bhkSphereShape>(pShape) != NULL)
+	{
+		getGeometryFromSphereShape(DynamicCast<bhkSphereShape>(pShape), meshList, transformAry, pTmplAlphaProp);
+	}
+	//bhkTransformShape
+	else if (DynamicCast<bhkTransformShape>(pShape) != NULL)
+	{
+		Matrix44	tTrans(DynamicCast<bhkTransformShape>(pShape)->GetTransform().Transpose());
+		Vector4		tVec4 (tTrans.GetTranslation());
+		Vector3		tVec3 (tVec4.x * _factor, tVec4.y * _factor, tVec4.z * _factor);
+		Matrix33	tMat33(tTrans.GetRotation());
+		Matrix44	tMat44(tVec3, tMat33, tTrans.GetScale());
+	
+		//  add own translation to list
+		transformAry.push_back(tMat44);
+
+		//  parse sub shape(s)
+		getGeometryFromCollisionShape(DynamicCast<bhkTransformShape>(pShape)->GetShape(), meshList, transformAry, pTmplAlphaProp);
+
+		//  remove own translation from list
+		transformAry.pop_back();
+	}
+	//bhkListShape
+	else if (DynamicCast<bhkListShape>(pShape) != NULL)
+	{
+		vector<bhkShapeRef>		subShapes(DynamicCast<bhkListShape>(pShape)->GetSubShapes());
+
+		//  parse sub shape(s)
+		for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+		{
+			//  parse sub shape(s)
+			getGeometryFromCollisionShape(*pIter, meshList, transformAry, pTmplAlphaProp);
+		}
 	}
 
+	return meshList.size();
+}
 
+//-----  getGeometryFromSphereShape()  ----------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromSphereShape(bhkSphereShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	float		radius(pShape->GetRadius());
+	Matrix44	locTransform;
 
+	//  much work to do!!!
 
+	return meshList.size();
+}
 
+//-----  getGeometryFromBoxShape()  -------------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromBoxShape(bhkBoxShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	Vector3		dimensions(pShape->GetDimensions());
+	Matrix44	locTransform;
+
+	//  - indices
+	unsigned int		countI     (24);
+	unsigned int		indexI     (0);
+	unsigned short*		pBufIndices(new unsigned short[countI]);
+
+	pBufIndices[0]  = 0;
+	pBufIndices[1]  = 1;
+	pBufIndices[2]  = 0;
+	pBufIndices[3]  = 2;
+	pBufIndices[4]  = 0;
+	pBufIndices[5]  = 4;
+	pBufIndices[6]  = 1;
+	pBufIndices[7]  = 3;
+	pBufIndices[8]  = 1;
+	pBufIndices[9]  = 5;
+	pBufIndices[10] = 2;
+	pBufIndices[11] = 3;
+	pBufIndices[12] = 2;
+	pBufIndices[13] = 6;
+	pBufIndices[14] = 3;
+	pBufIndices[15] = 7;
+	pBufIndices[16] = 4;
+	pBufIndices[17] = 5;
+	pBufIndices[18] = 4;
+	pBufIndices[19] = 6;
+	pBufIndices[20] = 5;
+	pBufIndices[21] = 7;
+	pBufIndices[22] = 6;
+	pBufIndices[23] = 7;
+
+	//  - vertices
+	unsigned int							countV      (8);
+	DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+
+	//  +x, +y, +z
+	pBufVertices[0]._x =  dimensions.x * _factor;
+	pBufVertices[0]._y =  dimensions.y * _factor;
+	pBufVertices[0]._z =  dimensions.z * _factor;
+	//  +x, +y, -z
+	pBufVertices[1]._x =  dimensions.x * _factor;
+	pBufVertices[1]._y =  dimensions.y * _factor;
+	pBufVertices[1]._z = -dimensions.z * _factor;
+	//  +x, -y, +z
+	pBufVertices[2]._x =  dimensions.x * _factor;
+	pBufVertices[2]._y = -dimensions.y * _factor;
+	pBufVertices[2]._z =  dimensions.z * _factor;
+	//  +x, -y, -z
+	pBufVertices[3]._x =  dimensions.x * _factor;
+	pBufVertices[3]._y = -dimensions.y * _factor;
+	pBufVertices[3]._z = -dimensions.z * _factor;
+	//  -x, +y, +z
+	pBufVertices[4]._x = -dimensions.x * _factor;
+	pBufVertices[4]._y =  dimensions.y * _factor;
+	pBufVertices[4]._z =  dimensions.z * _factor;
+	//  -x, +y, -z
+	pBufVertices[5]._x = -dimensions.x * _factor;
+	pBufVertices[5]._y =  dimensions.y * _factor;
+	pBufVertices[5]._z = -dimensions.z * _factor;
+	//  -x, -y, +z
+	pBufVertices[6]._x = -dimensions.x * _factor;
+	pBufVertices[6]._y = -dimensions.y * _factor;
+	pBufVertices[6]._z =  dimensions.z * _factor;
+	//  -x, -y, -z
+	pBufVertices[7]._x = -dimensions.x * _factor;
+	pBufVertices[7]._y = -dimensions.y * _factor;
+	pBufVertices[7]._z = -dimensions.z * _factor;
+
+	for (unsigned int i(0); i < countV; ++i)
+	{
+		pBufVertices[i]._color = _defCollisionColor;
+	}
+
+	//  collected all data needed => convert to DirectX
+	//  - transformation matrix
+	for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
+	{
+		locTransform *= *pIterT;
+	}
+
+	//  create new model
+	DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																	pBufVertices,
+																	countV,
+																	pBufIndices,
+																	countI,
+																	_defCollisionColor
+																);
+	//  modify primitive type
+	pNewModel->SetPrimitiveType(D3DPT_LINELIST);
+
+	//  set visibility
+	if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+	//  add model view data
+	pNewModel->SetNifData("unknown", "bhkBoxShape", pShape->internal_block_number);
+
+	//  append model to list
+	meshList.push_back(pNewModel);
 
 	return meshList.size();
 }
 
 //-----  getGeometryFromConvexVerticesShape()  --------------------------------
-unsigned int DirectXNifConverter::getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+unsigned int DirectXNifConverter::getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
-	bhkRigidBodyT*		pRBody      (DynamicCast<bhkRigidBodyT>(pBody));
 	vector<Vector3>		vecVertices (pShape->GetVertices());
 	Matrix44			locTransform;
-	float				factor      (7.0f);
-
-	//  add RigidBody translation to list - if bhkRigidBodyT
-	if (pRBody != NULL)
-	{
-		Vector4		tVec4 (pRBody->GetTranslation());
-		Vector3		tVec3 (tVec4.x * factor, tVec4.y * factor, tVec4.z * factor);
-		Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
-		Matrix44	tMat44(tVec3, tMat33, 1.0f);
-	
-		transformAry.push_back(tMat44);
-	}
 
 	//  - indices
 	unsigned int		countI     (vecVertices.size() * (vecVertices.size() - 1));
@@ -612,9 +790,9 @@ unsigned int DirectXNifConverter::getGeometryFromConvexVerticesShape(bhkConvexVe
 
 	for (unsigned int i(0); i < countV; ++i)
 	{
-		pBufVertices[i]._x     = vecVertices[i].x * factor;
-		pBufVertices[i]._y     = vecVertices[i].y * factor;
-		pBufVertices[i]._z     = vecVertices[i].z * factor;
+		pBufVertices[i]._x     = vecVertices[i].x * _factor;
+		pBufVertices[i]._y     = vecVertices[i].y * _factor;
+		pBufVertices[i]._z     = vecVertices[i].z * _factor;
 		pBufVertices[i]._color = _defCollisionColor;
 	}
 
@@ -645,38 +823,19 @@ unsigned int DirectXNifConverter::getGeometryFromConvexVerticesShape(bhkConvexVe
 	//  append model to list
 	meshList.push_back(pNewModel);
 
-	//  remove RigidBody translation from list - if set
-	if (pRBody != NULL)
-	{
-		transformAry.pop_back();
-	}
-
 	return meshList.size();
 }
 
 //-----  getGeometryFromCompressedMeshShape()  --------------------------------
-unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
 	bhkCompressedMeshShapeData*	pData(DynamicCast<bhkCompressedMeshShapeData>(pShape->GetData()));
 	if (pData == NULL)		return meshList.size();
 
 	//  hurray!!!
-	bhkRigidBodyT*				pRBody      (DynamicCast<bhkRigidBodyT>(pBody));
 	vector<bhkCMSDChunk>		chunkGeoList(pData->GetChunks());
 	vector<bhkCMSDMaterial>		chunkMatList(pData->GetChunkMaterials());
-	float						factor      (70.0f);
 	unsigned short				idxChunk    (0);
-
-	//  add RigidBody translation to list - if bhkRigidBodyT
-	if (pRBody != NULL)
-	{
-		Vector4		tVec4 (pRBody->GetTranslation());
-		Vector3		tVec3 (tVec4.x * factor, tVec4.y * factor, tVec4.z * factor);
-		Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
-		Matrix44	tMat44(tVec3, tMat33, 1.0f);
-	
-		transformAry.push_back(tMat44);
-	}
 
 	//  for each chunk of shape
 	for (auto pIter=chunkGeoList.begin(), pEnd=chunkGeoList.end(); pIter != pEnd; ++pIter, ++idxChunk)
@@ -740,9 +899,9 @@ unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompress
 
 		for (unsigned int i(0); i < countV; ++i)
 		{
-			pBufVertices[i]._x     = vecVertices[i].x * factor;
-			pBufVertices[i]._y     = vecVertices[i].y * factor;
-			pBufVertices[i]._z     = vecVertices[i].z * factor;
+			pBufVertices[i]._x     = vecVertices[i].x * _factor;
+			pBufVertices[i]._y     = vecVertices[i].y * _factor;
+			pBufVertices[i]._z     = vecVertices[i].z * _factor;
 			pBufVertices[i]._color = _defCollisionColor;
 		}
 
@@ -854,9 +1013,9 @@ unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompress
 
 			for (unsigned int i(0); i < countV; ++i)
 			{
-				pBufVertices[i]._x     = pIter->_vertices[i].x * factor;
-				pBufVertices[i]._y     = pIter->_vertices[i].y * factor;
-				pBufVertices[i]._z     = pIter->_vertices[i].z * factor;
+				pBufVertices[i]._x     = pIter->_vertices[i].x * _factor;
+				pBufVertices[i]._y     = pIter->_vertices[i].y * _factor;
+				pBufVertices[i]._z     = pIter->_vertices[i].z * _factor;
 				pBufVertices[i]._color = _defCollisionColor;
 			}
 
@@ -890,38 +1049,19 @@ unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompress
 		}  //  for (auto pIter=chunkDataList.begin(), pEnd=chunkDataList.end(); pIter != pEnd; ++pIter)
 	}  //  if (!tBVecVec.empty() && !tBTriVec.empty())
 
-	//  remove RigidBody translation from list - if set
-	if (pRBody != NULL)
-	{
-		transformAry.pop_back();
-	}
-
 	return meshList.size();
 }
 
 //-----  getGeometryFromPackedTriStripsShape()  -------------------------------
-unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedNiTriStripsShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedNiTriStripsShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
 	hkPackedNiTriStripsData*	pData(DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
 	if (pData == NULL)		return meshList.size();
 
 	//  hurray!!!
-	bhkRigidBodyT*		pRBody      (DynamicCast<bhkRigidBodyT>(pBody));
 	vector<Vector3>		vecVertices (pData->GetVertices());
 	vector<Triangle>	vecTriangles(pData->GetTriangles());
 	Matrix44			locTransform;
-	float				factor      (7.0f);
-
-	//  add RigidBody translation to list - if bhkRigidBodyT
-	if (pRBody != NULL)
-	{
-		Vector4		tVec4 (pRBody->GetTranslation());
-		Vector3		tVec3 (tVec4.x * factor, tVec4.y * factor, tVec4.z * factor);
-		Matrix33	tMat33(QuaternionToMatrix33(pRBody->GetRotation()));
-		Matrix44	tMat44(tVec3, tMat33, 1.0f);
-	
-		transformAry.push_back(tMat44);
-	}
 
 	//  - indices
 	unsigned int		countI     (vecTriangles.size()*3);
@@ -940,9 +1080,9 @@ unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedN
 
 	for (unsigned int i(0); i < countV; ++i)
 	{
-		pBufVertices[i]._x     = vecVertices[i].x * factor;
-		pBufVertices[i]._y     = vecVertices[i].y * factor;
-		pBufVertices[i]._z     = vecVertices[i].z * factor;
+		pBufVertices[i]._x     = vecVertices[i].x * _factor;
+		pBufVertices[i]._y     = vecVertices[i].y * _factor;
+		pBufVertices[i]._z     = vecVertices[i].z * _factor;
 		pBufVertices[i]._color = _defCollisionColor;
 	}
 
@@ -970,11 +1110,76 @@ unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedN
 	//  append model to list
 	meshList.push_back(pNewModel);
 
-	//  remove RigidBody translation from list - if set
-	if (pRBody != NULL)
+	return meshList.size();
+}
+
+//-----  getGeometryFromTriStripsShape()  -------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromTriStripsShape(bhkNiTriStripsShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	int		numData(pShape->GetNumStripsData());
+	if	(numData <= 0)		return meshList.size();
+
+	//  for each strips data
+	for (int idxData(0); idxData < numData; ++idxData)
 	{
-		transformAry.pop_back();
-	}
+		NiTriStripsDataRef		pData(pShape->GetStripsData(idxData));
+		if (pData == NULL)		continue;
+
+		vector<Vector3>		vecVertices (pData->GetVertices());
+		vector<Triangle>	vecTriangles(pData->GetTriangles());
+		Matrix44			locTransform;
+
+		//  - indices
+		unsigned int		countI     (vecTriangles.size()*3);
+		unsigned short*		pBufIndices(new unsigned short[countI]);
+
+		for (unsigned int i(0); i < countI; i+=3)
+		{
+			pBufIndices[i]   = vecTriangles[i/3].v1;
+			pBufIndices[i+1] = vecTriangles[i/3].v2;
+			pBufIndices[i+2] = vecTriangles[i/3].v3;
+		}
+
+		//  - vertices
+		unsigned int							countV      (vecVertices.size());
+		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+
+		for (unsigned int i(0); i < countV; ++i)
+		{
+			pBufVertices[i]._x     = vecVertices[i].x;
+			pBufVertices[i]._y     = vecVertices[i].y;
+			pBufVertices[i]._z     = vecVertices[i].z;
+			pBufVertices[i]._color = _defCollisionColor;
+		}
+
+		//  collected all data needed => convert to DirectX
+		//  - transformation matrix
+		for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
+		{
+			locTransform *= *pIterT;
+		}
+
+		//  create new model
+		DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																		pBufVertices,
+																		countV,
+																		pBufIndices,
+																		countI,
+																		_defCollisionColor
+																	);
+		//  set visibility
+		if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+		//  add model view data
+		stringstream	sStream;
+
+		sStream << "TriStripData #" << idxData << ": " << NifUtlMaterialList::getInstance()->getMaterialDefName(pData->GetSkyrimMaterial());
+		pNewModel->SetNifData(sStream.str(), "bhkNiTriStrips", pShape->internal_block_number);
+
+		//  append model to list
+		meshList.push_back(pNewModel);
+
+	}  //  for (int idxData(0); idxData < numData; ++idxData)
 
 	return meshList.size();
 }
@@ -998,42 +1203,6 @@ bool DirectXNifConverter::ConvertModel(const string fileName, vector<DirectXMesh
 	getGeometryFromNode(pRootInput, meshList, transformAry, NULL);
 
 	return true;
-}
-
-//-----  BlendFuncToDXBlend()  ------------------------------------------------
-void DirectXNifConverter::BlendFuncToDXBlend(const NiAlphaProperty::BlendFunc value, DWORD& dxBlend, DWORD& dxArg)
-{
-	switch (value)
-	{
-		case NiAlphaProperty::BF_SRC_ALPHA:
-		case NiAlphaProperty::BF_SRC_ALPHA_SATURATE:
-		{
-			dxBlend = D3DBLEND_SRCALPHA;
-			dxArg   = D3DTA_TEXTURE;
-			break;
-		}
-
-		case NiAlphaProperty::BF_DST_ALPHA:
-		{
-			dxBlend = D3DBLEND_DESTALPHA;
-			dxArg   = D3DTA_TEXTURE;
-			break;
-		}
-
-		case NiAlphaProperty::BF_ONE_MINUS_SRC_ALPHA:
-		{
-			dxBlend = D3DBLEND_INVSRCALPHA;
-			dxArg   = D3DTA_TEXTURE;
-			break;
-		}
-
-		case NiAlphaProperty::BF_ONE_MINUS_DST_ALPHA:
-		{
-			dxBlend = D3DBLEND_INVDESTALPHA;
-			dxArg   = D3DTA_TEXTURE;
-			break;
-		}
-	}
 }
 
 //-----  Matrix44ToD3DXMATRIX()  ----------------------------------------------

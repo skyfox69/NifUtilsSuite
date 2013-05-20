@@ -22,7 +22,10 @@
 #include "obj/bhkCollisionObject.h"
 #include "obj/bhkCompressedMeshShape.h"
 #include "obj/bhkPackedNiTriStripsShape.h"
+#include "obj/bhkNiTriStripsShape.h"
 #include "obj/bhkConvexVerticesShape.h"
+#include "obj/bhkBoxShape.h"
+#include "obj/bhkSphereShape.h"
 #include "gen/QuaternionXYZW.h"
 
 //-----  DEFINES  -------------------------------------------------------------
@@ -42,6 +45,7 @@ class DirectXNifConverter
 		DWORD						_defAmbientColor;
 		DWORD						_defDiffuseColor;
 		DWORD						_defSpecularColor;
+		float						_factor;
 		unsigned short				_lodRenderLevel;
 		bool						_isBillboard;
 		bool						_isCollision;
@@ -58,11 +62,14 @@ class DirectXNifConverter
 		virtual	unsigned int		getGeometryFromData(vector<Vector3>& vecVertices, vector<Triangle>& vecTriangles, vector<Vector3>& vecNormals, vector<Color4>& vecColors, vector<TexCoord>& vecTexCoords, NiTriBasedGeomRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 		//  collision
 		virtual	unsigned int		getGeometryFromCollisionObject(bhkCollisionObjectRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
-		virtual	unsigned int		getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
-		virtual	unsigned int		getGeometryFromPackedTriStripsShape(bhkPackedNiTriStripsShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
-		virtual	unsigned int		getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, NiObjectRef pBody, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromCollisionShape(bhkShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromPackedTriStripsShape(bhkPackedNiTriStripsShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromTriStripsShape(bhkNiTriStripsShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromBoxShape(bhkBoxShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromSphereShape(bhkSphereShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 
-		virtual	void				BlendFuncToDXBlend     (const NiAlphaProperty::BlendFunc value, DWORD& dxBlend, DWORD& dxArg);
 		virtual D3DXMATRIX			Matrix44ToD3DXMATRIX   (const Matrix44& matrixIn);
 		virtual	Matrix33			QuaternionToMatrix33   (const QuaternionXYZW& quadIn);
 		virtual	string				CheckTextureName       (string texName);
