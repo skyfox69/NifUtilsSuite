@@ -22,7 +22,7 @@
 #include "obj/NiTriShapeData.h"
 #include "obj/BSLightingShaderProperty.h"
 #include "obj/NiTriStrips.h"
-#include "obj/NiCollisionObject.h"
+#include "obj/bhkPackedNiTriStripsShape.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  return codes
@@ -258,5 +258,6 @@ protected:
 		*/
 	virtual bool checkFileExists(string fileName);
 
-	virtual NiNodeRef convertCollObjectToCollNode(NiCollisionObjectRef pCollObject, vector<Matrix44>& transformAry);
+	virtual bhkShapeRef convertCollShape(bhkShapeRef pShape);
+	virtual bhkShapeRef convertCollPackedNiTriStrips(bhkPackedNiTriStripsShapeRef pShape);
 };

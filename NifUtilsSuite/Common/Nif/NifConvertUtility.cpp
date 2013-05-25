@@ -27,6 +27,9 @@
 #include "obj/bhkRigidBody.h"
 #include "obj/bhkCollisionObject.h"
 #include "obj/hkPackedNiTriStripsData.h"
+#include "obj/bhkNiTriStripsShape.h"
+#include "obj/bhkConvexTransformShape.h"
+#include "obj/bhkListShape.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -91,7 +94,7 @@ NiNodeRef NifConvertUtility::getRootNodeFromNifFile(string fileName, string logP
 NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
 	NiNodeRef				pDstNode    (pSrcNode);
-	NiCollisionObjectRef	pCollObject (pSrcNode->GetCollisionObject());
+	bhkCollisionObjectRef	pCollObject (DynamicCast<bhkCollisionObject>(pSrcNode->GetCollisionObject()));
 	vector<NiAVObjectRef>	srcShapeList(pDstNode->GetChildren());
 
 	//  add local transformation to list
@@ -141,19 +144,12 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 	//  add collision object in case of holding
 	if (!_cleanTreeCollision && (pCollObject != NULL))
 	{
-		NiNodeRef	pCollNode(convertCollObjectToCollNode(pCollObject, transformAry));
+		//  search for embedded shape
+		bhkRigidBodyRef		pRBody(DynamicCast<bhkRigidBody>(pCollObject->GetBody()));
 
-		//  remove old target
-		pCollObject->SetTarget(NULL);
-
-		//  add old-style collision if available
-		if (pCollNode != NULL)
+		if (pRBody != NULL)
 		{
-			pDstNode->ClearChildren();
-			pDstNode->AddChild(&(*pCollNode));
-		}
-		else
-		{
+			pRBody->SetShape(convertCollShape(pRBody->GetShape()));
 			pDstNode->SetCollisionObject(pCollObject);
 		}
 	}  //  if (!_cleanTreeCollision && (pCollObject != NULL))
@@ -750,126 +746,128 @@ BSLightingShaderPropertyRef NifConvertUtility::cloneBSLightingShaderProperty(BSL
 }
 
 /*---------------------------------------------------------------------------*/
-NiNodeRef NifConvertUtility::convertCollObjectToCollNode(NiCollisionObjectRef pCollObject, vector<Matrix44>& transformAry)
+bhkShapeRef NifConvertUtility::convertCollShape(bhkShapeRef pShape)
 {
-	NiNodeRef	pCollNode(NULL);
+	bhkShapeRef		pShapeOut(pShape);
 
-	if (pCollObject == NULL)			return NULL;
-
-	//  search for embedded hkPackedNiTriStripsData
-	bhkCollisionObjectRef	pModel(DynamicCast<bhkCollisionObject>(pCollObject));
-	if (pModel == NULL)		return NULL; 
-
-	bhkRigidBodyRef			pRBody(DynamicCast<bhkRigidBody>(pModel->GetBody()));
-	if (pRBody == NULL)		return NULL; 
-
-	bhkMoppBvTreeShapeRef	pMBTS(DynamicCast<bhkMoppBvTreeShape>(pRBody->GetShape()));
-	if (pMBTS == NULL)		return NULL;
-
-	bhkPackedNiTriStripsShapeRef	pShape(DynamicCast<bhkPackedNiTriStripsShape>(pMBTS->GetShape()));
-	if (pShape == NULL)		return NULL;
-
-	hkPackedNiTriStripsData*	pData(DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
-	if (pData == NULL)		return NULL;
-
-	//  found bhkPackedNiTriStripsShape and data => convert each sub-shape to NiTriShape
-	NiTriShapeRef				pTriShape   (NULL);
-	NiTriShapeDataRef			pTriData    (NULL);
-	vector<Vector3>				vertices    (pData->GetVertices());
-	vector<Vector3>				verticesTmp;
-	vector<hkTriangle>			triangles   (pData->GetHavokTriangles());
-	vector<Triangle>			trianglesTmp;
-	vector<OblivionSubShape>	subShapes(pShape->GetSubShapes());
-	hkTriangle&					triangle    (triangles[0]);
-	Vector3						tVector;
-	unsigned int				verOffset   (0);
-	unsigned int				triIndex    (0);
-
-	pCollNode = new RootCollisionNode();
-
-	for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+	//  check type of collision mesh
+	//bhkMoppBvTreeShape
+	if (DynamicCast<bhkMoppBvTreeShape>(pShape) != NULL)
 	{
-		//  reset arrays
-		verticesTmp.clear();
-		trianglesTmp.clear();
+		DynamicCast<bhkMoppBvTreeShape>(pShape)->SetShape(convertCollShape(DynamicCast<bhkMoppBvTreeShape>(pShape)->GetShape()));
+	}
+	//bhkTransformShape
+	else if (DynamicCast<bhkTransformShape>(pShape) != NULL)
+	{
+		DynamicCast<bhkTransformShape>(pShape)->SetShape(convertCollShape(DynamicCast<bhkTransformShape>(pShape)->GetShape()));
+	}
+	//bhkListShape
+	else if (DynamicCast<bhkListShape>(pShape) != NULL)
+	{
+		bhkListShapeRef			pTShape(DynamicCast<bhkListShape>(pShape));
+		vector<bhkShapeRef>		subShapes(pTShape->GetSubShapes());
+		vector<bhkShapeRef>		newShapes;
 
-		//  get vertices
-		for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+		//  parse sub shape(s)
+		for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
 		{
-			tVector = vertices[idx];
-
-			//  transform vertex to global coordinates
-			for (int t((int) (transformAry.size())-1); t >= 0; --t)
-			{
-				tVector = transformAry[t] * tVector;
-			}
-
-			//  scale final vertex
-			tVector *= 7.0f;
-
-			//  add vertex to tmp. array
-			verticesTmp.push_back(tVector);
-
-		}  //  for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
-
-		//  get triangles
-		for (; triIndex < triangles.size(); ++triIndex)
-		{
-			//  check vertex bounds
-			triangle = triangles[triIndex];
-			if ((triangle.triangle.v1 >= (pIter->numVertices + verOffset)) ||
-				(triangle.triangle.v2 >= (pIter->numVertices + verOffset)) ||
-				(triangle.triangle.v3 >= (pIter->numVertices + verOffset))
-			   )
-			{
-				break;
-			}
-			
-			/**  TEST FOR ROTATION
-			if ((triIndex == 152) || (triIndex == 78))
-			{
-				int	iiii=0;
-			}
-
-			Vector3		A (vertices[triangle.triangle.v1]);
-			Vector3		B (vertices[triangle.triangle.v2]);
-			Vector3		C (vertices[triangle.triangle.v3]);
-			Vector3		BA(B - A);
-			Vector3		CA(C - A);
-			Vector3		N (BA.CrossProduct(CA));
-			Vector3		Nn(N.Normalized());
-			float		w (N.DotProduct(B));
-			float		v (Nn.DotProduct(triangle.normal));
-
-			Matrix44	tMatrix(A.x, A.y, A.z, 1.0, B.x, B.y, B.z, 1.0, C.x, C.y, C.z, 1.0, triangle.normal.x, triangle.normal.y, triangle.normal.z, 1.0);
-			float		det(tMatrix.Determinant());
-
-			//  add triangle
-			if (w >= 0)
-			{
-				trianglesTmp.push_back(Triangle(triangle.triangle.v1-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v3-verOffset));
-			}
-			else
-			{
-				trianglesTmp.push_back(Triangle(triangle.triangle.v3-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v1-verOffset));
-			}
-			**/
-			trianglesTmp.push_back(Triangle(triangle.triangle.v1-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v3-verOffset));
+			//  parse sub shape(s)
+			newShapes.push_back(convertCollShape(*pIter));
 		}
 
-		pTriData = new NiTriShapeData();
-		pTriData->SetVertices (verticesTmp);
-		pTriData->SetTriangles(trianglesTmp);
+		//  set new shape list
+		pTShape->SetSubShapes(newShapes);
+	}
+	//bhkPackedNiTriStripsShape
+	else if (DynamicCast<bhkPackedNiTriStripsShape>(pShape) != NULL)
+	{
+		pShapeOut = convertCollPackedNiTriStrips(DynamicCast<bhkPackedNiTriStripsShape>(pShape));
+	}
 
-		pTriShape = new NiTriShape();
-		pTriShape->SetData(pTriData);
+	return pShapeOut;
+}
 
-		pCollNode->AddChild(&(*pTriShape));
+/*---------------------------------------------------------------------------*/
+bhkShapeRef NifConvertUtility::convertCollPackedNiTriStrips(bhkPackedNiTriStripsShapeRef pShape)
+{
+	bhkShapeRef					pShapeOut(pShape);
+	hkPackedNiTriStripsDataRef	pData    (DynamicCast<hkPackedNiTriStripsData>(pShape->GetData()));
 
-		//  increase vertex offset
-		verOffset += pIter->numVertices;
+	//  only convert on existing dsata
+	if (pData != NULL)
+	{
+		vector<OblivionSubShape>	subShapes   (pShape->GetSubShapes());
+		vector<Vector3>				vertices    (pData->GetVertices());
+		vector<Vector3>				verticesTmp;
+		vector<hkTriangle>			triangles   (pData->GetHavokTriangles());
+		vector<Triangle>			trianglesTmp;
+		hkTriangle&					triangle    (triangles[0]);
+		Vector3						tVector;
+		unsigned int				verOffset   (0);
+		unsigned int				triIndex    (0);
+		int							subIndex    (0);
 
-	}  //  for (auto pIter=pShape->GetSubShapes().begin(), pEnd=pShape->GetSubShapes().end(); pIter != pEnd; ++pIter)
+		//  create new result shape
+		bhkNiTriStripsShapeRef		pShapeTri(new bhkNiTriStripsShape());
 
-	return	pCollNode;
+		//  copy attributes
+		pShapeTri->SetScale(pShape->GetScale());
+		pShapeTri->SetNumStripsData(subShapes.size());
+
+		//  convert each sub-shape
+		for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter, ++subIndex)
+		{
+			NiTriStripsDataRef	pDataTri(new NiTriStripsData());
+
+			//  reset arrays
+			verticesTmp.clear();
+			trianglesTmp.clear();
+
+			//  get vertices
+			for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+			{
+				tVector = vertices[idx];
+
+				//  scale final vertex
+				tVector *= 7.0f;
+
+				//  add vertex to tmp. array
+				verticesTmp.push_back(tVector);
+
+			}  //  for (unsigned int idx(verOffset), idxMax(verOffset+pIter->numVertices); idx < idxMax; ++idx)
+
+			//  get triangles
+			for (; triIndex < triangles.size(); ++triIndex)
+			{
+				//  check vertex bounds
+				triangle = triangles[triIndex];
+				if ((triangle.triangle.v1 >= (pIter->numVertices + verOffset)) ||
+					(triangle.triangle.v2 >= (pIter->numVertices + verOffset)) ||
+					(triangle.triangle.v3 >= (pIter->numVertices + verOffset))
+				   )
+				{
+					break;
+				}
+			
+				trianglesTmp.push_back(Triangle(triangle.triangle.v1-verOffset, triangle.triangle.v2-verOffset, triangle.triangle.v3-verOffset));
+			}
+
+			//  fill data object
+			pDataTri->SetVertices (verticesTmp);
+			pDataTri->SetTriangles(trianglesTmp);
+
+			//  add data to shape
+			pShapeTri->SetStripsData(subIndex, pDataTri);
+
+			//  increase vertex offset
+			verOffset += pIter->numVertices;
+
+		}  //  for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+
+		//  set out shape
+		pShapeOut = pShapeTri;
+
+	}  //  if (pData != NULL)
+
+	return pShapeOut;
 }
