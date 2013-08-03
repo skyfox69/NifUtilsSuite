@@ -16,7 +16,7 @@
 #include "Common\Util\FDFileHelper.h"
 #include "Common\Util\Configuration.h"
 #include "Common\Util\FDToolTipText.h"
-#include "Common\Nif\NifCollisionUtility.h"
+#include "Common\Nif\NifExtractUtility.h"
 #include <afxbutton.h>
 
 extern void logCallback(const int type, const char* pMessage);
@@ -412,7 +412,7 @@ void CFormChunkExtractView::LogMessage(const CString text, const CHARFORMAT* pFo
 void CFormChunkExtractView::OnBnClickedBtConvert()
 {
 	Configuration*			pConfig  (Configuration::getInstance());
-	NifCollisionUtility		ncUtility(*(NifUtlMaterialList::getInstance()));
+	NifExtractUtility		ncUtility(*(NifUtlMaterialList::getInstance()));
 	unsigned short			ncReturn (NCU_OK);
 
 	//  store data

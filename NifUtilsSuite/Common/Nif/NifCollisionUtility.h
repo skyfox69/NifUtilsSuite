@@ -16,7 +16,6 @@
 #include "Common\Nif\MaterialTypeHandling.h"
 #include "Common\Nif\ChunkNameHandling.h"
 #include "Common\Nif\NifUtlMaterial.h"
-#include "Common\Nif\NifChunkData.h"
 
 //  Niflib includes
 #include "obj/nitrishape.h"
@@ -120,14 +119,6 @@ public:
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 
-	virtual unsigned int extractChunks(string fileNameCollSrc, string fileNameDstNif, string fileNameDstObj);
-
-	virtual void setGenerateNormals(const bool genNormals);
-
-	virtual void setScaleToModel(const bool doScale);
-
-	virtual void setSaveAsVersion(const unsigned int version);
-
 	virtual void setMergeCollision(const bool doMerge);
 
 protected:
@@ -181,13 +172,7 @@ protected:
 
 	ChunkNameHandling _cmHandling;
 
-	bool _generateNormals;
-
-	bool _scaleToModel;
-
 	bool _mergeCollision;
-
-	unsigned int _saveAsVersion;
 
 	/**
 	* Get geometry from NiTriShape
@@ -273,12 +258,6 @@ protected:
 	* @param text    in: message text
 	*/
 	virtual void logMessage(int type, string text);
-
-	virtual unsigned int getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeDataRef pShape, vector<NifChunkData>& chunkDataList);
-
-	virtual bool writeChunkDataAsObj(string fileName, vector<NifChunkData>& chunkDataList);
-
-	virtual bool writeChunkDataAsNif(string fileName, vector<NifChunkData>& chunkDataList);
 
 	virtual void cleanTreeCollision(NiNodeRef pNode);
 

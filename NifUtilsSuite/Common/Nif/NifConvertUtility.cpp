@@ -30,6 +30,10 @@
 #include "obj/bhkNiTriStripsShape.h"
 #include "obj/bhkConvexTransformShape.h"
 #include "obj/bhkListShape.h"
+#include "obj/bhkBoxShape.h"
+#include "obj/bhkCapsuleShape.h"
+#include "obj/bhkSphereShape.h"
+#include "obj/bhkConvexVerticesShape.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -149,6 +153,16 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 
 		if (pRBody != NULL)
 		{
+			array<7, unsigned short>	unknown7(pRBody->GetUnknown7Shorts());
+
+			//  force SKYRIM values
+			unknown7[3] = 0;
+			unknown7[4] = 0;
+			unknown7[5] = 1;
+			unknown7[6] = 65535;
+			pRBody->SetUnknown7Shorts(unknown7);
+			pRBody->SetTranslation(pRBody->GetTranslation() * 0.1f);
+			//pRBody->SetCenter(pRBody->GetCenter() * 0.7f);
 			pRBody->SetShape(convertCollShape(pRBody->GetShape()));
 			pDstNode->SetCollisionObject(pCollObject);
 		}
@@ -759,7 +773,15 @@ bhkShapeRef NifConvertUtility::convertCollShape(bhkShapeRef pShape)
 	//bhkTransformShape
 	else if (DynamicCast<bhkTransformShape>(pShape) != NULL)
 	{
-		DynamicCast<bhkTransformShape>(pShape)->SetShape(convertCollShape(DynamicCast<bhkTransformShape>(pShape)->GetShape()));
+		bhkTransformShapeRef	pShapeRef(DynamicCast<bhkTransformShape>(pShape));
+		Matrix44				transform(pShapeRef->GetTransform());
+
+		transform[0][3] *= 0.1f;
+		transform[1][3] *= 0.1f;
+		transform[2][3] *= 0.1f;
+		pShapeRef->SetTransform(transform);
+		pShapeRef->SetShape(convertCollShape(pShapeRef->GetShape()));
+		pShapeOut = pShapeRef;
 	}
 	//bhkListShape
 	else if (DynamicCast<bhkListShape>(pShape) != NULL)
@@ -782,6 +804,47 @@ bhkShapeRef NifConvertUtility::convertCollShape(bhkShapeRef pShape)
 	else if (DynamicCast<bhkPackedNiTriStripsShape>(pShape) != NULL)
 	{
 		pShapeOut = convertCollPackedNiTriStrips(DynamicCast<bhkPackedNiTriStripsShape>(pShape));
+	}
+	//bhkBoxShape
+	else if (DynamicCast<bhkBoxShape>(pShape) != NULL)
+	{
+		bhkBoxShapeRef	pShapeRef(DynamicCast<bhkBoxShape>(pShape));
+
+		pShapeRef->SetDimensions(pShapeRef->GetDimensions() * 0.1f);
+		pShapeOut = pShapeRef;
+	}
+	//bhkCapsuleShape
+	else if (DynamicCast<bhkCapsuleShape>(pShape) != NULL)
+	{
+		bhkCapsuleShapeRef	pShapeRef(DynamicCast<bhkCapsuleShape>(pShape));
+
+		pShapeRef->SetFirstPoint (pShapeRef->GetFirstPoint()  * 0.1f);
+		pShapeRef->SetSecondPoint(pShapeRef->GetSecondPoint() * 0.1f);
+		pShapeRef->SetRadius     (pShapeRef->GetRadius()      * 0.1f);
+		pShapeRef->SetRadius1    (pShapeRef->GetRadius1()     * 0.1f);
+		pShapeRef->SetRadius2    (pShapeRef->GetRadius2()     * 0.1f);
+		pShapeOut = pShapeRef;
+	}
+	//bhkSphereShape
+	else if (DynamicCast<bhkSphereShape>(pShape) != NULL)
+	{
+		bhkSphereShapeRef	pShapeRef(DynamicCast<bhkSphereShape>(pShape));
+
+		pShapeRef->SetRadius(pShapeRef->GetRadius() * 0.1f);
+		pShapeOut = pShapeRef;
+	}
+	//bhkConvexVerticesShape
+	else if (DynamicCast<bhkConvexVerticesShape>(pShape) != NULL)
+	{
+		bhkConvexVerticesShapeRef	pShapeRef(DynamicCast<bhkConvexVerticesShape>(pShape));
+		vector<Vector3>				vertList (pShapeRef->GetVertices());
+
+		for (auto pIter=vertList.begin(), pEnd=vertList.end(); pIter != pEnd; ++pIter)
+		{
+			*pIter *= 0.1f;
+		}
+		pShapeRef->SetVertices(vertList);
+		pShapeOut = pShapeRef;
 	}
 
 	return pShapeOut;
@@ -811,8 +874,9 @@ bhkShapeRef NifConvertUtility::convertCollPackedNiTriStrips(bhkPackedNiTriStrips
 		bhkNiTriStripsShapeRef		pShapeTri(new bhkNiTriStripsShape());
 
 		//  copy attributes
-		pShapeTri->SetScale(pShape->GetScale());
+		pShapeTri->SetScale        (pShape->GetScale());
 		pShapeTri->SetNumStripsData(subShapes.size());
+		pShapeTri->SetNumDataLayers(subShapes.size());
 
 		//  convert each sub-shape
 		for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter, ++subIndex)
@@ -858,6 +922,10 @@ bhkShapeRef NifConvertUtility::convertCollPackedNiTriStrips(bhkPackedNiTriStrips
 
 			//  add data to shape
 			pShapeTri->SetStripsData(subIndex, pDataTri);
+
+			//  set data layer
+			pShapeTri->SetOblivionLayer (subIndex, pIter->layer);
+			pShapeTri->SetOblivionFilter(subIndex, pIter->colFilter);
 
 			//  increase vertex offset
 			verOffset += pIter->numVertices;

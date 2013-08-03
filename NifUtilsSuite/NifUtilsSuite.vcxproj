@@ -145,6 +145,7 @@
     <ClInclude Include="Common\Nif\NifChunkData.h" />
     <ClInclude Include="Common\Nif\NifCollisionUtility.h" />
     <ClInclude Include="Common\Nif\NifConvertUtility.h" />
+    <ClInclude Include="Common\Nif\NifExtractUtility.h" />
     <ClInclude Include="Common\Nif\NifPrepareUtility.h" />
     <ClInclude Include="Common\Nif\NifUtlMaterial.h" />
     <ClInclude Include="Common\Nif\VertexColorHandling.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="Common\GUI\SubFormBase.cpp" />
     <ClCompile Include="Common\Nif\NifCollisionUtility.cpp" />
     <ClCompile Include="Common\Nif\NifConvertUtility.cpp" />
+    <ClCompile Include="Common\Nif\NifExtractUtility.cpp" />
     <ClCompile Include="Common\Nif\NifPrepareUtility.cpp" />
     <ClCompile Include="Common\Nif\NifUtlMaterial.cpp" />
     <ClCompile Include="Common\Util\Configuration.cpp" />

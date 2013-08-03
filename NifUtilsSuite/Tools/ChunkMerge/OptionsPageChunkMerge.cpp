@@ -40,9 +40,9 @@ void COptionsPageChunkMerge::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 
-	DDX_Radio(pDX, IDC_RD_MAT_SINGLE, _matHandling);
-	DDX_Radio(pDX, IDC_RD_COLL_CDATA, _colHandling);
-	DDX_Check(pDX, IDC_CK_MERGE_COLL, _mergeCollision); 
+	DDX_Radio(pDX, IDC_RD_MAT_SINGLE,  _matHandling);
+	DDX_Radio(pDX, IDC_RD_COLL_CDATA,  _colHandling);
+	DDX_Radio(pDX, IDC_RD_COLL_GLOBAL, _mergeCollision); 
 }
 
 //-----  OnWizardNext()  ------------------------------------------------------
