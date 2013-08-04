@@ -34,6 +34,7 @@
 #include "obj/bhkCapsuleShape.h"
 #include "obj/bhkSphereShape.h"
 #include "obj/bhkConvexVerticesShape.h"
+#include "obj/NiBinaryExtraData.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -162,7 +163,6 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 			unknown7[6] = 65535;
 			pRBody->SetUnknown7Shorts(unknown7);
 			pRBody->SetTranslation(pRBody->GetTranslation() * 0.1f);
-			//pRBody->SetCenter(pRBody->GetCenter() * 0.7f);
 			pRBody->SetShape(convertCollShape(pRBody->GetShape()));
 			pDstNode->SetCollisionObject(pCollObject);
 		}
@@ -182,7 +182,6 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 
 	//  force some data in destination shape
 	pDstNode->SetCollisionObject(NULL);  //  no collision object here
-	pDstNode->ClearExtraData();
 	pDstNode->SetFlags          (14);    //  ???
 
 	//  return converted NiTriShape
@@ -240,9 +239,44 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 	BSLightingShaderPropertyRef	pDstLShader (NULL);
 	NiGeometryDataRef			pDstGeo     (pDstNode->GetData());
 	vector<NiPropertyRef>		dstPropList (pDstNode->GetProperties());
+	list<NiExtraDataRef>		dstExtraList(pDstNode->GetExtraData());
 	short						bsPropIdx   (0);
 	bool						forceAlpha  (pTmplAlphaProp != NULL);
 	bool						hasAlpha    (false);
+	bool						tanWasCopied(false);
+
+	//  look for tangent space data
+	for (auto pIter=dstExtraList.begin(), pEnd=dstExtraList.end(); pIter != pEnd; ++pIter)
+	{
+		if ((DynamicCast<NiBinaryExtraData>(*pIter) != NULL) && (pDstGeo != NULL))
+		{
+			vector<byte>	vecByte(DynamicCast<NiBinaryExtraData>(*pIter)->GetData());
+			vector<Vector3>	vecTan;
+			vector<Vector3>	vecBin;
+			float*			pStartT((float*) &(vecByte[0]));
+			int				numVert(pDstGeo->GetVertexCount() * 3);
+
+			//  extract tangent space
+			for (int i(0); i < numVert; i += 3)
+			{
+				vecTan.push_back(Vector3(pStartT[i],         pStartT[i+1],         pStartT[i+2]));
+				vecBin.push_back(Vector3(pStartT[numVert+i], pStartT[numVert+i+1], pStartT[numVert+i+2]));
+			}
+
+			//  set tangent space
+			pDstGeo->SetTangents  (vecTan);
+			pDstGeo->SetBitangents(vecBin);
+
+			//  enable tangent space
+			pDstGeo->SetTspaceFlag(0x10);
+
+			tanWasCopied = true;
+
+		}  //  if ((DynamicCast<NiBinaryExtraData>(*pIter) != NULL) && (pDstGeo != NULL))
+	}  //  for (auto pIter=dstExtraList.begin(), pEnd=dstExtraList.end(); pIter != pEnd; ++pIter)
+
+	//  remove extra data
+	pDstNode->ClearExtraData();
 
 	//  data node
 	if (pDstGeo != NULL)
@@ -254,7 +288,7 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 		}
 
 		//  update tangent space?
-		if ((_updateTangentSpace) && (DynamicCast<NiTriShapeData>(pDstGeo) != NULL))
+		if (_updateTangentSpace && !tanWasCopied && (DynamicCast<NiTriShapeData>(pDstGeo) != NULL))
 		{
 			//  update tangent space
 			if (updateTangentSpace(DynamicCast<NiTriShapeData>(pDstGeo)))
