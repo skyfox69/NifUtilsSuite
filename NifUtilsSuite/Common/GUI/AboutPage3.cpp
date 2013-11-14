@@ -42,6 +42,9 @@ BOOL CAboutPage3::OnSetActive()
 	CString		tString;
 
 	tString  = "\r\n";
+	tString += "Version 1.1.2\r\n";
+	tString += "=============\r\n\r\n";
+	tString += "* Fix:	ChunkMerge: correct handling of buildType and MOPP data (fields swapped)\r\n\r\n\r\n";
 	tString += "Version 1.1.1\r\n";
 	tString += "=============\r\n\r\n";
 	tString += "* Chng:	ChunkExtract: handling of version number to be saved to\r\n";
