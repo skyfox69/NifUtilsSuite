@@ -577,7 +577,7 @@ bool NifCollisionUtility::injectCollisionData(vector<hkGeometry>& geometryMap, b
 	}  //  for (vector<hkGeometry>::iterator geoIter = geometryMap.begin(); geoIter != geometryMap.end(); geoIter++)
 
 	//  create welding info
-	mci.m_enableChunkSubdivision = true;
+	mci.m_enableChunkSubdivision = false;	//  PC version
 	pMoppCode   = hkpMoppUtility::buildCode(pCompMesh, mci);
 	pMoppBvTree = new hkpMoppBvTreeShape(pCompMesh, pMoppCode);
 	hkpMeshWeldingUtility::computeWeldingInfo(pCompMesh, pMoppBvTree, hkpWeldingUtility::WELDING_TYPE_TWO_SIDED);
@@ -600,14 +600,11 @@ bool NifCollisionUtility::injectCollisionData(vector<hkGeometry>& geometryMap, b
 	//  set scale
 	pMoppShape->SetMoppScale(pMoppBvTree->getMoppCode()->m_info.getScale());
 
+	//  set build Type
+	pMoppShape->SetBuildType(MoppDataBuildType((byte) pMoppCode->m_buildType));
+
 	//  copy mopp data
-	tByteVec.resize(pMoppBvTree->m_moppDataSize);
-	tByteVec[0] = pMoppBvTree->m_moppData[pMoppBvTree->m_moppDataSize - 1];
-	for (hkUint32 i(0); i < (pMoppBvTree->m_moppDataSize - 1); ++i)
-	{
-		tByteVec[i+1] = pMoppBvTree->m_moppData[i];
-	}
-	pMoppShape->SetMoppCode(tByteVec);
+	pMoppShape->SetMoppCode(vector<Niflib::byte>(pMoppBvTree->m_moppData));
 
 	//  set boundings
 	pData->SetBoundsMin(Vector4(pCompMesh->m_bounds.m_min(0), pCompMesh->m_bounds.m_min(1), pCompMesh->m_bounds.m_min(2), pCompMesh->m_bounds.m_min(3)));
