@@ -119,14 +119,6 @@ public:
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 
-	virtual unsigned int extractChunks(string fileNameCollSrc, string fileNameDstNif, string fileNameDstObj);
-
-	virtual void setGenerateNormals(const bool genNormals);
-
-	virtual void setScaleToModel(const bool doScale);
-
-	virtual void setSaveAsVersion(const unsigned int version);
-
 protected:
 
 	void (*_logCallback) (const int, const char*);
@@ -177,12 +169,6 @@ protected:
 	NifUtlMaterialList& _materialList;
 
 	ChunkNameHandling _cmHandling;
-
-	bool _generateNormals;
-
-	bool _scaleToModel;
-
-	unsigned int _saveAsVersion;
 
 	/**
 	* Get geometry from NiTriShape
@@ -256,9 +242,4 @@ protected:
 	*/
 	virtual void logMessage(int type, string text);
 
-	virtual unsigned int getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeDataRef pShape, vector<NifChunkData>& chunkDataList);
-
-	virtual bool writeChunkDataAsObj(string fileName, vector<NifChunkData>& chunkDataList);
-
-	virtual bool writeChunkDataAsNif(string fileName, vector<NifChunkData>& chunkDataList);
 };
