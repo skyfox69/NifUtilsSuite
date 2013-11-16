@@ -22,6 +22,9 @@ class COptionsPageModelView : public CPropertyPage
 				CMFCColorButton		_defColorBack;
 				CMFCColorButton		_defColorColl;
 				CMFCColorButton		_defColorWire;
+				CMFCColorButton		_defColorAmbi;
+				CMFCColorButton		_defColorDiff;
+				CMFCColorButton		_defColorSpec;
 				CComboBox			_levelLOD;
 				int					_showAxes;
 				int					_showModel;

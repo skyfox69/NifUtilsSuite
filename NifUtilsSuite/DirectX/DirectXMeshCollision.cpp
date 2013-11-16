@@ -25,7 +25,8 @@ DirectXMeshCollision::DirectXMeshCollision(D3DXMATRIX transform,
 		_pVertices    (pBufferV),
 		_pIndices     (pBufferI),
 		_countVertices(countV),
-		_countIndices (countI)
+		_countIndices (countI),
+		_primitiveType(D3DPT_TRIANGLELIST)
 {
 	_transform      = transform;
 	_wireframeColor = wireframeColor;
@@ -84,6 +85,15 @@ DirectXRenderMode DirectXMeshCollision::SetRenderMode(const DirectXRenderMode re
 	return DirectXMesh::SetRenderMode(renderMode);
 }
 
+//-----  SetPrimitiveType()  --------------------------------------------------
+D3DPRIMITIVETYPE DirectXMeshCollision::SetPrimitiveType(const D3DPRIMITIVETYPE type)
+{
+	D3DPRIMITIVETYPE	oldType(_primitiveType);
+
+	_primitiveType = type;
+	return oldType;
+}
+
 //-----  Render()  ------------------------------------------------------------
 bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worldMatrix)
 {
@@ -131,7 +141,28 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 		pd3dDevice->SetStreamSource     (0, _pVBuffer, 0, sizeof(D3DCustomVertex));						//  set vertices source
 		pd3dDevice->SetIndices          (_pIBuffer);													//  set indices source
 		pd3dDevice->SetFVF              (D3DFVF_CUSTOMVERTEX_COLOR);									//  set vertex style
-		pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, _countVertices, 0, _countIndices/3);	//  render
+
+		unsigned int	countIndices (_countIndices);
+		unsigned int	countVertices(_countVertices);
+
+		switch (_primitiveType)
+		{
+			case D3DPT_TRIANGLELIST:
+			{
+				countIndices  = _countIndices/3;
+				countVertices = _countVertices;
+				break;
+			}
+
+			case D3DPT_LINELIST:
+			{
+				countIndices  = _countIndices/2;
+				countVertices = _countVertices;
+				break;
+			}
+		}
+
+		pd3dDevice->DrawIndexedPrimitive(_primitiveType, 0, 0, countVertices, 0, countIndices);			//  render
 	}
 
 	return true;

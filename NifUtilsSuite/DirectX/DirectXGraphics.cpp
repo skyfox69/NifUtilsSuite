@@ -79,6 +79,8 @@ bool CDirectXGraphics::dxDestroyRenderingContext()
 //-----  dxInitScene()  -------------------------------------------------------
 bool CDirectXGraphics::dxInitScene()
 {
+	Configuration*	pConfig(Configuration::getInstance());
+
 	// --------------------------------------------------------------
 	// Init viewport.
 	// --------------------------------------------------------------
@@ -114,7 +116,7 @@ bool CDirectXGraphics::dxInitScene()
 								 &D3DXVECTOR3(0.0f, 0.0f, -1.0f));	// camera up vector
 	_pd3dDevice->SetTransform(D3DTS_VIEW, &matView);
 
-	_pd3dDevice->SetRenderState(D3DRS_AMBIENT, RGB(200,200,200));
+	_pd3dDevice->SetRenderState(D3DRS_AMBIENT, pConfig->_mvDefAmbiColor);
 	_pd3dDevice->SetRenderState(D3DRS_NORMALIZENORMALS, TRUE);
 
 	for (int i(0); i < 8; ++i)
@@ -127,9 +129,11 @@ bool CDirectXGraphics::dxInitScene()
 
 	D3DLIGHT9	light;
 
+	//  1st light source
 	ZeroMemory(&light, sizeof(light));
 	light.Type        = D3DLIGHT_DIRECTIONAL;
-	light.Diffuse     = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+	light.Diffuse     = D3DXCOLOR(pConfig->_mvDefDiffColor);
+	light.Specular    = D3DXCOLOR(pConfig->_mvDefSpecColor);
 	light.Direction.x = 0.0f;
 	light.Direction.y = -10000.0f;
 	light.Direction.z = 0.0f;
@@ -138,13 +142,8 @@ bool CDirectXGraphics::dxInitScene()
 	_pd3dDevice->SetLight(0, &light);
 	_pd3dDevice->LightEnable(0, true);
 
-	ZeroMemory(&light, sizeof(light));
-	light.Type        = D3DLIGHT_DIRECTIONAL;
-	light.Diffuse     = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	light.Direction.x = 0.0f;
+	//  2nd light source
 	light.Direction.y = 10000.0f;
-	light.Direction.z = 0.0f;
-	//light.Range       = 21000.0f;
 
 	_pd3dDevice->SetLight(1, &light);
 	_pd3dDevice->LightEnable(1, true);
@@ -304,3 +303,31 @@ void CDirectXGraphics::dxResetMeshList()
 	}
 }
 
+//-----  dxResetColors()  -----------------------------------------------------
+void CDirectXGraphics::dxResetColors()
+{
+	Configuration*	pConfig(Configuration::getInstance());
+	D3DLIGHT9		light;
+
+	//  ambient light
+	_pd3dDevice->SetRenderState(D3DRS_AMBIENT, pConfig->_mvDefAmbiColor);
+
+	//  1st light source
+	ZeroMemory(&light, sizeof(light));
+	light.Type        = D3DLIGHT_DIRECTIONAL;
+	light.Diffuse     = D3DXCOLOR(pConfig->_mvDefDiffColor);
+	light.Specular    = D3DXCOLOR(pConfig->_mvDefSpecColor);
+	light.Direction.x = 0.0f;
+	light.Direction.y = -10000.0f;
+	light.Direction.z = 0.0f;
+	light.Range       = 21000.0f;
+
+	_pd3dDevice->SetLight(0, &light);
+	_pd3dDevice->LightEnable(0, true);
+
+	//  2nd light source
+	light.Direction.y = 10000.0f;
+
+	_pd3dDevice->SetLight(1, &light);
+	_pd3dDevice->LightEnable(1, true);
+}
