@@ -28,12 +28,17 @@ Configuration::Configuration(const string fileName)
 		_mvDefBackColor  (0xFF000000),
 		_mvDefCollColor  (0xFFFF0000),
 		_mvDefWireColor  (0xFFFFFF00),
+		_mvDefAmbiColor  (0xFF707070),
+		_mvDefDiffColor  (0xFFE5E5E5),
+		_mvDefSpecColor  (0xFFFFFFFF),
 		_ceSaveVersion   (NUS_USERVER_1134),
 		_mvDefLOD        (2),
 		_lastOpenView    (0),
 		_ncUpTangent     (true),
 		_ncReorderProp   (true),
 		_ncForceDDS      (true),
+		_ncRemoveColl    (true),
+		_cmMergeColl     (true),
 		_showToolTipps   (true),
 		_saveLastView    (false),
 		_ceGenNormals    (true),
@@ -334,6 +339,9 @@ bool Configuration::read()
 			readAttribute(content, "DefaultBackColor>",        _mvDefBackColor,    offset);
 			readAttribute(content, "DefaultWireColor>",        _mvDefWireColor,    offset);
 			readAttribute(content, "DefaultCollColor>",        _mvDefCollColor,    offset);
+			readAttribute(content, "DefaultAmbiColor>",        _mvDefAmbiColor,    offset);
+			readAttribute(content, "DefaultDiffColor>",        _mvDefDiffColor,    offset);
+			readAttribute(content, "DefaultSpecColor>",        _mvDefSpecColor,    offset);
 			readAttribute(content, "MvShowGrid>",              _mvShowGrid,        offset);
 			readAttribute(content, "MvAlterRows>",             _mvAlterRows,       offset);
 			readAttribute(content, "MvForceDDS>",              _mvForceDDS,        offset);
@@ -348,6 +356,8 @@ bool Configuration::read()
 			readAttribute(content, "BpBAMapping>",             _bpBAMapping,       offset);
 			readAttribute(content, "DefaultTemplateNameBPBA>", _cmDefaultTemplate, offset);
 			readAttribute(content, "NcForceDDS>",              _ncForceDDS,        offset);
+			readAttribute(content, "NcRemoveColl>",            _ncRemoveColl,      offset);
+			readAttribute(content, "CmMergeColl>",             _cmMergeColl,       offset);
 
 
 		}  //  while (iStr.good())
@@ -399,11 +409,13 @@ bool Configuration::write()
 		oStr << "<DefaultTemplateNameNC>" << _ncDefaultTemplate       << "</DefaultTemplateNameNC>";
 		oStr << "<DefaultTextureNameNC>"  << _ncDefaultTexture        << "</DefaultTextureNameNC>";
 		oStr << "<NcForceDDS>"            << _ncForceDDS              << "</NcForceDDS>";
+		oStr << "<NcRemoveColl>"          << _ncRemoveColl            << "</NcRemoveColl>";
 		oStr << "</NifConvert><ChunkMerge>";
 		oStr << "<MaterialHandling>"      << _cmMatHandling           << "</MaterialHandling>";
 		oStr << "<CollisionHandling>"     << _cmCollHandling          << "</CollisionHandling>";
 		oStr << "<MaterialSingleType>"    << _cmMatSingleType         << "</MaterialSingleType>";
 		oStr << "<DefaultTemplateNameCM>" << _cmDefaultTemplate       << "</DefaultTemplateNameCM>";
+		oStr << "<CmMergeColl>"           << _cmMergeColl             << "</CmMergeColl>";
 		oStr << "</ChunkMerge><ChunkExtract>";
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";
@@ -453,6 +465,9 @@ bool Configuration::write()
 		oStr << "<DefaultBackColor>"      << _mvDefBackColor          << "</DefaultBackColor>";
 		oStr << "<DefaultWireColor>"      << _mvDefWireColor          << "</DefaultWireColor>";
 		oStr << "<DefaultCollColor>"      << _mvDefCollColor          << "</DefaultCollColor>";
+		oStr << "<DefaultAmbiColor>"      << _mvDefAmbiColor          << "</DefaultAmbiColor>";
+		oStr << "<DefaultDiffColor>"      << _mvDefDiffColor          << "</DefaultDiffColor>";
+		oStr << "<DefaultSpecColor>"      << _mvDefSpecColor          << "</DefaultSpecColor>";
 		oStr << "<MvShowGrid>"            << _mvShowGrid              << "</MvShowGrid>";
 		oStr << "<MvAlterRows>"           << _mvAlterRows             << "</MvAlterRows>";
 		oStr << "<MvForceDDS>"            << _mvForceDDS              << "</MvForceDDS>";

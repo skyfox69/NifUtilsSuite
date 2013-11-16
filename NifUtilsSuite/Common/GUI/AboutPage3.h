@@ -18,7 +18,10 @@ class CAboutPage3 : public CPropertyPage
 		enum { IDD = IDD_PAGE_ABOUT3 };
 
 	protected:
+		CFont					_myFont;
+
 		virtual	void			DoDataExchange(CDataExchange* pDX);
+		virtual	BOOL			OnInitDialog();
 		virtual BOOL			OnSetActive();
 		virtual	void			OnOK();
 

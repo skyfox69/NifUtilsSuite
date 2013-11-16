@@ -21,6 +21,7 @@
 #include "obj/nialphaproperty.h"
 #include "obj/NiTriShapeData.h"
 #include "obj/BSLightingShaderProperty.h"
+#include "obj/NiTriStrips.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  return codes
@@ -107,6 +108,12 @@ public:
 	virtual void setForceDDS(bool doForce);
 
 	/**
+		* 
+		* @param doClean    in: true: remove all collision nodes before saving
+		*/
+	virtual void setCleanTreeCollision(bool doClean);
+
+	/**
 		* Get list of user messages
 		*/
 	virtual vector<string>& getUserMessages();
@@ -180,6 +187,8 @@ protected:
 		*/
 	bool _forceDDS;
 
+	bool _cleanTreeCollision;
+
 	/**
 		* Get NiNode from NIF-file
 		* 
@@ -187,7 +196,7 @@ protected:
 		* @param logPreText    in: text prepended to log output
 		* @param fakedRoot    out: flag marking real root node or faked one
 		*/
-	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot);
+	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot, NifInfo* pNifInfo=NULL);
 
 	/**
 		* Convert NiNode and all known sub-nodes
@@ -207,6 +216,17 @@ protected:
 		* @param tmplAlphaProp    in: Template for alpha properties
 		*/
 	virtual NiTriShapeRef convertNiTriShape(NiTriShapeRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
+
+	/**
+		* Convert NiTriStrips and properties/geometry
+		* 
+		* @param srcNode    in: Source NiTriStrips node
+		* @param tmplNode    in: Template NiTriShape node
+		* @param tmplAlphaProp    in: Template for alpha properties
+		*/
+	virtual NiTriShapeRef convertNiTriStrips(NiTriStripsRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
+
+	virtual NiTriShapeRef convertNiTri(NiTriShapeRef pDstNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp);
 
 	/**
 		* Create tangent space data

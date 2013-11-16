@@ -64,6 +64,9 @@ class Configuration
 				unsigned int			_mvDefCollColor;
 				unsigned int			_mvDefWireColor;
 				unsigned int			_mvDefBackColor;
+				unsigned int			_mvDefAmbiColor;
+				unsigned int			_mvDefDiffColor;
+				unsigned int			_mvDefSpecColor;
 				unsigned int			_mvDefLOD;
 				unsigned int			_ceSaveVersion;
 				int						_ncVtFlagsRemove;
@@ -76,6 +79,8 @@ class Configuration
 				bool					_ncUpTangent;
 				bool					_ncReorderProp;
 				bool					_ncForceDDS;
+				bool					_ncRemoveColl;
+				bool					_cmMergeColl;
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;

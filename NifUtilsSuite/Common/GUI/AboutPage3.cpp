@@ -36,6 +36,17 @@ void CAboutPage3::DoDataExchange(CDataExchange* pDX)
 void CAboutPage3::OnOK()
 {}
 
+//-----  OnInitDialog()  ------------------------------------------------------
+BOOL CAboutPage3::OnInitDialog()
+{
+	CPropertyPage::OnInitDialog();
+
+	_myFont.CreatePointFont(75, _T("Courier New"));
+	GetDlgItem(IDC_EDIT1)->SetFont(&_myFont);
+
+	return TRUE;
+}
+
 //-----  OnSetActive()  -------------------------------------------------------
 BOOL CAboutPage3::OnSetActive()
 {

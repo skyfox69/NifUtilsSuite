@@ -9,7 +9,9 @@
 //  Common includes
 #include "Common\Nif\NifConvertUtility.h"
 #include "Common\Util\DefLogMessageTypes.h"
+#include "version.h"
 #include <algorithm>
+#include <strstream>
 #include <string>
 
 //  Niflib includes
@@ -20,6 +22,12 @@
 #include "obj/BSShaderTextureSet.h"
 #include "obj/NiSourceTexture.h"
 #include "obj/NiMaterialProperty.h"
+#include "obj/NiVertexColorProperty.h"
+#include "obj/NiTriStripsData.h"
+#include "obj/NiTriStrips.h"
+#include "obj/NiBinaryExtraData.h"
+#include "obj/bhkCollisionObject.h"
+
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -33,6 +41,7 @@ NifConvertUtility::NifConvertUtility()
 		_updateTangentSpace(true),
 		_reorderProperties (true),
 		_forceDDS          (true),
+		_cleanTreeCollision(true),
 		_logCallback       (NULL)
 {}
 
@@ -41,13 +50,13 @@ NifConvertUtility::~NifConvertUtility()
 {}
 
 /*---------------------------------------------------------------------------*/
-NiNodeRef NifConvertUtility::getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot)
+NiNodeRef NifConvertUtility::getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot, NifInfo* pNifInfo)
 {
 	NiObjectRef		pRootTree (NULL);
 	NiNodeRef		pRootInput(NULL);
 
 	//  get input nif
-	pRootTree = ReadNifTree((const char*) fileName.c_str());
+	pRootTree = ReadNifTree((const char*) fileName.c_str(), pNifInfo);
 
 	//  NiNode as root
 	if (DynamicCast<NiNode>(pRootTree) != NULL)
@@ -108,11 +117,27 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 		{
 			pDstNode->AddChild(&(*convertNiTriShape(DynamicCast<NiTriShape>(*ppIter), pTmplNode, pTmplAlphaProp)));
 		}
+		//  NiTriStrips
+		else if (DynamicCast<NiTriStrips>(*ppIter) != NULL)
+		{
+			pDstNode->AddChild(&(*convertNiTriStrips(DynamicCast<NiTriStrips>(*ppIter), pTmplNode, pTmplAlphaProp)));
+		}
+		//  RootCollisionNode
+		else if ((DynamicCast<RootCollisionNode>(*ppIter) != NULL) && _cleanTreeCollision)
+		{
+			//  ignore node
+		}
 		//  NiNode (and derived classes?)
 		else if (DynamicCast<NiNode>(*ppIter) != NULL)
 		{
 			pDstNode->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pTmplNode, pRootNode, pTmplAlphaProp)));
 		}
+	}
+
+	//  remove collision object (newer version)
+	if (_cleanTreeCollision)
+	{
+		pDstNode->SetCollisionObject(NULL);
 	}
 
 	return pDstNode;
@@ -121,20 +146,106 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 /*---------------------------------------------------------------------------*/
 NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp)
 {
-	BSLightingShaderPropertyRef	pTmplLShader(NULL);
-	BSLightingShaderPropertyRef	pDstLShader (NULL);
-	vector<NiPropertyRef>		dstPropList;
-	short						bsPropIdx   (0);
-	bool						forceAlpha  (pTmplAlphaProp != NULL);
-	bool						hasAlpha    (false);
-
 	//  NiTriShape is moved from src to dest. It's unlinked in calling function
-	NiTriShapeRef		pDstNode(pSrcNode);
-	NiGeometryDataRef	pDstGeo (pDstNode->GetData());
+	NiTriShapeRef	pDstNode(pSrcNode);
 
 	//  force some data in destination shape
 	pDstNode->SetCollisionObject(NULL);  //  no collision object here
 	pDstNode->SetFlags          (14);    //  ???
+
+	//  return converted NiTriShape
+	return convertNiTri(pDstNode, pTmplNode, pTmplAlphaProp);
+}
+
+/*---------------------------------------------------------------------------*/
+NiTriShapeRef NifConvertUtility::convertNiTriStrips(NiTriStripsRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	NiTriShapeRef			pDstNode   (new NiTriShape());
+	NiTriShapeDataRef		pDstGeo    (new NiTriShapeData());
+	NiTriStripsDataRef		pSrcGeo    (DynamicCast<NiTriStripsData>(pSrcNode->GetData()));
+	vector<NiPropertyRef>	srcPropList(pSrcNode->GetProperties());
+
+	//  copy NiTriStrips to NiTriShape
+	pDstNode->SetCollisionObject(NULL);  //  no collision object here
+	pDstNode->SetFlags          (14);    //  ???
+	pDstNode->SetName           (pSrcNode->GetName());
+	pDstNode->SetLocalTransform (pSrcNode->GetLocalTransform());
+	pDstNode->SetData           (pDstGeo);
+
+	//  move properties
+	for (auto pIter=srcPropList.begin(), pEnd=srcPropList.end(); pIter != pEnd; ++pIter)
+	{
+		if (DynamicCast<NiVertexColorProperty>(*pIter) != NULL)
+		{
+			int	iii=0;
+		}
+		pDstNode->AddProperty(*pIter);
+	}
+	pSrcNode->ClearProperties();
+
+	//  data node
+	if (pSrcGeo != NULL)
+	{
+		pDstGeo->SetVertices    (pSrcGeo->GetVertices());
+		pDstGeo->SetNormals     (pSrcGeo->GetNormals());
+		pDstGeo->SetTriangles   (pSrcGeo->GetTriangles());
+		pDstGeo->SetVertexColors(pSrcGeo->GetColors());
+		pDstGeo->SetUVSetCount  (pSrcGeo->GetUVSetCount());
+		for (short idx(0), max(pSrcGeo->GetUVSetCount()); idx < max; ++idx)
+		{
+			pDstGeo->SetUVSet(idx, pSrcGeo->GetUVSet(idx));
+		}
+	}  //  if (pSrcGeo != NULL)
+
+	//  return converted NiTriShape
+	return convertNiTri(pDstNode, pTmplNode, pTmplAlphaProp);
+}
+
+/*---------------------------------------------------------------------------*/
+NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	BSLightingShaderPropertyRef	pTmplLShader(NULL);
+	BSLightingShaderPropertyRef	pDstLShader (NULL);
+	NiGeometryDataRef			pDstGeo     (pDstNode->GetData());
+	vector<NiPropertyRef>		dstPropList (pDstNode->GetProperties());
+	list<NiExtraDataRef>		dstExtraList(pDstNode->GetExtraData());
+	short						bsPropIdx   (0);
+	bool						forceAlpha  (pTmplAlphaProp != NULL);
+	bool						hasAlpha    (false);
+	bool						tanWasCopied(false);
+
+	//  look for tangent space data
+	for (auto pIter=dstExtraList.begin(), pEnd=dstExtraList.end(); pIter != pEnd; ++pIter)
+	{
+		if ((DynamicCast<NiBinaryExtraData>(*pIter) != NULL) && (pDstGeo != NULL))
+		{
+			vector<byte>	vecByte(DynamicCast<NiBinaryExtraData>(*pIter)->GetData());
+			vector<Vector3>	vecTan;
+			vector<Vector3>	vecBin;
+			float*			pStartT((float*) &(vecByte[0]));
+			int				numVert(pDstGeo->GetVertexCount() * 3);
+
+			//  extract tangent space
+			for (int i(0); i < numVert; i += 3)
+			{
+				vecTan.push_back(Vector3(pStartT[i],         pStartT[i+1],         pStartT[i+2]));
+				vecBin.push_back(Vector3(pStartT[numVert+i], pStartT[numVert+i+1], pStartT[numVert+i+2]));
+			}
+
+			//  set tangent space
+			pDstGeo->SetTangents  (vecTan);
+			pDstGeo->SetBitangents(vecBin);
+
+			//  enable tangent space
+			pDstGeo->SetTspaceFlag(0x10);
+
+			tanWasCopied = true;
+
+		}  //  if ((DynamicCast<NiBinaryExtraData>(*pIter) != NULL) && (pDstGeo != NULL))
+	}  //  for (auto pIter=dstExtraList.begin(), pEnd=dstExtraList.end(); pIter != pEnd; ++pIter)
+
+	//  remove extra data
+	pDstNode->ClearExtraData();
 
 	//  data node
 	if (pDstGeo != NULL)
@@ -146,7 +257,7 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 		}
 
 		//  update tangent space?
-		if ((_updateTangentSpace) && (DynamicCast<NiTriShapeData>(pDstGeo) != NULL))
+		if (_updateTangentSpace && !tanWasCopied && (DynamicCast<NiTriShapeData>(pDstGeo) != NULL))
 		{
 			//  update tangent space
 			if (updateTangentSpace(DynamicCast<NiTriShapeData>(pDstGeo)))
@@ -174,6 +285,7 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 
 	//  parse properties of destination node
 	dstPropList = pDstNode->GetProperties();
+	pDstNode->ClearProperties();
 
 	for (auto ppIter=dstPropList.begin(), pEnd=dstPropList.end(); ppIter != pEnd; ppIter++)
 	{
@@ -181,10 +293,6 @@ NiTriShapeRef NifConvertUtility::convertNiTriShape(NiTriShapeRef pSrcNode, NiTri
 		if (DynamicCast<NiAlphaProperty>(*ppIter) != NULL)
 		{
 			NiAlphaPropertyRef	pPropAlpha(DynamicCast<NiAlphaProperty>(*ppIter));
-
-			//  set values from template
-			pPropAlpha->SetFlags        (pTmplAlphaProp->GetFlags());
-			pPropAlpha->SetTestThreshold(pTmplAlphaProp->GetTestThreshold());
 
 			//  remove property from node
 			pDstNode->RemoveProperty(*ppIter);
@@ -351,6 +459,8 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 	NiNodeRef				pRootOutput    (NULL);
 	NiNodeRef				pRootTemplate  (NULL);
 	NiTriShapeRef			pNiTriShapeTmpl(NULL);
+	NiCollisionObjectRef	pRootCollObject(NULL);
+	NifInfo					nifInfo;
 	vector<NiAVObjectRef>	srcChildList;
 	bool					fakedRoot      (false);
 
@@ -371,7 +481,7 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 	_newTextures.clear();
 
 	//  read input NIF
-	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot)) == NULL)
+	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot, &nifInfo)) == NULL)
 	{
 		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
 		return NCU_ERROR_CANT_OPEN_INPUT;
@@ -393,45 +503,31 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 		logMessage(NCU_MSG_TYPE_INFO, "Template has no NiTriShape.");
 	}
 
+	//  get data from input node
+	srcChildList    = pRootInput->GetChildren();
+	pRootCollObject = pRootInput->GetCollisionObject();
+	
 	//  template root is used as root of output
 	pRootOutput = pRootTemplate;
 
-	//   get rid of unwanted subnodes
-	pRootOutput->ClearChildren();           //  remove all children
-	pRootOutput->SetCollisionObject(NULL);  //  unlink collision object
-	//  hold extra data and property nodes
-
-	//  copy translation from input node
+	//  move date from input to output
+	pRootInput ->SetCollisionObject(NULL);
+	pRootOutput->SetCollisionObject(pRootCollObject);
 	pRootOutput->SetLocalTransform(pRootInput->GetLocalTransform());
-
-	//  copy name of root node
 	pRootOutput->SetName(pRootInput->GetName());
 
-	//  get list of children from input node
-	srcChildList = pRootInput->GetChildren();
-
-	//  unlink children 'cause moved to output
+	//  get rid of unwanted subnodes
+	pRootOutput->ClearChildren();
 	pRootInput->ClearChildren();
 
-	//  iterate over source nodes and convert using template
-	for (auto ppIter=srcChildList.begin(), pEnd=srcChildList.end(); ppIter != pEnd; ppIter++)
+	//  move children to output
+	for (auto pIter=srcChildList.begin(), pEnd=srcChildList.end(); pIter != pEnd; ++pIter)
 	{
-		//  NiTriShape
-		if (DynamicCast<NiTriShape>(*ppIter) != NULL)
-		{
-			pRootOutput->AddChild(&(*convertNiTriShape(DynamicCast<NiTriShape>(*ppIter), pNiTriShapeTmpl)));
-		}
-		//  RootCollisionNode
-		else if (DynamicCast<RootCollisionNode>(*ppIter) != NULL)
-		{
-			//  ignore node
-		}
-		//  NiNode (and derived classes?)
-		else if (DynamicCast<NiNode>(*ppIter) != NULL)
-		{
-			pRootOutput->AddChild(&(*convertNiNode(DynamicCast<NiNode>(*ppIter), pNiTriShapeTmpl, pRootOutput)));
-		}
+		pRootOutput->AddChild(*pIter);
 	}
+
+	//  iterate over source nodes and convert using template
+	pRootOutput = convertNiNode(pRootOutput, pNiTriShapeTmpl, pRootOutput);
 
 	//  write missing textures to log - as block
 	for (auto pIter=_newTextures.begin(), pEnd=_newTextures.end(); pIter != pEnd; ++pIter)
@@ -439,8 +535,19 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 		logMessage(NCU_MSG_TYPE_TEXTURE_MISS, *pIter);
 	}
 
+	//  set version information
+	stringstream	sStream;
+
+	sStream << nifInfo.version;
+	nifInfo.version      = VER_20_2_0_7;
+	nifInfo.userVersion  = 12;
+	nifInfo.userVersion2 = 83;
+	nifInfo.creator      = "NifConvert";
+	nifInfo.exportInfo1  = MASTER_PRODUCT_VERSION_STR;
+	nifInfo.exportInfo2  = sStream.str();
+
 	//  write modified nif file
-	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, NifInfo(VER_20_2_0_7, 12, 83));
+	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, nifInfo);
 
 	return NCU_OK;
 }
@@ -575,6 +682,12 @@ void NifConvertUtility::setReorderProperties(bool doReorder)
 void NifConvertUtility::setForceDDS(bool doForce)
 {
 	_forceDDS = doForce;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setCleanTreeCollision(bool doClean)
+{
+	_cleanTreeCollision = doClean;
 }
 
 /*---------------------------------------------------------------------------*/
