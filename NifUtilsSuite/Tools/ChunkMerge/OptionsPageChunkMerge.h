@@ -20,6 +20,7 @@ class COptionsPageChunkMerge : public CPropertyPage
 				int				_matHandling;
 				int				_colHandling;
 				int				_matSingle;
+				int				_mergeCollision;
 
 	protected:
 		virtual	void			DoDataExchange(CDataExchange* pDX);

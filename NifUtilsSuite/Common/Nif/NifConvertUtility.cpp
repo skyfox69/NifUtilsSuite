@@ -27,7 +27,12 @@
 #include "obj/NiTriStrips.h"
 #include "obj/NiBinaryExtraData.h"
 #include "obj/bhkCollisionObject.h"
-
+#include "obj/bhkTransformShape.h"
+#include "obj/bhkListShape.h"
+#include "obj/bhkPackedNiTriStripsShape.h"
+#include "obj/hkPackedNiTriStripsData.h"
+#include "obj/bhkMoppBvTreeShape.h"
+#include "obj/bhkRigidBody.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  used namespaces
@@ -138,6 +143,15 @@ NiNodeRef NifConvertUtility::convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTm
 	if (_cleanTreeCollision)
 	{
 		pDstNode->SetCollisionObject(NULL);
+	}
+	else if (DynamicCast<bhkCollisionObject>(pDstNode->GetCollisionObject()) != NULL)
+	{
+		bhkRigidBodyRef		pBody(DynamicCast<bhkRigidBody>((DynamicCast<bhkCollisionObject>(pDstNode->GetCollisionObject()))->GetBody()));
+
+		if (pBody != NULL)
+		{
+			parseCollisionTree(pBody->GetShape());
+		}
 	}
 
 	return pDstNode;
@@ -775,4 +789,42 @@ BSLightingShaderPropertyRef NifConvertUtility::cloneBSLightingShaderProperty(BSL
 	pSource->SetTextureSet(pTSet);
 
 	return pDest;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::parseCollisionTree(bhkShapeRef pShape)
+{
+	//  check type of collision mesh
+	//bhkMoppBvTreeShape
+	if (DynamicCast<bhkMoppBvTreeShape>(pShape) != NULL)
+	{
+		parseCollisionTree(DynamicCast<bhkMoppBvTreeShape>(pShape)->GetShape());
+	}
+	//bhkTransformShape
+	else if (DynamicCast<bhkTransformShape>(pShape) != NULL)
+	{
+		parseCollisionTree(DynamicCast<bhkTransformShape>(pShape)->GetShape());
+	}
+	//bhkListShape
+	else if (DynamicCast<bhkListShape>(pShape) != NULL)
+	{
+		vector<bhkShapeRef>		subShapes(DynamicCast<bhkListShape>(pShape)->GetSubShapes());
+
+		//  parse sub shape(s)
+		for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
+		{
+			//  parse sub shape(s)
+			parseCollisionTree(*pIter);
+		}
+	}
+	//bhkPackedNiTriStripsShape
+	else if (DynamicCast<bhkPackedNiTriStripsShape>(pShape) != NULL)
+	{
+		bhkPackedNiTriStripsShapeRef	pTriShape(DynamicCast<bhkPackedNiTriStripsShape>(pShape));
+		hkPackedNiTriStripsDataRef		pTriData (pTriShape->GetData());
+
+		//  move sub-shapes into data
+		pTriData->SetSubShapes(pTriShape->GetSubShapes());
+		pTriShape->SetSubShapes(vector<OblivionSubShape>());
+	}
 }

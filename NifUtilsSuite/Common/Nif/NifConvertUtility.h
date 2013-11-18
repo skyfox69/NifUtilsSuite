@@ -22,6 +22,7 @@
 #include "obj/NiTriShapeData.h"
 #include "obj/BSLightingShaderProperty.h"
 #include "obj/NiTriStrips.h"
+#include "obj/bhkShape.h"
 
 //-----  DEFINES  -------------------------------------------------------------
 //  return codes
@@ -256,4 +257,6 @@ protected:
 		* @param fileName    in: path and name of file to check
 		*/
 	virtual bool checkFileExists(string fileName);
+
+	virtual void parseCollisionTree(bhkShapeRef pShape);
 };

@@ -25,6 +25,8 @@
 #include "obj/bhkMoppBvTreeShape.h"
 #include "obj/bhkCompressedMeshShapeData.h"
 #include "obj/bhkRigidBody.h"
+#include "obj/NiTriStrips.h"
+#include "obj/bhkPackedNiTriStripsShape.h"
 
 //  Havok includes
 #include "Common/Base/Types/Geometry/hkGeometry.h"
@@ -119,6 +121,8 @@ public:
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 
+	virtual void setMergeCollision(const bool doMerge);
+
 protected:
 
 	void (*_logCallback) (const int, const char*);
@@ -170,6 +174,10 @@ protected:
 
 	ChunkNameHandling _cmHandling;
 
+	bool _mergeCollision;
+
+	unsigned _nifVersion;
+
 	/**
 	* Get geometry from NiTriShape
 	* 
@@ -180,13 +188,24 @@ protected:
 	virtual unsigned int getGeometryFromTriShape(NiTriShapeRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
 
 	/**
+	* Get geometry from NiTriStrips
+	* 
+	* @param pShape    in: ptr. to NiTriStrips
+	* @param geometryAry    out: reference to vector of hkGeometry read geometries
+	* are inserted in
+	*/
+	virtual unsigned int getGeometryFromTriStrips(NiTriStripsRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	virtual unsigned int getGeometryFromShapeData(vector<Vector3>& vertices, vector<Triangle>& triangles, NiTriBasedGeomRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	/**
 	* Get geometry from NiNode
 	* 
 	* @param pNode    in: ptr. to root NiNode
 	* @param geometryAry    out: reference to vector of hkGeometry read geometries
 	* are inserted in
 	*/
-	virtual unsigned int getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+	virtual unsigned int getGeometryFromNode(NiNodeRef pNode, vector<hkGeometry>& geometryMap, vector<hkGeometry>& geometryMapColl, vector<Matrix44>& transformAry);
 
 	/**
 	* Get geometry from OBJ-file
@@ -213,7 +232,7 @@ protected:
 	* @param logPreText    in: text prepended to log output
 	* @param fakedRoot    out: flag marking real root node or faked one
 	*/
-	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot);
+	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot, bool setVersion);
 
 	/**
 	* Create bhkCollisionObject from template and geometry
@@ -242,4 +261,19 @@ protected:
 	*/
 	virtual void logMessage(int type, string text);
 
+	virtual bool collSourceHasCollNodes(string fileNameCollSrc);
+
+	virtual bhkShapeRef getGeometryFromCollShape(bhkShapeRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	virtual void cleanTreeCollision(NiNodeRef pNode);
+
+	virtual bool parseTreeCollision(NiNodeRef pNode, string fileNameCollTmpl, vector<hkGeometry>& geometryMapColl);
+
+	virtual bhkShapeRef parseCollisionShape(string fileNameCollTmpl, bhkShapeRef pShape, bhkRigidBodyRef pRigidBody, bhkMoppBvTreeShapeRef pMoppShape=NULL);
+
+	virtual bhkShapeRef convertCollPackedNiTriStrips(bhkPackedNiTriStripsShapeRef pShape, bhkMoppBvTreeShapeRef pMoppShape, bhkRigidBodyRef pRigidBody, string fileNameCollTmpl);
+
+	virtual unsigned int getGeometryFromPackedNiTriStrips(bhkPackedNiTriStripsShapeRef pShape, vector<hkGeometry>& geometryMap, vector<Matrix44>& transformAry);
+
+	virtual void reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry);
 };
