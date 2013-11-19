@@ -46,6 +46,7 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in
 						                   {IDC_RE_LOG,            "Some log output"},
 						                   {IDC_BT_RESET_FORM,     "Reset form to default settings"},
 						                   {IDC_BT_CONVERT,        "Add collision data to target"},
+										   {IDC_CK_REORDER_TRIS,   "Reorder triangles of bhk(Packed)NiTriStrips facing outward of model"},
 						                   {-1, ""}
 						                  };
 
@@ -65,6 +66,8 @@ BEGIN_MESSAGE_MAP(CFormChunkMergeView, CFormView)
 	ON_BN_CLICKED(IDC_BT_NSCOPE_IN,      &CFormChunkMergeView::OnBnClickedBtNscopeIn)
 	ON_BN_CLICKED(IDC_BT_NSCOPE_COLL,    &CFormChunkMergeView::OnBnClickedBtNscopeColl)
 	ON_BN_CLICKED(IDC_BT_CONVERT,        &CFormChunkMergeView::OnBnClickedBtConvert)
+	ON_BN_CLICKED(IDC_RD_COLL_GLOBAL,    &CFormChunkMergeView::OnBnClickedRdCollGlobal)
+	ON_BN_CLICKED(IDC_RD_COLL_LOCAL,     &CFormChunkMergeView::OnBnClickedRdCollLocal)
 END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
@@ -132,12 +135,13 @@ void CFormChunkMergeView::OnInitialUpdate()
 	((CMFCButton*) GetDlgItem(IDC_BT_NSCOPE_IN))  ->SetImage(pImageList->ExtractIcon(10), true, NULL, pImageListDis->ExtractIcon(10));
 	((CMFCButton*) GetDlgItem(IDC_BT_NSCOPE_COLL))->SetImage(pImageList->ExtractIcon(10), true, NULL, pImageListDis->ExtractIcon(10));
 
-	GetDlgItem(IDC_BT_VIEW_IN)    ->EnableWindow(FALSE);
-	GetDlgItem(IDC_BT_NSCOPE_IN)  ->EnableWindow(FALSE);
-	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(FALSE);
-	GetDlgItem(IDC_BT_NSCOPE_COLL)->EnableWindow(FALSE);
-	GetDlgItem(IDC_RD_COLL_LOCAL) ->EnableWindow(FALSE);
-	GetDlgItem(IDC_RD_COLL_GLOBAL)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BT_VIEW_IN)     ->EnableWindow(FALSE);
+	GetDlgItem(IDC_BT_NSCOPE_IN)   ->EnableWindow(FALSE);
+	GetDlgItem(IDC_BT_VIEW_COLL)   ->EnableWindow(FALSE);
+	GetDlgItem(IDC_BT_NSCOPE_COLL) ->EnableWindow(FALSE);
+	GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(FALSE);
+	GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(FALSE);
+	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(FALSE);
 
 	//  initialize log view
 	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
@@ -424,8 +428,9 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_COLL_MESH)) ->SetCheck(selItem == IDC_RD_COLL_MESH);
 
 			//  other flags
-			((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL)) ->SetCheck(pConfig->_cmMergeColl ? BST_UNCHECKED : BST_CHECKED);
-			((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL))->SetCheck(pConfig->_cmMergeColl ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL))  ->SetCheck(pConfig->_cmMergeColl   ? BST_UNCHECKED : BST_CHECKED);
+			((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL)) ->SetCheck(pConfig->_cmMergeColl   ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->SetCheck(pConfig->_cmReorderTris ? BST_CHECKED   : BST_UNCHECKED);
 
 			break;
 		}
@@ -490,7 +495,8 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	ncUtility.setCollisionNodeHandling((CollisionNodeHandling) (GetCheckedRadioButton(IDC_RD_COLL_CDATA, IDC_RD_COLL_MESH) - IDC_RD_COLL_CDATA));
 	ncUtility.setMaterialTypeHandling (matHandling, materialMap);
 	ncUtility.setDefaultMaterial      (materialMap[-1]);
-	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL))->GetCheck() == TRUE);
+	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL)) ->GetCheck() == TRUE);
+	ncUtility.setReorderTriangles     (((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->GetCheck() == TRUE);
 
 	//  add collision data to nif
 	ncReturn = ncUtility.addCollision(CStringA(_fileNameColl).GetString(), CStringA(_fileNameIn).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());
@@ -505,4 +511,16 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 		LogMessageObject::LogMessage(NCU_MSG_TYPE_ERROR, "NifCollision returned code: %d", ncReturn);
 	}
 	LogMessageObject::LogMessage(NCU_MSG_TYPE_INFO, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+}
+
+//-----  OnBnClickedRdCollGlobal()  -------------------------------------------
+void CFormChunkMergeView::OnBnClickedRdCollGlobal()
+{
+	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(FALSE);
+}
+
+//-----  OnBnClickedRdCollLocal()  --------------------------------------------
+void CFormChunkMergeView::OnBnClickedRdCollLocal()
+{
+	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(TRUE);
 }

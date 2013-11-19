@@ -25,10 +25,11 @@ COptionsPageChunkMerge::COptionsPageChunkMerge(CWnd* pParent /*=NULL*/)
 {
 	Configuration*	pConfig(Configuration::getInstance());
 
-	_colHandling = pConfig->_cmCollHandling;
-	_matHandling = pConfig->_cmMatHandling;
-	_matSingle   = pConfig->_cmMatSingleType;
-	_mergeCollision = pConfig->_cmMergeColl ? 0 : 1;
+	_colHandling      = pConfig->_cmCollHandling;
+	_matHandling      = pConfig->_cmMatHandling;
+	_matSingle        = pConfig->_cmMatSingleType;
+	_mergeCollision   = pConfig->_cmMergeColl ? 0 : 1;
+	_reorderTriangles = pConfig->_cmReorderTris ? 1 : 0;
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -40,9 +41,10 @@ void COptionsPageChunkMerge::DoDataExchange(CDataExchange* pDX)
 {
 	CPropertyPage::DoDataExchange(pDX);
 
-	DDX_Radio  (pDX, IDC_RD_MAT_SINGLE, _matHandling);
-	DDX_Radio  (pDX, IDC_RD_COLL_CDATA, _colHandling);
-	DDX_Radio(pDX, IDC_RD_COLL_GLOBAL, _mergeCollision); 
+	DDX_Radio(pDX, IDC_RD_MAT_SINGLE,   _matHandling);
+	DDX_Radio(pDX, IDC_RD_COLL_CDATA,   _colHandling);
+	DDX_Radio(pDX, IDC_RD_COLL_GLOBAL,  _mergeCollision); 
+	DDX_Check(pDX, IDC_CK_REORDER_TRIS, _reorderTriangles);
 }
 
 //-----  OnWizardNext()  ------------------------------------------------------
@@ -62,7 +64,8 @@ void COptionsPageChunkMerge::OnOK()
 	pConfig->_cmCollHandling  = _colHandling;
 	pConfig->_cmMatHandling   = _matHandling;
 	pConfig->_cmMatSingleType = _matSingle;
-	pConfig->_cmMergeColl     = (_mergeCollision == 0);
+	pConfig->_cmMergeColl     = (_mergeCollision   == 0);
+	pConfig->_cmReorderTris   = (_reorderTriangles == 1);
 }
 
 //-----  OnInitDialog()  ------------------------------------------------------

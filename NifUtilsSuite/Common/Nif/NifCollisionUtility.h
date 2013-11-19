@@ -120,8 +120,9 @@ public:
 		*/
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
-
 	virtual void setMergeCollision(const bool doMerge);
+
+	virtual void setReorderTriangles(const bool doReorder);
 
 protected:
 
@@ -175,6 +176,8 @@ protected:
 	ChunkNameHandling _cmHandling;
 
 	bool _mergeCollision;
+
+	bool _reorderTriangles;
 
 	unsigned _nifVersion;
 

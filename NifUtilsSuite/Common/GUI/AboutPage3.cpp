@@ -41,7 +41,7 @@ BOOL CAboutPage3::OnInitDialog()
 {
 	CPropertyPage::OnInitDialog();
 
-	_myFont.CreatePointFont(75, _T("Courier New"));
+	_myFont.CreatePointFont(76, _T("Courier New"));
 	GetDlgItem(IDC_EDIT1)->SetFont(&_myFont);
 
 	return TRUE;

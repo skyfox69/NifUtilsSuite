@@ -41,6 +41,8 @@ class CFormChunkMergeView : public CFormView, public LogMessageObject, public If
 		afx_msg void				OnBnClickedBtNscopeColl();
 		afx_msg void				OnBnClickedBtConvert();
 		afx_msg void				OnBnClickedRadioCollMat();
+		afx_msg void				OnBnClickedRdCollGlobal();
+		afx_msg void				OnBnClickedRdCollLocal();
 
 		DECLARE_DYNCREATE(CFormChunkMergeView)
 		DECLARE_MESSAGE_MAP()

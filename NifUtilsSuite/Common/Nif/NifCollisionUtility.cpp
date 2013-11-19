@@ -48,6 +48,7 @@ NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 		_materialList      (materialList),
 		_defaultMaterial   (0),
 		_mergeCollision    (true),
+		_reorderTriangles  (true),
 		_nifVersion        (0)
 {}
 
@@ -929,6 +930,12 @@ void NifCollisionUtility::setMergeCollision(const bool doMerge)
 }
 
 /*---------------------------------------------------------------------------*/
+void NifCollisionUtility::setReorderTriangles(const bool doReorder)
+{
+	_reorderTriangles = doReorder;
+}
+
+/*---------------------------------------------------------------------------*/
 vector<string>& NifCollisionUtility::getUserMessages()
 {
 	return _userMessages;
@@ -1288,7 +1295,10 @@ unsigned int NifCollisionUtility::getGeometryFromPackedNiTriStrips(bhkPackedNiTr
 			}  //  for (; triIndex < triangles.size(); ++triIndex)
 
 			//  re-order triangles points to match same winding
-			reorderTriangles(triAry);
+			if (_reorderTriangles)
+			{
+				reorderTriangles(triAry);
+			}
 
 			//  add geometry to result array
 			geometryMap.push_back(tmpGeo);
