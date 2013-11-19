@@ -40,6 +40,7 @@
 #define   NCU_ERROR_CANT_OPEN_TEMPLATE      0x04
 #define   NCU_ERROR_CANT_OPEN_OUTPUT        0x05
 #define   NCU_ERROR_CANT_GET_GEOMETRY       0x06
+#define   NCU_ERROR_WRONG_NIF_VERSION       0x07
 
 //  used namespaces
 using namespace Niflib;

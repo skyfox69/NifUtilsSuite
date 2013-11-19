@@ -469,6 +469,7 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 	vector<hkGeometry>		geometryMap;
 	vector<NiAVObjectRef>	srcChildList;
 	bool					fakedRoot    (false);
+	unsigned int			nifVersion   (0);
 
 	//  test on existing file names
 	if (fileNameCollSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
@@ -486,6 +487,14 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 	logMessage(NCU_MSG_TYPE_INFO, "CollSource:  "   + (fileNameCollSrc.empty() ? "- none -" : fileNameCollSrc));
 	logMessage(NCU_MSG_TYPE_INFO, "CollTemplate:  " + (fileNameCollTmpl.empty() ? "- none -" : fileNameCollTmpl));
 	logMessage(NCU_MSG_TYPE_INFO, "Destination:  "  + (fileNameNifDst.empty() ? "- none -" : fileNameNifDst));
+
+	//  check supported NIF version
+	nifVersion = GetNifVersion(fileNameNifDst);
+	if (nifVersion != VER_20_2_0_7)
+	{
+		logMessage(NCU_MSG_TYPE_ERROR, "NIF version of destination file '" + fileNameCollTmpl + "' not supported.");
+		return NCU_ERROR_WRONG_NIF_VERSION;
+	}
 
 	//  get template nif
 	pRootTemplate = DynamicCast<BSFadeNode>(ReadNifTree((const char*) fileNameCollTmpl.c_str()));
