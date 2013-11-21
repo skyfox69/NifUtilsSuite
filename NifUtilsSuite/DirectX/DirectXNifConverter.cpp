@@ -1059,56 +1059,89 @@ unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedN
 	if (pData == NULL)		return meshList.size();
 
 	//  hurray!!!
-	vector<Vector3>		vecVertices (pData->GetVertices());
-	vector<Triangle>	vecTriangles(pData->GetTriangles());
-	Matrix44			locTransform;
+	vector<Vector3>				vecVertices (pData->GetVertices());
+	vector<Triangle>			vecTriangles(pData->GetTriangles());
+	vector<Triangle>			tmpTriangles;
+	vector<OblivionSubShape>	subShapes   (pShape->GetSubShapes());
+	Matrix44					locTransform;
+	unsigned int				vertOff     (0);
+	unsigned int				triIndex    (0);
+	unsigned int				subShapeIdx (0);
 
-	//  - indices
-	unsigned int		countI     (vecTriangles.size()*3);
-	unsigned short*		pBufIndices(new unsigned short[countI]);
+	//  get sub shapes
+	if (subShapes.empty())		subShapes = pData->GetSubShapes();
 
-	for (unsigned int i(0); i < countI; i+=3)
-	{
-		pBufIndices[i]   = vecTriangles[i/3].v1;
-		pBufIndices[i+1] = vecTriangles[i/3].v2;
-		pBufIndices[i+2] = vecTriangles[i/3].v3;
-	}
-
-	//  - vertices
-	unsigned int							countV      (vecVertices.size());
-	DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
-
-	for (unsigned int i(0); i < countV; ++i)
-	{
-		pBufVertices[i]._x     = vecVertices[i].x * _factor;
-		pBufVertices[i]._y     = vecVertices[i].y * _factor;
-		pBufVertices[i]._z     = vecVertices[i].z * _factor;
-		pBufVertices[i]._color = _defCollisionColor;
-	}
-
-	//  collected all data needed => convert to DirectX
 	//  - transformation matrix
 	for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
 	{
 		locTransform *= *pIterT;
 	}
 
-	//  create new model
-	DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
-																	pBufVertices,
-																	countV,
-																	pBufIndices,
-																	countI,
-																	_defCollisionColor
-																);
-	//  set visibility
-	if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+	//  for each sub shape
+	for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter, ++subShapeIdx)
+	{
+		//  - vertices
+		unsigned int							countV      (pIter->numVertices);
+		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
 
-	//  add model view data
-	pNewModel->SetNifData("unknown", "bhkPackedNiTriStrips", pShape->internal_block_number);
+		for (unsigned int i(0); i < countV; ++i)
+		{
+			pBufVertices[i]._x     = vecVertices[i+vertOff].x * _factor;
+			pBufVertices[i]._y     = vecVertices[i+vertOff].y * _factor;
+			pBufVertices[i]._z     = vecVertices[i+vertOff].z * _factor;
+			pBufVertices[i]._color = _defCollisionColor;
+		}
 
-	//  append model to list
-	meshList.push_back(pNewModel);
+		//  - indices
+		for (tmpTriangles.clear(); triIndex < vecTriangles.size(); ++triIndex)
+		{
+			//  check vertex bounds
+			if ((vecTriangles[triIndex].v1 >= (pIter->numVertices + vertOff)) ||
+				(vecTriangles[triIndex].v2 >= (pIter->numVertices + vertOff)) ||
+				(vecTriangles[triIndex].v3 >= (pIter->numVertices + vertOff))
+				)
+			{
+				break;
+			}
+
+			tmpTriangles.push_back(vecTriangles[triIndex]);
+		}
+
+		unsigned int		countI     (tmpTriangles.size()*3);
+		unsigned short*		pBufIndices(new unsigned short[countI]);
+
+		for (unsigned int i(0); i < countI; i+=3)
+		{
+			pBufIndices[i]   = tmpTriangles[i/3].v1 - vertOff;
+			pBufIndices[i+1] = tmpTriangles[i/3].v2 - vertOff;
+			pBufIndices[i+2] = tmpTriangles[i/3].v3 - vertOff;
+		}
+
+		//  collected all data needed => convert to DirectX
+		//  create new model
+		DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																		pBufVertices,
+																		countV,
+																		pBufIndices,
+																		countI,
+																		_defCollisionColor
+																	);
+		//  set visibility
+		if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+		//  add model view data
+		stringstream	sStream;
+
+		sStream << "SubShape # " << subShapeIdx;
+		pNewModel->SetNifData(sStream.str(), "bhkPackedNiTriStrips", pShape->internal_block_number);
+
+		//  append model to list
+		meshList.push_back(pNewModel);
+
+		//  increase vertices offset
+		vertOff += countV;
+
+	}  //  for (auto pIter=subShapes.begin(), pEnd=subShapes.end(); pIter != pEnd; ++pIter)
 
 	return meshList.size();
 }
