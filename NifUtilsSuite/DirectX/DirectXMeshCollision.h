@@ -10,6 +10,9 @@
 //-----  INCLUDES  ------------------------------------------------------------
 //  NifUtiliy includes
 #include "DirectX\DirectXMesh.h"
+#include <vector>
+
+using namespace std;
 
 //-----  CLASS  ---------------------------------------------------------------
 class DirectXMeshCollision : public DirectXMesh
@@ -24,13 +27,13 @@ class DirectXMeshCollision : public DirectXMesh
 		};
 
 	protected:
-		LPDIRECT3DVERTEXBUFFER9	_pVBuffer;		//  VertexBuffer to hold vertices
-		LPDIRECT3DINDEXBUFFER9	_pIBuffer;		//  IndexBuffer to hold face indexes
-		D3DCustomVertex*		_pVertices;		//  raw vertex buffer
-		unsigned short*			_pIndices;		//  raw index buffer
-		unsigned int			_countVertices;	//  number of vertices
-		unsigned int			_countIndices;	//  number of indices
-		D3DPRIMITIVETYPE		_primitiveType;	//  primitive type
+		vector<LPDIRECT3DVERTEXBUFFER9>		_vecVBuffer;		//  VertexBuffer to hold vertices
+		vector<LPDIRECT3DINDEXBUFFER9>		_vecIBuffer;		//  IndexBuffer to hold face indexes
+		vector<D3DCustomVertex*>			_vecVertices;		//  raw vertex buffer
+		vector<unsigned short*>				_vecIndices;		//  raw index buffer
+		vector<unsigned int>				_vecCountVertices;	//  number of vertices
+		vector<unsigned int>				_vecCountIndices;	//  number of indices
+		vector<D3DPRIMITIVETYPE>			_vecPrimitiveType;	//  primitive type
 
 	public:
 								DirectXMeshCollision(D3DXMATRIX transform,
@@ -39,9 +42,17 @@ class DirectXMeshCollision : public DirectXMesh
 													 unsigned short* pBufferI,
 													 const unsigned int countI,
 													 DWORD wireframeColor);
+
+								DirectXMeshCollision(D3DXMATRIX transform,
+													 vector<D3DCustomVertex*> vecBufferV,
+													 const vector<unsigned int> vecCountV,
+													 vector<unsigned short*> vecBufferI,
+													 const vector<unsigned int> vecCountI,
+													 DWORD wireframeColor);
 		virtual					~DirectXMeshCollision();
 
 		virtual	D3DPRIMITIVETYPE	SetPrimitiveType  (const D3DPRIMITIVETYPE type);
+		virtual	D3DPRIMITIVETYPE	SetPrimitiveType  (const vector<D3DPRIMITIVETYPE> vecType);
 
 		//  IfcDirectXRenderObject
 		virtual	bool				Render            (LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worldMatrix);

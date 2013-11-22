@@ -611,6 +611,11 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionShape(bhkShapeRef pSha
 	{
 		getGeometryFromSphereShape(DynamicCast<bhkSphereShape>(pShape), meshList, transformAry, pTmplAlphaProp);
 	}
+	//bhkCapsuleShape
+	else if (DynamicCast<bhkCapsuleShape>(pShape) != NULL)
+	{
+		getGeometryFromCapsuleShape(DynamicCast<bhkCapsuleShape>(pShape), meshList, transformAry, pTmplAlphaProp);
+	}
 	//bhkTransformShape
 	else if (DynamicCast<bhkTransformShape>(pShape) != NULL)
 	{
@@ -645,13 +650,256 @@ unsigned int DirectXNifConverter::getGeometryFromCollisionShape(bhkShapeRef pSha
 	return meshList.size();
 }
 
+//-----  getGeometryFromCapsuleShape()  ----------------------------------------
+unsigned int DirectXNifConverter::getGeometryFromCapsuleShape(bhkCapsuleShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
+{
+	vector<D3DPRIMITIVETYPE>	vecPrimTypes;
+	Matrix44					locTransform;
+	Vector3						point1  (pShape->GetFirstPoint() * _factor);
+	Vector3						point2  (pShape->GetSecondPoint() * _factor);
+	Vector3						distance(point2 - point1);
+	Vector3						normal  (distance.Normalized());
+	Vector3						x       (normal.y, normal.z, normal.x);
+	Vector3						y       (normal.CrossProduct(x));
+	Vector3						tmpVec;
+	Vector3						radVec;
+	float						radius  (pShape->GetRadius() * _factor);
+	float						f       (0.0f);
+	float						radSeg  (0.0f);
+	int							subDiv  (8);
+
+	x = normal.CrossProduct(y);
+	x *= radius;
+	y *= radius;
+
+	//  - vertices
+	vector<DirectXMeshCollision::D3DCustomVertex>	tmpVertices[4];
+	vector<DirectXMeshCollision::D3DCustomVertex*>	vecVertices;
+	vector<unsigned short*>							vecIndices;
+	vector<unsigned int>							vecCntVertices;
+	vector<unsigned int>							vecCntIndices;
+	DirectXMeshCollision::D3DCustomVertex			tVertex;
+	
+	for (int i(0); i <= subDiv*2; ++i)
+	{
+		tmpVec         = point1 + distance/2 + x * sin(PI / subDiv * i) + y * cos(PI / subDiv * i);
+		tVertex._x     = tmpVec.x;
+		tVertex._y     = tmpVec.y;
+		tVertex._z     = tmpVec.z;
+		tVertex._color = _defCollisionColor;
+		tmpVertices[0].push_back(tVertex);
+
+		tmpVec         = point1 + x * sin(PI / subDiv * i) + y * cos(PI / subDiv * i);
+		tVertex._x     = tmpVec.x;
+		tVertex._y     = tmpVec.y;
+		tVertex._z     = tmpVec.z;
+		tVertex._color = _defCollisionColor;
+		tmpVertices[1].push_back(tVertex);
+
+		tmpVec         = point2 + x * sin(PI / subDiv * i) + y * cos(PI / subDiv * i);
+		tVertex._x     = tmpVec.x;
+		tVertex._y     = tmpVec.y;
+		tVertex._z     = tmpVec.z;
+		tVertex._color = _defCollisionColor;
+		tmpVertices[1].push_back(tVertex);
+	}
+
+	for (int j(-subDiv); j <= subDiv; ++j)
+	{
+		f      = PI * float(j) / float(subDiv * 2);
+		radSeg = sin(f);
+		radVec = normal * radius * cos(f);
+		for (int i(0); i <= subDiv*2; ++i)
+		{
+			tmpVec         = point1 - radVec + x * sin(PI / subDiv * i) * radSeg + y * cos(PI / subDiv * i) * radSeg;
+			tVertex._x     = tmpVec.x;
+			tVertex._y     = tmpVec.y;
+			tVertex._z     = tmpVec.z;
+			tVertex._color = _defCollisionColor;
+			tmpVertices[2].push_back(tVertex);
+
+			tmpVec         = point2 + radVec + x * sin(PI / subDiv * i) * radSeg + y * cos(PI / subDiv * i) * radSeg;
+			tVertex._x     = tmpVec.x;
+			tVertex._y     = tmpVec.y;
+			tVertex._z     = tmpVec.z;
+			tVertex._color = _defCollisionColor;
+			tmpVertices[3].push_back(tVertex);
+		}
+
+
+	}  //  for (int j(-subDiv); j <= subDiv; ++j)
+
+	//  - build parameter lists
+	for (short idx(0); idx < 4; ++idx)
+	{
+		//  vertices
+		unsigned int							countV      (tmpVertices[idx].size());
+		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+
+		//memcpy(pBufVertices, &tmpVertices[idx], countV * sizeof(DirectXMeshCollision::D3DCustomVertex));
+		for (unsigned int ii(0); ii < countV; ++ii)
+		{
+			pBufVertices[ii] = tmpVertices[idx][ii];
+		}
+		vecVertices.push_back(pBufVertices);
+		vecCntVertices.push_back(countV);
+
+		//  indices
+		unsigned int		countI     (tmpVertices[idx].size());
+		unsigned short*		pBufIndices(new unsigned short[countI]);
+
+		for (unsigned short ii(0); ii < countI; ++ii)
+		{
+			pBufIndices[ii] = ii;
+		}
+		vecIndices.push_back(pBufIndices);
+		vecCntIndices.push_back(countI);
+
+	}  //  for (short idx(0); idx < 3; ++idx)
+
+	//  - primitive types
+	vecPrimTypes.push_back(D3DPT_LINESTRIP);
+	vecPrimTypes.push_back(D3DPT_LINELIST);
+	vecPrimTypes.push_back(D3DPT_LINESTRIP);
+	vecPrimTypes.push_back(D3DPT_LINESTRIP);
+
+	//  collected all data needed => convert to DirectX
+	//  - transformation matrix
+	for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
+	{
+		locTransform *= *pIterT;
+	}
+
+	//  create new model
+	DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																	vecVertices,
+																	vecCntVertices,
+																	vecIndices,
+																	vecCntIndices,
+																	_defCollisionColor
+																);
+	//  modify primitive type
+	pNewModel->SetPrimitiveType(vecPrimTypes);
+
+	//  set visibility
+	if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+	//  add model view data
+	pNewModel->SetNifData("unknown", "bhkCapsuleShape", pShape->internal_block_number);
+
+	//  append model to list
+	meshList.push_back(pNewModel);
+
+	return meshList.size();
+}
+
 //-----  getGeometryFromSphereShape()  ----------------------------------------
 unsigned int DirectXNifConverter::getGeometryFromSphereShape(bhkSphereShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp)
 {
-	float		radius(pShape->GetRadius());
 	Matrix44	locTransform;
+	Vector3			center;
+	Vector3			tmpVec;
+	Vector3			radVec;
+	float			radius(pShape->GetRadius() * _factor);
+	float			f     (0.0f);
+	float			radSeg(0.0f);
+	int				subDiv(8);
 
-	//  much work to do!!!
+	//  - vertices
+	vector<DirectXMeshCollision::D3DCustomVertex>	tmpVertices[3];
+	vector<DirectXMeshCollision::D3DCustomVertex*>	vecVertices;
+	vector<unsigned short*>							vecIndices;
+	vector<unsigned int>							vecCntVertices;
+	vector<unsigned int>							vecCntIndices;
+	DirectXMeshCollision::D3DCustomVertex			tVertex;
+
+	for (int j(-subDiv); j <= subDiv; ++j)
+	{
+		f      = PI * float(j) / float(subDiv);
+		radSeg = radius * sin(f);
+
+		for (int i(0); i <= subDiv*2; ++i)
+		{
+			radVec = center + Vector3(0, 0, radius * cos(f));
+			tmpVec         = (Vector3(sin(PI / subDiv * i), cos(PI / subDiv * i), 0) * radSeg + radVec);
+			tVertex._x     = tmpVec.x;
+			tVertex._y     = tmpVec.y;
+			tVertex._z     = tmpVec.z;
+			tVertex._color = _defCollisionColor;
+			tmpVertices[0].push_back(tVertex);
+
+			radVec = center + Vector3(0, radius * cos(f), 0);
+			tmpVec         = (Vector3(sin(PI / subDiv * i), 0, cos(PI / subDiv * i)) * radSeg + radVec);
+			tVertex._x     = tmpVec.x;
+			tVertex._y     = tmpVec.y;
+			tVertex._z     = tmpVec.z;
+			tVertex._color = _defCollisionColor;
+			tmpVertices[1].push_back(tVertex);
+
+			radVec = center + Vector3(radius * cos(f), 0, 0);
+			tmpVec         = (Vector3(0, sin(PI / subDiv * i), cos(PI / subDiv * i)) * radSeg + radVec);
+			tVertex._x     = tmpVec.x;
+			tVertex._y     = tmpVec.y;
+			tVertex._z     = tmpVec.z;
+			tVertex._color = _defCollisionColor;
+			tmpVertices[2].push_back(tVertex);
+		}
+	}  //  for (int j(-subDiv); j <= subDiv; ++j)
+
+	//  - build parameter lists
+	for (short idx(0); idx < 3; ++idx)
+	{
+		//  vertices
+		unsigned int							countV      (tmpVertices[idx].size());
+		DirectXMeshCollision::D3DCustomVertex*	pBufVertices(new DirectXMeshCollision::D3DCustomVertex[countV]);
+
+		//memcpy(pBufVertices, &tmpVertices[idx], countV * sizeof(DirectXMeshCollision::D3DCustomVertex));
+		for (unsigned int ii(0); ii < countV; ++ii)
+		{
+			pBufVertices[ii] = tmpVertices[idx][ii];
+		}
+		vecVertices.push_back(pBufVertices);
+		vecCntVertices.push_back(countV);
+
+		//  indices
+		unsigned int		countI     (tmpVertices[idx].size());
+		unsigned short*		pBufIndices(new unsigned short[countI]);
+
+		for (unsigned short ii(0); ii < countI; ++ii)
+		{
+			pBufIndices[ii] = ii;
+		}
+		vecIndices.push_back(pBufIndices);
+		vecCntIndices.push_back(countI);
+
+	}  //  for (short idx(0); idx < 3; ++idx)
+
+	//  collected all data needed => convert to DirectX
+	//  - transformation matrix
+	for (auto pIterT=transformAry.rbegin(), pEndT=transformAry.rend(); pIterT != pEndT; ++pIterT)
+	{
+		locTransform *= *pIterT;
+	}
+
+	//  create new model
+	DirectXMeshCollision*	pNewModel = new DirectXMeshCollision(Matrix44ToD3DXMATRIX(locTransform),
+																	vecVertices,
+																	vecCntVertices,
+																	vecIndices,
+																	vecCntIndices,
+																	_defCollisionColor
+																);
+	//  modify primitive type
+	pNewModel->SetPrimitiveType(D3DPT_LINESTRIP);
+
+	//  set visibility
+	if (!_showCollision)	pNewModel->SetRenderMode(DXRM_NONE);
+
+	//  add model view data
+	pNewModel->SetNifData("unknown", "bhkSphereShape", pShape->internal_block_number);
+
+	//  append model to list
+	meshList.push_back(pNewModel);
 
 	return meshList.size();
 }
@@ -664,7 +912,6 @@ unsigned int DirectXNifConverter::getGeometryFromBoxShape(bhkBoxShapeRef pShape,
 
 	//  - indices
 	unsigned int		countI     (24);
-	unsigned int		indexI     (0);
 	unsigned short*		pBufIndices(new unsigned short[countI]);
 
 	pBufIndices[0]  = 0;

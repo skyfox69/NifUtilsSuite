@@ -26,6 +26,7 @@
 #include "obj/bhkConvexVerticesShape.h"
 #include "obj/bhkBoxShape.h"
 #include "obj/bhkSphereShape.h"
+#include "obj/bhkCapsuleShape.h"
 #include "gen/QuaternionXYZW.h"
 
 //-----  DEFINES  -------------------------------------------------------------
@@ -69,6 +70,7 @@ class DirectXNifConverter
 		virtual	unsigned int		getGeometryFromConvexVerticesShape(bhkConvexVerticesShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 		virtual	unsigned int		getGeometryFromBoxShape(bhkBoxShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 		virtual	unsigned int		getGeometryFromSphereShape(bhkSphereShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
+		virtual	unsigned int		getGeometryFromCapsuleShape(bhkCapsuleShapeRef pShape, vector<DirectXMesh*>& meshList, vector<Matrix44>& transformAry, NiAlphaPropertyRef pTmplAlphaProp);
 
 		virtual D3DXMATRIX			Matrix44ToD3DXMATRIX   (const Matrix44& matrixIn);
 		virtual	Matrix33			QuaternionToMatrix33   (const QuaternionXYZW& quadIn);

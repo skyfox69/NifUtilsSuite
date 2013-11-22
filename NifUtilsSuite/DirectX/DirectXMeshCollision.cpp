@@ -19,26 +19,59 @@ DirectXMeshCollision::DirectXMeshCollision(D3DXMATRIX transform,
 								   unsigned short* pBufferI,
 								   const unsigned int countI,
 								   DWORD wireframeColor)
-	:	DirectXMesh   (),
-		_pVBuffer     (NULL),
-		_pIBuffer     (NULL),
-		_pVertices    (pBufferV),
-		_pIndices     (pBufferI),
-		_countVertices(countV),
-		_countIndices (countI),
-		_primitiveType(D3DPT_TRIANGLELIST)
+	:	DirectXMesh   ()
 {
 	_transform      = transform;
 	_wireframeColor = wireframeColor;
+	_vecVertices.push_back(pBufferV);
+	_vecIndices.push_back(pBufferI);
+	_vecCountVertices.push_back(countV);
+	_vecCountIndices.push_back(countI);
+	_vecPrimitiveType.push_back(D3DPT_TRIANGLELIST);
+}
+
+//-----  DirectXMeshModel()  --------------------------------------------------
+DirectXMeshCollision::DirectXMeshCollision(D3DXMATRIX transform,
+									vector<D3DCustomVertex*> vecBufferV,
+									vector<unsigned int> vecCountV,
+									vector<unsigned short*> vecBufferI,
+									vector<unsigned int> vecCountI,
+									DWORD wireframeColor)
+	:	DirectXMesh   (),
+		_vecVertices     (vecBufferV),
+		_vecIndices      (vecBufferI),
+		_vecCountVertices(vecCountV),
+		_vecCountIndices (vecCountI)
+{
+	_transform      = transform;
+	_wireframeColor = wireframeColor;
+	for (unsigned int idx(0); idx < _vecVertices.size(); ++idx)
+	{
+		_vecPrimitiveType.push_back(D3DPT_TRIANGLELIST);
+	}
 }
 
 //-----  ~DirectXMeshModel()  -------------------------------------------------
 DirectXMeshCollision::~DirectXMeshCollision()
 {
-	if (_pVBuffer  != NULL)		_pVBuffer->Release();
-	if (_pIBuffer  != NULL)		_pIBuffer->Release();
-	if (_pVertices != NULL)		delete[] _pVertices;
-	if (_pIndices  != NULL)		delete[] _pIndices;
+	for (auto pIter=_vecVBuffer.begin(), pEnd=_vecVBuffer.end(); pIter != pEnd; ++pIter)
+	{
+		(*pIter)->Release();
+	}
+	for (auto pIter=_vecIBuffer.begin(), pEnd=_vecIBuffer.end(); pIter != pEnd; ++pIter)
+	{
+		(*pIter)->Release();
+	}
+	for (auto pIter=_vecVertices.begin(), pEnd=_vecVertices.end(); pIter != pEnd; ++pIter)
+	{
+		delete[] (*pIter);
+		//  removeFromVector ??
+	}
+	for (auto pIter=_vecIndices.begin(), pEnd=_vecIndices.end(); pIter != pEnd; ++pIter)
+	{
+		delete[] (*pIter);
+		//  removeFromVector ??
+	}
 }
 
 //-----  SetWireframeColor()  -------------------------------------------------
@@ -50,12 +83,15 @@ DWORD DirectXMeshCollision::SetWireframeColor(const DWORD color)
 	_wireframeColor = color;
 
 	//  wireframe mode?
-	if ((_renderMode == DXRM_WIREFRAME) && (_pVBuffer != NULL))
+	if ((_renderMode == DXRM_WIREFRAME) && (!_vecVBuffer.empty()))
 	{
 		_forceNoRender = true;		//  disable rendering
 
-		_pVBuffer->Release();
-		_pVBuffer = NULL;
+		for (auto pIter=_vecVBuffer.begin(), pEnd=_vecVBuffer.end(); pIter != pEnd; ++pIter)
+		{
+			(*pIter)->Release();
+		}
+		_vecVBuffer.clear();
 
 		_forceNoRender = false;		//  enable rendering
 
@@ -88,9 +124,22 @@ DirectXRenderMode DirectXMeshCollision::SetRenderMode(const DirectXRenderMode re
 //-----  SetPrimitiveType()  --------------------------------------------------
 D3DPRIMITIVETYPE DirectXMeshCollision::SetPrimitiveType(const D3DPRIMITIVETYPE type)
 {
-	D3DPRIMITIVETYPE	oldType(_primitiveType);
+	D3DPRIMITIVETYPE	oldType(_vecPrimitiveType[0]);
 
-	_primitiveType = type;
+	_vecPrimitiveType.clear();
+	for (unsigned int idx(0); idx < _vecVertices.size(); ++idx)
+	{
+		_vecPrimitiveType.push_back(type);
+	}
+	return oldType;
+}
+
+//-----  SetPrimitiveType()  --------------------------------------------------
+D3DPRIMITIVETYPE DirectXMeshCollision::SetPrimitiveType(const vector<D3DPRIMITIVETYPE> vecType)
+{
+	D3DPRIMITIVETYPE	oldType(_vecPrimitiveType[0]);
+
+	_vecPrimitiveType = vecType;
 	return oldType;
 }
 
@@ -101,33 +150,44 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 	if ((_renderMode == DXRM_NONE) || _forceNoRender)		return true;
 
 	//  create DX parameters if not existing
-	if (_pVBuffer == NULL)
+	if (_vecVBuffer.empty())
+	{
+		for (unsigned int idxShape(0); idxShape < _vecVertices.size(); ++idxShape)
 	{
 		//  vertices
+			LPDIRECT3DVERTEXBUFFER9		pVBuffer     (NULL);
 		D3DCustomVertex*	pVModel(NULL);
+			D3DCustomVertex*			pVertices    (_vecVertices[idxShape]);
+			unsigned int				countVertices(_vecCountVertices[idxShape]);
 
-		pd3dDevice->CreateVertexBuffer(_countVertices*sizeof(D3DCustomVertex), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &_pVBuffer, NULL);
-		_pVBuffer->Lock(0, 0, (void**)&pVModel, 0);
-		for (unsigned int i(0); i < _countVertices; ++i)
-		{
-			pVModel[i]._x     = _pVertices[i]._x;
-			pVModel[i]._y     = _pVertices[i]._y;
-			pVModel[i]._z     = _pVertices[i]._z;
+			pd3dDevice->CreateVertexBuffer(countVertices*sizeof(D3DCustomVertex), D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &pVBuffer, NULL);
+			pVBuffer->Lock(0, 0, (void**)&pVModel, 0);
+			for (unsigned int i(0); i < countVertices; ++i)
+			{
+				pVModel[i]._x     = pVertices[i]._x;
+				pVModel[i]._y     = pVertices[i]._y;
+				pVModel[i]._z     = pVertices[i]._z;
 			pVModel[i]._color = _wireframeColor;
 		}
-		_pVBuffer->Unlock();
+			pVBuffer->Unlock();
+			_vecVBuffer.push_back(pVBuffer);
 
 		//  indices
-		if (_pIBuffer == NULL)
+			if (_vecIBuffer.size() < _vecVBuffer.size())
 		{
+				LPDIRECT3DINDEXBUFFER9	pIBuffer    (NULL);
 			unsigned short*		pIModel(NULL);
+				unsigned short*			pIndices    (_vecIndices[idxShape]);
+				unsigned int			countIndices(_vecCountIndices[idxShape]);
 
-			pd3dDevice->CreateIndexBuffer(_countIndices*sizeof(unsigned short), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &_pIBuffer, NULL);
-			_pIBuffer->Lock(0, 0, (void**)&pIModel, 0);
-			memcpy(pIModel, _pIndices, _countIndices*sizeof(unsigned short));
-			_pIBuffer->Unlock();
+				pd3dDevice->CreateIndexBuffer(countIndices*sizeof(unsigned short), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16, D3DPOOL_MANAGED, &pIBuffer, NULL);
+				pIBuffer->Lock(0, 0, (void**)&pIModel, 0);
+				memcpy(pIModel, pIndices, countIndices*sizeof(unsigned short));
+				pIBuffer->Unlock();
+				_vecIBuffer.push_back(pIBuffer);
 		}
-	}  //  if (_pVBuffer == NULL)
+		}  // for (unsigned int idxShape(0); idxShape < _vesVertices.size(); ++idxShape)
+	}  //  if (_vecVBuffer.empty())
 
 	//  wireframe?
 	if (_renderMode == DXRM_WIREFRAME)
@@ -138,31 +198,36 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 		pd3dDevice->SetRenderState		(D3DRS_ALPHABLENDENABLE, false);								//  disable alpha blending
 		pd3dDevice->SetRenderState      (D3DRS_FILLMODE, D3DFILL_WIREFRAME);							//  forced wireframe
 		pd3dDevice->SetRenderState      (D3DRS_LIGHTING, false);										//  disable light
-		pd3dDevice->SetStreamSource     (0, _pVBuffer, 0, sizeof(D3DCustomVertex));						//  set vertices source
-		pd3dDevice->SetIndices          (_pIBuffer);													//  set indices source
 		pd3dDevice->SetFVF              (D3DFVF_CUSTOMVERTEX_COLOR);									//  set vertex style
 
-		unsigned int	countIndices (_countIndices);
-		unsigned int	countVertices(_countVertices);
+		for (unsigned int idxShape(0); idxShape < _vecVBuffer.size(); ++idxShape)
+		{
+			pd3dDevice->SetStreamSource     (0, _vecVBuffer[idxShape], 0, sizeof(D3DCustomVertex));		//  set vertices source
+			pd3dDevice->SetIndices          (_vecIBuffer[idxShape]);									//  set indices source
 
-		switch (_primitiveType)
+			unsigned int	countIndices (_vecCountIndices[idxShape]);
+			unsigned int	countVertices(_vecCountVertices[idxShape]);
+
+			switch (_vecPrimitiveType[idxShape])
 		{
 			case D3DPT_TRIANGLELIST:
 			{
-				countIndices  = _countIndices/3;
-				countVertices = _countVertices;
+					countIndices  = countIndices/3;
+					countVertices = countVertices;
 				break;
 			}
 
 			case D3DPT_LINELIST:
 			{
-				countIndices  = _countIndices/2;
-				countVertices = _countVertices;
+					countIndices  = countIndices/2;
+					countVertices = countVertices;
 				break;
 			}
 		}
 
-		pd3dDevice->DrawIndexedPrimitive(_primitiveType, 0, 0, countVertices, 0, countIndices);			//  render
+			pd3dDevice->DrawIndexedPrimitive(_vecPrimitiveType[idxShape], 0, 0, countVertices, 0, countIndices);		//  render
+
+		}  //  for (unsigned int idxShape(0); idxShape < _vecVBuffer.size(); ++idxShape)
 	}
 
 	return true;
