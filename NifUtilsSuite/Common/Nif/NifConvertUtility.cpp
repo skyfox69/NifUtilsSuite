@@ -55,6 +55,186 @@ NifConvertUtility::~NifConvertUtility()
 {}
 
 /*---------------------------------------------------------------------------*/
+unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileNameDst, string fileNameTmpl)
+{
+	NiNodeRef				pRootInput     (NULL);
+	NiNodeRef				pRootOutput    (NULL);
+	NiNodeRef				pRootTemplate  (NULL);
+	NiTriShapeRef			pNiTriShapeTmpl(NULL);
+	NiCollisionObjectRef	pRootCollObject(NULL);
+	NifInfo					nifInfo;
+	vector<NiAVObjectRef>	srcChildList;
+	bool					fakedRoot      (false);
+
+	//  test on existing file names
+	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameTmpl.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+
+	//  initialize user messages
+	_userMessages.clear();
+	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty() ? "- none -" : fileNameSrc));
+	logMessage(NCU_MSG_TYPE_INFO, "Template:  "    + (fileNameTmpl.empty() ? "- none -" : fileNameTmpl));
+	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty() ? "- none -" : fileNameDst));
+	logMessage(NCU_MSG_TYPE_INFO, "Texture:  "     + (_pathTexture.empty() ? "- none -" : _pathTexture));
+
+	//  initialize used texture list
+	_usedTextures.clear();
+	_newTextures.clear();
+
+	//  read input NIF
+	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot, &nifInfo)) == NULL)
+	{
+		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
+		return NCU_ERROR_CANT_OPEN_INPUT;
+	}
+
+	//  get template nif
+	pRootTemplate = DynamicCast<BSFadeNode>(ReadNifTree((const char*) fileNameTmpl.c_str()));
+	if (pRootTemplate == NULL)
+	{
+		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameTmpl + "' as template");
+		return NCU_ERROR_CANT_OPEN_TEMPLATE;
+	}
+
+	//  get shapes from template
+	//  - shape root
+	pNiTriShapeTmpl = DynamicCast<NiTriShape>(pRootTemplate->GetChildren().at(0));
+	if (pNiTriShapeTmpl == NULL)
+	{
+		logMessage(NCU_MSG_TYPE_INFO, "Template has no NiTriShape.");
+	}
+
+	//  get data from input node
+	srcChildList    = pRootInput->GetChildren();
+	pRootCollObject = pRootInput->GetCollisionObject();
+	
+	//  template root is used as root of output
+	pRootOutput = pRootTemplate;
+
+	//  move date from input to output
+	pRootInput ->SetCollisionObject(NULL);
+	pRootOutput->SetCollisionObject(pRootCollObject);
+	pRootOutput->SetLocalTransform(pRootInput->GetLocalTransform());
+	pRootOutput->SetName(pRootInput->GetName());
+
+	//  get rid of unwanted subnodes
+	pRootOutput->ClearChildren();
+	pRootInput->ClearChildren();
+
+	//  move children to output
+	for (auto pIter=srcChildList.begin(), pEnd=srcChildList.end(); pIter != pEnd; ++pIter)
+	{
+		pRootOutput->AddChild(*pIter);
+	}
+
+	//  iterate over source nodes and convert using template
+	pRootOutput = convertNiNode(pRootOutput, pNiTriShapeTmpl, pRootOutput);
+
+	//  write missing textures to log - as block
+	for (auto pIter=_newTextures.begin(), pEnd=_newTextures.end(); pIter != pEnd; ++pIter)
+	{
+		logMessage(NCU_MSG_TYPE_TEXTURE_MISS, *pIter);
+	}
+
+	//  set version information
+	stringstream	sStream;
+
+	sStream << nifInfo.version;
+	nifInfo.version      = VER_20_2_0_7;
+	nifInfo.userVersion  = 12;
+	nifInfo.userVersion2 = 83;
+	nifInfo.creator      = "NifConvert";
+	nifInfo.exportInfo1  = MASTER_PRODUCT_VERSION_STR;
+	nifInfo.exportInfo2  = sStream.str();
+
+	//  write modified nif file
+	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, nifInfo);
+
+	return NCU_OK;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setTexturePath(string pathTexture)
+{
+	_pathTexture = pathTexture;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setSkyrimPath(string pathSkyrim)
+{
+	_pathSkyrim = pathSkyrim;
+	transform(_pathSkyrim.begin(), _pathSkyrim.end(), _pathSkyrim.begin(), ::tolower);
+
+	size_t	pos(_pathSkyrim.rfind("\\data\\textures"));
+
+	if (pos != string::npos)
+	{
+		_pathSkyrim.replace(pos, 14, "");
+	}
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setVertexColorHandling(VertexColorHandling vcHandling)
+{
+	_vcHandling = vcHandling;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setDefaultVertexColor(Color4 defaultColor)
+{
+	_vcDefaultColor = defaultColor;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setUpdateTangentSpace(bool doUpdate)
+{
+	_updateTangentSpace = doUpdate;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setReorderProperties(bool doReorder)
+{
+	_reorderProperties = doReorder;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setForceDDS(bool doForce)
+{
+	_forceDDS = doForce;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setCleanTreeCollision(bool doClean)
+{
+	_cleanTreeCollision = doClean;
+}
+
+/*---------------------------------------------------------------------------*/
+vector<string>& NifConvertUtility::getUserMessages()
+{
+	return _userMessages;
+}
+
+/*---------------------------------------------------------------------------*/
+set<string>& NifConvertUtility::getUsedTextures()
+{
+	return _usedTextures;
+}
+
+/*---------------------------------------------------------------------------*/
+set<string>& NifConvertUtility::getNewTextures()
+{
+	return _newTextures;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifConvertUtility::setLogCallback(void (*logCallback) (const int type, const char* pMessage))
+{
+	_logCallback = logCallback;
+}
+
+/*---------------------------------------------------------------------------*/
 NiNodeRef NifConvertUtility::getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot, NifInfo* pNifInfo)
 {
 	NiObjectRef		pRootTree (NULL);
@@ -467,106 +647,6 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 }
 
 /*---------------------------------------------------------------------------*/
-unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileNameDst, string fileNameTmpl)
-{
-	NiNodeRef				pRootInput     (NULL);
-	NiNodeRef				pRootOutput    (NULL);
-	NiNodeRef				pRootTemplate  (NULL);
-	NiTriShapeRef			pNiTriShapeTmpl(NULL);
-	NiCollisionObjectRef	pRootCollObject(NULL);
-	NifInfo					nifInfo;
-	vector<NiAVObjectRef>	srcChildList;
-	bool					fakedRoot      (false);
-
-	//  test on existing file names
-	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameTmpl.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-
-	//  initialize user messages
-	_userMessages.clear();
-	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty() ? "- none -" : fileNameSrc));
-	logMessage(NCU_MSG_TYPE_INFO, "Template:  "    + (fileNameTmpl.empty() ? "- none -" : fileNameTmpl));
-	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty() ? "- none -" : fileNameDst));
-	logMessage(NCU_MSG_TYPE_INFO, "Texture:  "     + (_pathTexture.empty() ? "- none -" : _pathTexture));
-
-	//  initialize used texture list
-	_usedTextures.clear();
-	_newTextures.clear();
-
-	//  read input NIF
-	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot, &nifInfo)) == NULL)
-	{
-		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
-		return NCU_ERROR_CANT_OPEN_INPUT;
-	}
-
-	//  get template nif
-	pRootTemplate = DynamicCast<BSFadeNode>(ReadNifTree((const char*) fileNameTmpl.c_str()));
-	if (pRootTemplate == NULL)
-	{
-		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameTmpl + "' as template");
-		return NCU_ERROR_CANT_OPEN_TEMPLATE;
-	}
-
-	//  get shapes from template
-	//  - shape root
-	pNiTriShapeTmpl = DynamicCast<NiTriShape>(pRootTemplate->GetChildren().at(0));
-	if (pNiTriShapeTmpl == NULL)
-	{
-		logMessage(NCU_MSG_TYPE_INFO, "Template has no NiTriShape.");
-	}
-
-	//  get data from input node
-	srcChildList    = pRootInput->GetChildren();
-	pRootCollObject = pRootInput->GetCollisionObject();
-	
-	//  template root is used as root of output
-	pRootOutput = pRootTemplate;
-
-	//  move date from input to output
-	pRootInput ->SetCollisionObject(NULL);
-	pRootOutput->SetCollisionObject(pRootCollObject);
-	pRootOutput->SetLocalTransform(pRootInput->GetLocalTransform());
-	pRootOutput->SetName(pRootInput->GetName());
-
-	//  get rid of unwanted subnodes
-	pRootOutput->ClearChildren();
-	pRootInput->ClearChildren();
-
-	//  move children to output
-	for (auto pIter=srcChildList.begin(), pEnd=srcChildList.end(); pIter != pEnd; ++pIter)
-	{
-		pRootOutput->AddChild(*pIter);
-	}
-
-	//  iterate over source nodes and convert using template
-	pRootOutput = convertNiNode(pRootOutput, pNiTriShapeTmpl, pRootOutput);
-
-	//  write missing textures to log - as block
-	for (auto pIter=_newTextures.begin(), pEnd=_newTextures.end(); pIter != pEnd; ++pIter)
-	{
-		logMessage(NCU_MSG_TYPE_TEXTURE_MISS, *pIter);
-	}
-
-	//  set version information
-	stringstream	sStream;
-
-	sStream << nifInfo.version;
-	nifInfo.version      = VER_20_2_0_7;
-	nifInfo.userVersion  = 12;
-	nifInfo.userVersion2 = 83;
-	nifInfo.creator      = "NifConvert";
-	nifInfo.exportInfo1  = MASTER_PRODUCT_VERSION_STR;
-	nifInfo.exportInfo2  = sStream.str();
-
-	//  write modified nif file
-	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, nifInfo);
-
-	return NCU_OK;
-}
-
-/*---------------------------------------------------------------------------*/
 bool NifConvertUtility::updateTangentSpace(NiTriShapeDataRef pDataObj)
 {
 	vector<Vector3>		vecVertices (pDataObj->GetVertices());
@@ -649,83 +729,21 @@ bool NifConvertUtility::updateTangentSpace(NiTriShapeDataRef pDataObj)
 }
 
 /*---------------------------------------------------------------------------*/
-void NifConvertUtility::setTexturePath(string pathTexture)
+BSLightingShaderPropertyRef NifConvertUtility::cloneBSLightingShaderProperty(BSLightingShaderPropertyRef pSource)
 {
-	_pathTexture = pathTexture;
-}
+	BSLightingShaderPropertyRef		pDest(new BSLightingShaderProperty);
+	BSShaderTextureSetRef			pTSet(pSource->GetTextureSet());
 
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setSkyrimPath(string pathSkyrim)
-{
-	_pathSkyrim = pathSkyrim;
-	transform(_pathSkyrim.begin(), _pathSkyrim.end(), _pathSkyrim.begin(), ::tolower);
+	//  force empty texture set to source (HACK)
+	pSource->SetTextureSet(NULL);
 
-	size_t	pos(_pathSkyrim.rfind("\\data\\textures"));
+	//  copy all members, even inaccessable ones (HACK)
+	memcpy(pDest, pSource, sizeof(BSLightingShaderProperty));
 
-	if (pos != string::npos)
-	{
-		_pathSkyrim.replace(pos, 14, "");
-	}
-}
+	//  reset source texture set
+	pSource->SetTextureSet(pTSet);
 
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setVertexColorHandling(VertexColorHandling vcHandling)
-{
-	_vcHandling = vcHandling;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setDefaultVertexColor(Color4 defaultColor)
-{
-	_vcDefaultColor = defaultColor;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setUpdateTangentSpace(bool doUpdate)
-{
-	_updateTangentSpace = doUpdate;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setReorderProperties(bool doReorder)
-{
-	_reorderProperties = doReorder;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setForceDDS(bool doForce)
-{
-	_forceDDS = doForce;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setCleanTreeCollision(bool doClean)
-{
-	_cleanTreeCollision = doClean;
-}
-
-/*---------------------------------------------------------------------------*/
-vector<string>& NifConvertUtility::getUserMessages()
-{
-	return _userMessages;
-}
-
-/*---------------------------------------------------------------------------*/
-set<string>& NifConvertUtility::getUsedTextures()
-{
-	return _usedTextures;
-}
-
-/*---------------------------------------------------------------------------*/
-set<string>& NifConvertUtility::getNewTextures()
-{
-	return _newTextures;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifConvertUtility::setLogCallback(void (*logCallback) (const int type, const char* pMessage))
-{
-	_logCallback = logCallback;
+	return pDest;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -771,24 +789,6 @@ bool NifConvertUtility::checkFileExists(string fileName)
 
 	//  return existance of file
 	return iStream.good();
-}
-
-/*---------------------------------------------------------------------------*/
-BSLightingShaderPropertyRef NifConvertUtility::cloneBSLightingShaderProperty(BSLightingShaderPropertyRef pSource)
-{
-	BSLightingShaderPropertyRef		pDest(new BSLightingShaderProperty);
-	BSShaderTextureSetRef			pTSet(pSource->GetTextureSet());
-
-	//  force empty texture set to source (HACK)
-	pSource->SetTextureSet(NULL);
-
-	//  copy all members, even inaccessable ones (HACK)
-	memcpy(pDest, pSource, sizeof(BSLightingShaderProperty));
-
-	//  reset source texture set
-	pSource->SetTextureSet(pTSet);
-
-	return pDest;
 }
 
 /*---------------------------------------------------------------------------*/

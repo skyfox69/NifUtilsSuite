@@ -23,13 +23,77 @@ NifExtractUtility::NifExtractUtility(NifUtlMaterialList& materialList)
 	:	_logCallback       (NULL),
 		_materialList      (materialList),
 		_generateNormals   (true),
-		_scaleToModel      (true),
-		_mergeCollision    (true)
+		_scaleToModel      (true)
 {}
 
 /*---------------------------------------------------------------------------*/
 NifExtractUtility::~NifExtractUtility()
 {}
+
+/*---------------------------------------------------------------------------*/
+unsigned int NifExtractUtility::extractChunks(string fileNameCollSrc, string fileNameDstNif, string fileNameDstObj)
+{
+	bool					fakedRoot(false);
+	vector<NiObjectRef>		blockList(ReadNifList(fileNameCollSrc));
+	vector<NifChunkData>	chunkDataList;
+
+	//  test on existing file names
+	if (fileNameCollSrc.empty())								return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameDstNif.empty() && fileNameDstObj.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+
+	//  initialize user messages
+	_userMessages.clear();
+	logMessage(NCU_MSG_TYPE_INFO, "CollSource:  " + (fileNameCollSrc.empty() ? "- none -" : fileNameCollSrc));
+	logMessage(NCU_MSG_TYPE_INFO, "Name NIF:    " + (fileNameDstNif.empty()  ? "- none -" : fileNameDstNif));
+	logMessage(NCU_MSG_TYPE_INFO, "Name OBJ:    " + (fileNameDstObj.empty()  ? "- none -" : fileNameDstObj));
+
+	//  find collision node (bhkCompressedMeshData)
+	for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
+	{
+		if (DynamicCast<bhkCompressedMeshShapeData>(*pIter) != NULL)
+		{
+			getGeometryFromCompressedMeshShape(DynamicCast<bhkCompressedMeshShapeData>(*pIter), chunkDataList);
+		}
+	}  //  for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
+
+	//  check extracted chunks
+	if (chunkDataList.empty())
+	{
+		logMessage(NCU_MSG_TYPE_INFO, "No chunks found");
+	}
+	else  //  if (chunkDataList.empty())
+	{
+		//  save OBJ file?
+		if (!fileNameDstObj.empty())
+		{
+			logMessage(NCU_MSG_TYPE_INFO, "Exporting OBJ to " + fileNameDstObj);
+			if (writeChunkDataAsObj(fileNameDstObj, chunkDataList))
+			{
+				logMessage(NCU_MSG_TYPE_INFO, "Done successfully");
+			}
+			else
+			{
+				logMessage(NCU_MSG_TYPE_ERROR, "Error while exporting to " + fileNameDstObj);
+			}
+		}  //  if (!fileNameDstObj.empty())
+
+		//  save NIF file?
+		if (!fileNameDstNif.empty())
+		{
+			logMessage(NCU_MSG_TYPE_INFO, "Exporting NIF to " + fileNameDstNif);
+			if (writeChunkDataAsNif(fileNameDstNif, chunkDataList))
+			{
+				logMessage(NCU_MSG_TYPE_INFO, "Done successfully");
+			}
+			else
+			{
+				logMessage(NCU_MSG_TYPE_ERROR, "Error while exporting to " + fileNameDstObj);
+			}
+		}  //  if (!fileNameDstNif.empty())
+	}  //  else [if (chunkDataList.empty())]
+
+	return NCU_OK;
+}
 
 /*---------------------------------------------------------------------------*/
 void NifExtractUtility::setSkyrimPath(string pathSkyrim)
@@ -292,71 +356,6 @@ unsigned int NifExtractUtility::getGeometryFromCompressedMeshShape(bhkCompressed
 	}  //  if (!tBVecVec.empty() && !tBTriVec.empty())
 
 	return chunkDataList.size();
-}
-
-/*---------------------------------------------------------------------------*/
-unsigned int NifExtractUtility::extractChunks(string fileNameCollSrc, string fileNameDstNif, string fileNameDstObj)
-{
-	bool					fakedRoot(false);
-	vector<NiObjectRef>		blockList(ReadNifList(fileNameCollSrc));
-	vector<NifChunkData>	chunkDataList;
-
-	//  test on existing file names
-	if (fileNameCollSrc.empty())								return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameDstNif.empty() && fileNameDstObj.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-
-	//  initialize user messages
-	_userMessages.clear();
-	logMessage(NCU_MSG_TYPE_INFO, "CollSource:  " + (fileNameCollSrc.empty() ? "- none -" : fileNameCollSrc));
-	logMessage(NCU_MSG_TYPE_INFO, "Name NIF:    " + (fileNameDstNif.empty()  ? "- none -" : fileNameDstNif));
-	logMessage(NCU_MSG_TYPE_INFO, "Name OBJ:    " + (fileNameDstObj.empty()  ? "- none -" : fileNameDstObj));
-
-	//  find collision node (bhkCompressedMeshData)
-	for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
-	{
-		if (DynamicCast<bhkCompressedMeshShapeData>(*pIter) != NULL)
-		{
-			getGeometryFromCompressedMeshShape(DynamicCast<bhkCompressedMeshShapeData>(*pIter), chunkDataList);
-		}
-	}  //  for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
-
-	//  check extracted chunks
-	if (chunkDataList.empty())
-	{
-		logMessage(NCU_MSG_TYPE_INFO, "No chunks found");
-	}
-	else  //  if (chunkDataList.empty())
-	{
-		//  save OBJ file?
-		if (!fileNameDstObj.empty())
-		{
-			logMessage(NCU_MSG_TYPE_INFO, "Exporting OBJ to " + fileNameDstObj);
-			if (writeChunkDataAsObj(fileNameDstObj, chunkDataList))
-			{
-				logMessage(NCU_MSG_TYPE_INFO, "Done successfully");
-			}
-			else
-			{
-				logMessage(NCU_MSG_TYPE_ERROR, "Error while exporting to " + fileNameDstObj);
-			}
-		}  //  if (!fileNameDstObj.empty())
-
-		//  save NIF file?
-		if (!fileNameDstNif.empty())
-		{
-			logMessage(NCU_MSG_TYPE_INFO, "Exporting NIF to " + fileNameDstNif);
-			if (writeChunkDataAsNif(fileNameDstNif, chunkDataList))
-			{
-				logMessage(NCU_MSG_TYPE_INFO, "Done successfully");
-			}
-			else
-			{
-				logMessage(NCU_MSG_TYPE_ERROR, "Error while exporting to " + fileNameDstObj);
-			}
-		}  //  if (!fileNameDstNif.empty())
-	}  //  else [if (chunkDataList.empty())]
-
-	return NCU_OK;
 }
 
 /*---------------------------------------------------------------------------*/

@@ -1,4 +1,4 @@
-/**
+/*!
  *  file:   NifPrepareUtility.h
  *  class:  NifPrepareUtility
  *
@@ -34,68 +34,106 @@ class NifPrepareUtility
 {
 
 public:
-	/**
-		* Default Constructor
-		*/
+	/*!
+	 * Default Constructor
+	 */
 	NifPrepareUtility();
 
-	/**
-		* Destructor
-		*/
+	/*!
+	 * Destructor
+	 */
 	virtual ~NifPrepareUtility();
 
+	/*!
+	 * Prepare armor-NIF for import into Blender
+	 *
+	 * \param[in] fileNameSrc  file name of armor NIF
+	 * \param[in] fileNameDst  file name of destination NIF
+	 */
 	virtual unsigned int prepareArmorBlender(string fileNameSrc, string fileNameDst);
+
+	/*!
+	 * Prepare NIF exproted from Blender as armor-NIF for Skyrim
+	 *
+	 * \param[in] fileNameSrc  file name of exported NIF
+	 * \param[in] fileNameDst  file name of destination armor-NIF
+	 * \param[in] fileNameTmpl  file name of NIF used as template for armor-NIF
+	 */
 	virtual unsigned int prepareBlenderArmor(string fileNameSrc, string fileNameDst, string fileNameTmpl);
 
-
-
+	/*!
+	 *  Set removement of BSInvMarker
+	 */
 	virtual void setRemoveBSInvMarker (const bool doRemove);
-	virtual void setRemoveBSProperties(const bool doRemove);
-	virtual void setBodyPartMap       (map<unsigned short, unsigned short> bodyPartMap);
 
-	/**
-		* Get list of user messages
-		*/
+	/*!
+	 *  Set removement of BSProperties
+	 */
+	virtual void setRemoveBSProperties(const bool doRemove);
+
+	/*!
+	 *  Set body part translation map
+	 *
+	 * \param[in] bodyPartMap  translation map of body parts
+	 */
+	virtual void setBodyPartMap(map<unsigned short, unsigned short> bodyPartMap);
+
+	/*!
+	 * Get list of user messages
+	 */
 	virtual vector<string>& getUserMessages();
 
-	/**
-		* Set callback function for logging info
-		*/
+	/*!
+	 * Set callback function for logging info
+	 */
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 protected:
 
+	/*!	ptr. to logging callback function */
 	void (*_logCallback) (const int, const char*);
 
-	bool _remBSInvMarker;
-	bool _remBSProperties;
-
-	/**
-		* log messages for user
-		*/
-	vector<string> _userMessages;
-
+	/*! body part translation map */
 	map<unsigned short, unsigned short> _bodyPartMap;
 
+	/*! log messages for user */
+	vector<string> _userMessages;
 
-	/**
-		* Get NiNode from NIF-file
-		* 
-		* @param fileName    in: path and name of NIF file
-		* @param logPreText    in: text prepended to log output
-		* @param fakedRoot    out: flag marking real root node or faked one
-		*/
+	/*! remove BSInvMarker */
+	bool _remBSInvMarker;
+
+	/*! remove BSProperties */
+	bool _remBSProperties;
+
+	/*!
+	 * Get NiNode from NIF-file
+	 * 
+	 * \param[in] fileName  path and name of NIF file
+	 * \param[in] logPreText  text prepended to log output
+	 * \param[in] fakedRoot  flag marking real root node or faked one
+	 */
 	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot);
 
-
+	/*!
+	 * Parse NIF tree and transform for usage in Blender
+	 *
+	 * \param[in] pNode  root node to parse from
+	 */
 	virtual NiNodeRef parse4Blender(NiNodeRef pNode);
-	virtual NiNodeRef parse4Armor  (NiNodeRef pNode, BSLightingShaderPropertyRef pShaderTmpl);
 
-	/**
-		* Log messages
-		* 
-		* @param type    in: message type
-		* @param text    in: message text
-		*/
+	/*!
+	 * Parse NIF tree and transform into armor-NIF
+	 *
+	 * \param[in] pNode  root node to parse from
+	 * \param[in] pShaderTmpl  template for use with BSLightingShaderProperty
+	 */
+	virtual NiNodeRef parse4Armor(NiNodeRef pNode, BSLightingShaderPropertyRef pShaderTmpl);
+
+	/*!
+	 * Log messages
+	 * 
+	 * \param[in] type  message type
+	 * \param[in] text  message text
+	 */
 	virtual void logMessage(int type, string text);
 };

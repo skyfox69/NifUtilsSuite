@@ -35,6 +35,115 @@ NifPrepareUtility::~NifPrepareUtility()
 {}
 
 /*---------------------------------------------------------------------------*/
+unsigned int NifPrepareUtility::prepareArmorBlender(string fileNameSrc, string fileNameDst)
+{
+	NiNodeRef	pRootInput (NULL);
+	NiNodeRef	pRootOutput(NULL);
+	bool		fakedRoot  (false);
+
+	//  test on existing file names
+	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+
+	//  initialize user messages
+	_userMessages.clear();
+	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty() ? "- none -" : fileNameSrc));
+	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty() ? "- none -" : fileNameDst));
+
+	//  read input NIF
+	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot)) == NULL)
+	{
+		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
+		return NCU_ERROR_CANT_OPEN_INPUT;
+	}
+
+	//  parse tree
+	pRootOutput = parse4Blender(pRootInput);
+
+	//  write modified nif file
+	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, NifInfo(VER_20_2_0_7, 11, 34));
+
+	return NCU_OK;
+}
+
+/*---------------------------------------------------------------------------*/
+unsigned int NifPrepareUtility::prepareBlenderArmor(string fileNameSrc, string fileNameDst, string fileNameTmpl)
+{
+	NiNodeRef						pRootInput (NULL);
+	NiNodeRef						pRootOutput(NULL);
+	BSLightingShaderPropertyRef		pShaderTempl(NULL);
+	vector<NiObjectRef>				blockList;
+	bool							fakedRoot  (false);
+
+	//  test on existing file names
+	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+	if (fileNameTmpl.empty())		return NCU_ERROR_MISSING_FILE_NAME;
+
+	//  initialize user messages
+	_userMessages.clear();
+	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty()  ? "- none -" : fileNameSrc));
+	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty()  ? "- none -" : fileNameDst));
+	logMessage(NCU_MSG_TYPE_INFO, "Template:  "    + (fileNameTmpl.empty() ? "- none -" : fileNameTmpl));
+
+	//  read input NIF
+	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot)) == NULL)
+	{
+		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
+		return NCU_ERROR_CANT_OPEN_INPUT;
+	}
+
+	//  get first BSLightingShaderProperty from template
+	blockList = ReadNifList(fileNameTmpl);
+	for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
+	{
+		if (DynamicCast<BSLightingShaderProperty>(*pIter) != NULL)
+		{
+			pShaderTempl = DynamicCast<BSLightingShaderProperty>(*pIter);
+			break;
+		}
+	}  //  for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
+
+	//  parse tree
+	pRootOutput = parse4Armor(pRootInput, pShaderTempl);
+
+	//  write modified nif file
+	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, NifInfo(VER_20_2_0_7, 12, 83));
+
+	return NCU_OK;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifPrepareUtility::setRemoveBSInvMarker(const bool doRemove)
+{
+	_remBSInvMarker = doRemove;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifPrepareUtility::setRemoveBSProperties(const bool doRemove)
+{
+	_remBSProperties = doRemove;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifPrepareUtility::setBodyPartMap(map<unsigned short, unsigned short> bodyPartMap)
+{
+	_bodyPartMap = bodyPartMap;
+}
+
+/*---------------------------------------------------------------------------*/
+vector<string>& NifPrepareUtility::getUserMessages()
+{
+	return _userMessages;
+}
+
+/*---------------------------------------------------------------------------*/
+void NifPrepareUtility::setLogCallback(void (*logCallback) (const int type, const char* pMessage))
+{
+	_logCallback = logCallback;
+}
+
+/*---------------------------------------------------------------------------*/
 NiNodeRef NifPrepareUtility::getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot)
 {
 	NiObjectRef		pRootTree (NULL);
@@ -72,7 +181,6 @@ NiNodeRef NifPrepareUtility::getRootNodeFromNifFile(string fileName, string logP
 
 	return pRootInput;
 }
-
 
 /*---------------------------------------------------------------------------*/
 NiNodeRef NifPrepareUtility::parse4Blender(NiNodeRef pNode)
@@ -123,38 +231,6 @@ NiNodeRef NifPrepareUtility::parse4Blender(NiNodeRef pNode)
 	}  //  for (auto pIter(childList.begin()), pEnd(childList.end()); pIter != pEnd; pIter++)
 
 	return pNode;
-}
-
-/*---------------------------------------------------------------------------*/
-unsigned int NifPrepareUtility::prepareArmorBlender(string fileNameSrc, string fileNameDst)
-{
-	NiNodeRef	pRootInput (NULL);
-	NiNodeRef	pRootOutput(NULL);
-	bool		fakedRoot  (false);
-
-	//  test on existing file names
-	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-
-	//  initialize user messages
-	_userMessages.clear();
-	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty() ? "- none -" : fileNameSrc));
-	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty() ? "- none -" : fileNameDst));
-
-	//  read input NIF
-	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot)) == NULL)
-	{
-		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
-		return NCU_ERROR_CANT_OPEN_INPUT;
-	}
-
-	//  parse tree
-	pRootOutput = parse4Blender(pRootInput);
-
-	//  write modified nif file
-	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, NifInfo(VER_20_2_0_7, 11, 34));
-
-	return NCU_OK;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -243,83 +319,6 @@ NiNodeRef NifPrepareUtility::parse4Armor(NiNodeRef pNode, BSLightingShaderProper
 	}  //  for (auto pIter(childList.begin()), pEnd(childList.end()); pIter != pEnd; pIter++)
 
 	return pNode;
-}
-
-/*---------------------------------------------------------------------------*/
-unsigned int NifPrepareUtility::prepareBlenderArmor(string fileNameSrc, string fileNameDst, string fileNameTmpl)
-{
-	NiNodeRef						pRootInput (NULL);
-	NiNodeRef						pRootOutput(NULL);
-	BSLightingShaderPropertyRef		pShaderTempl(NULL);
-	vector<NiObjectRef>				blockList;
-	bool							fakedRoot  (false);
-
-	//  test on existing file names
-	if (fileNameSrc.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameDst.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-	if (fileNameTmpl.empty())		return NCU_ERROR_MISSING_FILE_NAME;
-
-	//  initialize user messages
-	_userMessages.clear();
-	logMessage(NCU_MSG_TYPE_INFO, "Source:  "      + (fileNameSrc.empty()  ? "- none -" : fileNameSrc));
-	logMessage(NCU_MSG_TYPE_INFO, "Destination:  " + (fileNameDst.empty()  ? "- none -" : fileNameDst));
-	logMessage(NCU_MSG_TYPE_INFO, "Template:  "    + (fileNameTmpl.empty() ? "- none -" : fileNameTmpl));
-
-	//  read input NIF
-	if ((pRootInput = getRootNodeFromNifFile(fileNameSrc, "source", fakedRoot)) == NULL)
-	{
-		logMessage(NCU_MSG_TYPE_ERROR, "Can't open '" + fileNameSrc + "' as input");
-		return NCU_ERROR_CANT_OPEN_INPUT;
-	}
-
-	//  get first BSLightingShaderProperty from template
-	blockList = ReadNifList(fileNameTmpl);
-	for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
-	{
-		if (DynamicCast<BSLightingShaderProperty>(*pIter) != NULL)
-		{
-			pShaderTempl = DynamicCast<BSLightingShaderProperty>(*pIter);
-			break;
-		}
-	}  //  for (auto pIter=blockList.begin(), pEnd=blockList.end(); pIter != pEnd; ++pIter)
-
-	//  parse tree
-	pRootOutput = parse4Armor(pRootInput, pShaderTempl);
-
-	//  write modified nif file
-	WriteNifTree((const char*) fileNameDst.c_str(), pRootOutput, NifInfo(VER_20_2_0_7, 12, 83));
-
-	return NCU_OK;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifPrepareUtility::setRemoveBSInvMarker(const bool doRemove)
-{
-	_remBSInvMarker = doRemove;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifPrepareUtility::setRemoveBSProperties(const bool doRemove)
-{
-	_remBSProperties = doRemove;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifPrepareUtility::setBodyPartMap(map<unsigned short, unsigned short> bodyPartMap)
-{
-	_bodyPartMap = bodyPartMap;
-}
-
-/*---------------------------------------------------------------------------*/
-vector<string>& NifPrepareUtility::getUserMessages()
-{
-	return _userMessages;
-}
-
-/*---------------------------------------------------------------------------*/
-void NifPrepareUtility::setLogCallback(void (*logCallback) (const int type, const char* pMessage))
-{
-	_logCallback = logCallback;
 }
 
 /*---------------------------------------------------------------------------*/

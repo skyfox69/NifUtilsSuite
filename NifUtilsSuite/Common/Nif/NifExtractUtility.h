@@ -1,4 +1,4 @@
-/**
+/*!
  *  file:   NifExtractUtility.h
  *  class:  NifExtractUtility
  *
@@ -37,99 +37,127 @@ using namespace std;
 class NifExtractUtility
 {
 public:
-	/**
-		* Default Constructor
-		*/
+	/*!
+	 * Default Constructor
+	 */
 	NifExtractUtility(NifUtlMaterialList& materialList);
 
-	/**
-		* Destructor
-		*/
+	/*!
+	 * Destructor
+	 */
 	virtual ~NifExtractUtility();
 
-	/**
-		* set Skyrim path
-		* 
-		* @param pathSkyrim    in: path to Skyrim base directory
-		* of textures
-		*/
-	virtual void setSkyrimPath(string pathSkyrim);
-
-	/**
-		* 
-		* @param cmHandling    in: handling of naming chunks
-		*/
-	virtual void setChunkNameHandling(ChunkNameHandling cmHandling);
-
-	/**
-		* Get list of user messages
-		*/
-	virtual vector<string>& getUserMessages();
-
-	/**
-		* Get list of used textures
-		*/
-	virtual set<string>& getUsedTextures();
-
-	/**
-		* Set callback function for logging info
-		*/
-	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
-
-
+	/*!
+	 * extract chunks from bhkCompressedMeshShapeData to file(s)
+	 * 
+	 * \param[in] fileNameCollSrc  filename of collision source. NIF ending
+	 * \param[in] fileNameDstNif  filename of NIF, collision should be extracted to
+	 * \param[in] fileNameDstObj  filename of NIF, collision should be written to
+	 */
 	virtual unsigned int extractChunks(string fileNameCollSrc, string fileNameDstNif, string fileNameDstObj);
 
+	/*!
+	 * set Skyrim path
+	 * 
+	 * \param[in] pathSkyrim  path to Skyrim base directory of textures
+	*/
+	virtual void setSkyrimPath(string pathSkyrim);
+
+	/*!
+	 * 
+	 * \param[in] cmHandling  handling of naming chunks
+	 */
+	virtual void setChunkNameHandling(ChunkNameHandling cmHandling);
+
+	/*!
+	 * Set if face normals should be generated while exporting to OBJ
+	 */
 	virtual void setGenerateNormals(const bool genNormals);
 
+	/*!
+	 * Set if collision data should be resized to model size
+	 */
 	virtual void setScaleToModel(const bool doScale);
 
+	/*!
+	 * Set the version destination NIF should be saved to
+	 */
 	virtual void setSaveAsVersion(const unsigned int version);
+
+	/*!
+	 * Get list of user messages
+	 */
+	virtual vector<string>& getUserMessages();
+
+	/*!
+	 * Get list of used textures
+	 */
+	virtual set<string>& getUsedTextures();
+
+	/*!
+	 * Set callback function for logging info
+	 */
+	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 protected:
 
+	/*!	ptr. to logging callback function */
 	void (*_logCallback) (const int, const char*);
 
-	/**
-		* path to Skyrim files
-		*/
-	string _pathSkyrim;
-
-	/**
-		* log messages for user
-		*/
+	/*! log messages for user */
 	vector<string> _userMessages;
 
-	/**
-		* list of used textures
-		*/
+	/*! list of used textures */
 	set<string> _usedTextures;
 
-	/**
-		* reference to material list (injected)
-		*/
+	/*! path to Skyrim files */
+	string _pathSkyrim;
+
+	/*! reference to material list (injected) */
 	NifUtlMaterialList& _materialList;
 
-	ChunkNameHandling _cmHandling;
-
-	bool _generateNormals;
-
-	bool _scaleToModel;
-
-	bool _mergeCollision;
-
+	/*! version NIF should be saved as */
 	unsigned int _saveAsVersion;
 
-	/**
+	/*! handling of chunk names */
+	ChunkNameHandling _cmHandling;
+
+	/*! true if normals should be generated */
+	bool _generateNormals;
+
+	/*! true if collision data should be resized to model size */
+	bool _scaleToModel;
+
+
+	/*!
 	* Log messages
 	* 
-	* @param type    in: message type
-	* @param text    in: message text
+	* \param[in] type  message type
+	* \param[in] text  message text
 	*/
 	virtual void logMessage(int type, string text);
 
+	/*!
+	 * Extract geometry from bhkCompressedMeshShapeData
+	 *
+	 * \param[in] pShape  ptr. to bhkCompressedMeshShapeData chunks should be extracted from
+	 * \param[out] chunkDataList  list of chunk geometries
+	 */
 	virtual unsigned int getGeometryFromCompressedMeshShape(bhkCompressedMeshShapeDataRef pShape, vector<NifChunkData>& chunkDataList);
 
+	/*!
+	 * Write chunk list of geometries into OBJ file
+	 *
+	 * \param[in] fileName  file name of destination file
+	 * \param[in] chunkDataList  list of chunk geometries
+	 */
 	virtual bool writeChunkDataAsObj(string fileName, vector<NifChunkData>& chunkDataList);
 
+	/*!
+	 * Write chunk list of geometries into NIF file
+	 *
+	 * \param[in] fileName  file name of destination file
+	 * \param[in] chunkDataList  list of chunk geometries
+	 */
 	virtual bool writeChunkDataAsNif(string fileName, vector<NifChunkData>& chunkDataList);
 };

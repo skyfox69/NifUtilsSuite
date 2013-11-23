@@ -1,4 +1,4 @@
-/**
+/*!
  *  file:   NifConvertUtility.h
  *  class:  NifConvertUtility
  *
@@ -41,222 +41,220 @@ using namespace std;
 //-----  CLASS  ---------------------------------------------------------------
 class NifConvertUtility
 {
-
 public:
-	/**
-		* Default Constructor
-		*/
+	/*!
+	 * Default Constructor
+	 */
 	NifConvertUtility();
 
-	/**
-		* Destructor
-		*/
+	/*!
+	 * Destructor
+	 */
 	virtual ~NifConvertUtility();
 
-	/**
-		* Convert shape part of NIF to new format
-		* 
-		* @param fileNameSrc    in: filename of NIF to be converted
-		* @param fileNameDst    in: filename of NIF to be produced
-		* @param fileNameTmpl    in: path and name of Nif-file used as template
-		*/
+	/*!
+	 * Convert shape part of NIF to new format
+	 * 
+	 * \param[in] fileNameSrc  filename of NIF to be converted
+	 * \param[in] fileNameDst  filename of NIF to be produced
+	 * \param[in] fileNameTmpl  path and name of Nif-file used as template
+	 */
 	virtual unsigned int convertShape(string fileNameSrc, string fileNameDst, string fileNameTmpl);
 
-	/**
-		* set texture path used for re-locate textures
-		* 
-		* @param pathTexture    in: path to texture base directory used for new location
-		* of textures
-		*/
+	/*!
+	 * set texture path used for re-locate textures
+	 * 
+	 * \param[in] pathTexture  path to texture base directory used for new location of textures
+	 */
 	virtual void setTexturePath(string pathTexture);
 
-	/**
-		* set Skyrim path
-		* 
-		* @param pathSkyrim    in: path to Skyrim base directory
-		* of textures
-		*/
+	/*!
+	 * set path to Skyrim executeable
+	 * 
+	 * \param[in] pathSkyrim  path to Skyrim base directory of textures
+	 */
 	virtual void setSkyrimPath(string pathSkyrim);
 
-	/**
-		* 
-		* @param vcHandling    in: handling of vertex colors when missing in source NIF
-		*/
+	/*!
+	 * Set handling of missing vertex color
+	 *
+	 * \param[in] vcHandling  handling of vertex colors when missing in source NIF
+	 */
 	virtual void setVertexColorHandling(VertexColorHandling vcHandling);
 
-	/**
-		* 
-		* @param defaultColor    in: RGB color
-		*/
+	/*!
+	 * Set default vertex color
+	 *
+	 * \param[in] defaultColor  RGB color
+	 */
 	virtual void setDefaultVertexColor(Color4 defaultColor);
 
-	/**
-		* 
-		* @param doUpdate    in: true: update tangent space
-		*/
+	/*!
+	 * Set if normals and bi-normals should be (re-)generated
+	 * 
+	 * \param[in] doUpdate  true: update tangent space
+	 */
 	virtual void setUpdateTangentSpace(bool doUpdate);
 
-	/**
-		* 
-		* @param doReorder    in: true: reorder NiTriShape properties
-		*/
+	/*!
+	 * Set if properties of NiTriShapes should be brought into 'right' order
+	 *
+	 * \param[in] doReorder  true: reorder NiTriShape properties
+	 */
 	virtual void setReorderProperties(bool doReorder);
 
-	/**
-		* 
-		* @param doForce    in: true: force texture names having DDS ending
-		*/
+	/*!
+	 * Set if texture filenames should get .DDS ending
+	 *
+	 * \param[in] doForce  true: force texture names having DDS ending
+	 */
 	virtual void setForceDDS(bool doForce);
 
-	/**
-		* 
-		* @param doClean    in: true: remove all collision nodes before saving
-		*/
+	/*!
+	 * Set if all collision data should be removed from NIF
+	 *
+	 * \param[in] doClean  true: remove all collision nodes before saving
+	 */
 	virtual void setCleanTreeCollision(bool doClean);
 
-	/**
-		* Get list of user messages
-		*/
+	/*!
+	 * Get list of user messages
+	 */
 	virtual vector<string>& getUserMessages();
 
-	/**
-		* Get list of used textures
-		*/
+	/*!
+	 * Get list of used textures
+	 */
 	virtual set<string>& getUsedTextures();
 
-	/**
-		* Get list of non existing textures
-		*/
+	/*!
+	 * Get list of non existing textures
+	 */
 	virtual set<string>& getNewTextures();
 
-	/**
-		* Set callback function for logging info
-		*/
+	/*!
+	 * Set callback function for logging info
+	 */
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 protected:
 
+	/*!	ptr. to logging callback function */
 	void (*_logCallback) (const int, const char*);
 
-	/**
-		* path to texture files
-		*/
-	string _pathTexture;
-
-	/**
-		* path to Skyrim files
-		*/
-	string _pathSkyrim;
-
-	/**
-		* log messages for user
-		*/
+	/*! log messages for user */
 	vector<string> _userMessages;
 
-	/**
-		* list of used textures
-		*/
+	/*! list of used textures */
 	set<string> _usedTextures;
 
-	/**
-		* list of non existing textures
-		*/
+	/*! list of non existing textures */
 	set<string> _newTextures;
 
-	/**
-		* handling of vertex colors
-		*/
-	VertexColorHandling _vcHandling;
+	/*! path to texture files */
+	string _pathTexture;
 
-	/**
-		* default vertex color
-		*/
+	/*! path to Skyrim files */
+	string _pathSkyrim;
+
+	/*! default vertex color */
 	Color4 _vcDefaultColor;
 
-	/**
-		* update tangent space
-		*/
+	/*! handling of vertex colors */
+	VertexColorHandling _vcHandling;
+
+	/*! update tangent space */
 	bool _updateTangentSpace;
 
-	/**
-		* reorder NiTriShape properties
-		*/
+	/*! reorder NiTriShape properties */
 	bool _reorderProperties;
 
-	/**
-		* force texture names having DDS ending
-		*/
+	/*! force texture names having DDS ending */
 	bool _forceDDS;
 
+	/*! remove all collision data form tree */
 	bool _cleanTreeCollision;
 
-	/**
-		* Get NiNode from NIF-file
-		* 
-		* @param fileName    in: path and name of NIF file
-		* @param logPreText    in: text prepended to log output
-		* @param fakedRoot    out: flag marking real root node or faked one
-		*/
+
+	/*!
+	 * Get NiNode from NIF-file
+	 * 
+	 * \param[in] fileName  path and name of NIF file
+	 * \param[in] logPreText  text prepended to log output
+	 * \param[in] fakedRoot  flag marking real root node or faked one
+	 */
 	virtual NiNodeRef getRootNodeFromNifFile(string fileName, string logPreText, bool& fakedRoot, NifInfo* pNifInfo=NULL);
 
-	/**
-		* Convert NiNode and all known sub-nodes
-		* 
-		* @param srcNode
-		* @param tmplNode
-		* @param rootNode    in: Root node of destination NIF tree
-		* @param tmplAlphaProp    tmplAlphaProp
-		*/
+	/*!
+	 * Convert NiNode and all known sub-nodes
+	 * 
+	 * \param[in] srcNode  root node of (sub-)tree to convert
+	 * \param[in] tmplNode  template node for converion
+	 * \param[in] rootNode  Root node of destination NIF tree
+	 * \param[in] tmplAlphaProp  template of AlphaProperties when found
+	 */
 	virtual NiNodeRef convertNiNode(NiNodeRef pSrcNode, NiTriShapeRef pTmplNode, NiNodeRef pRootNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
-	/**
-		* Convert NiTriShape and properties/geometry
-		* 
-		* @param srcNode    in: Source NiTriShape node
-		* @param tmplNode    in: Template NiTriShape node
-		* @param tmplAlphaProp    in: Template for alpha properties
-		*/
+	/*!
+	 * Convert NiTriShape and properties/geometry
+	 * 
+	 * \param[in] srcNode  Source NiTriShape node
+	 * \param[in] tmplNode  Template NiTriShape node
+	 * \param[in] tmplAlphaProp  template of AlphaProperties when found
+	 */
 	virtual NiTriShapeRef convertNiTriShape(NiTriShapeRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
-	/**
-		* Convert NiTriStrips and properties/geometry
-		* 
-		* @param srcNode    in: Source NiTriStrips node
-		* @param tmplNode    in: Template NiTriShape node
-		* @param tmplAlphaProp    in: Template for alpha properties
-		*/
+	/*!
+	 * Convert NiTriStrips and properties/geometry
+	 * 
+	 * \param[in] srcNode  Source NiTriStrips node
+	 * \param[in] tmplNode  Template NiTriShape node
+	 * \param[in] tmplAlphaProp  template of AlphaProperties when found
+	 */
 	virtual NiTriShapeRef convertNiTriStrips(NiTriStripsRef pSrcNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp = NULL);
 
+	/*!
+	 * Base convert function for NiTriShapes and properties/geometry
+	 * 
+	 * \param[in] srcNode  Source NiTriStrips node
+	 * \param[in] tmplNode  Template NiTriShape node
+	 * \param[in] tmplAlphaProp  template of AlphaProperties when found
+	 */
 	virtual NiTriShapeRef convertNiTri(NiTriShapeRef pDstNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp);
 
-	/**
-		* Create tangent space data
-		* 
-		* @param pDataObj    in: data object
-		*/
+	/*!
+	 * Create tangent space data
+	 * 
+	 * \param[in] pDataObj  data object
+	 */
 	virtual bool updateTangentSpace(NiTriShapeDataRef pDataObj);
 
-	/**
-		* Clone BSLightingShaderProperty
-		* 
-		* @param pSource    in: ptr. to source object
-		*/
+	/*!
+	 * Clone BSLightingShaderProperty
+	 * 
+	 * \param[in] pSource  ptr. to source object
+	 */
 	virtual BSLightingShaderPropertyRef cloneBSLightingShaderProperty(BSLightingShaderPropertyRef pSource);
 
-	/**
-		* Log messages
-		* 
-		* @param type    in: message type
-		* @param text    in: message text
-		*/
+	/*!
+	 * Log messages
+	 * 
+	 * \param[in] type  message type
+	 * \param[in] text  message text
+	 */
 	virtual void logMessage(int type, string text);
 
-	/**
-		* Check of existence of file
-		* 
-		* @param fileName    in: path and name of file to check
-		*/
+	/*!
+	 * Check of existence of file
+	 * 
+	 * \param[in] fileName  path and name of file to check
+	 */
 	virtual bool checkFileExists(string fileName);
 
+	/*!
+	 * Parse NIF tree for collision data
+	 * 
+	 * \param[in] pShape  ptr. to root node of (sub-)tree to parse
+	 */
 	virtual void parseCollisionTree(bhkShapeRef pShape);
 };
