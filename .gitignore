@@ -9,6 +9,7 @@
 *.suo
 *.user
 *.sln.docstates
+doc_gen/
 
 # Build results
 [Dd]ebug/
