@@ -398,15 +398,20 @@ NiTriShapeRef NifConvertUtility::convertNiTriStrips(NiTriStripsRef pSrcNode, NiT
 /*---------------------------------------------------------------------------*/
 NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShapeRef pTmplNode, NiAlphaPropertyRef pTmplAlphaProp)
 {
-	BSLightingShaderPropertyRef	pTmplLShader(NULL);
-	BSLightingShaderPropertyRef	pDstLShader (NULL);
-	NiGeometryDataRef			pDstGeo     (pDstNode->GetData());
-	vector<NiPropertyRef>		dstPropList (pDstNode->GetProperties());
-	list<NiExtraDataRef>		dstExtraList(pDstNode->GetExtraData());
-	short						bsPropIdx   (0);
-	bool						forceAlpha  (pTmplAlphaProp != NULL);
-	bool						hasAlpha    (false);
-	bool						tanWasCopied(false);
+	BSLightingShaderPropertyRef			pTmplLShader(NULL);
+	BSLightingShaderPropertyRef			pDstLShader (NULL);
+	NiGeometryDataRef					pDstGeo     (pDstNode->GetData());
+	vector<NiPropertyRef>				dstPropList (pDstNode->GetProperties());
+	vector<NiPropertyRef>				dstPropArray;
+	list<NiExtraDataRef>				dstExtraList(pDstNode->GetExtraData());
+	short								bsPropIdx   (0);
+	bool								forceAlpha  (pTmplAlphaProp != NULL);
+	bool								hasAlpha    (false);
+	bool								tanWasCopied(false);
+
+	//  copy new style properties
+	if (pDstNode->GetBSProperty(0) != NULL)		dstPropArray.push_back(pDstNode->GetBSProperty(0));
+	if (pDstNode->GetBSProperty(1) != NULL)		dstPropArray.push_back(pDstNode->GetBSProperty(1));
 
 	//  look for tangent space data
 	for (auto pIter=dstExtraList.begin(), pEnd=dstExtraList.end(); pIter != pEnd; ++pIter)
@@ -478,8 +483,9 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 	}  //  for (short index(0); index < 2; ++index)
 
 	//  parse properties of destination node
-	dstPropList = pDstNode->GetProperties();
+	//dstPropList = pDstNode->GetProperties();
 	pDstNode->ClearProperties();
+	pDstNode->SetBSProperties(Niflib::array<2, NiPropertyRef>());
 
 	for (auto ppIter=dstPropList.begin(), pEnd=dstPropList.end(); ppIter != pEnd; ppIter++)
 	{
@@ -487,9 +493,6 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 		if (DynamicCast<NiAlphaProperty>(*ppIter) != NULL)
 		{
 			NiAlphaPropertyRef	pPropAlpha(DynamicCast<NiAlphaProperty>(*ppIter));
-
-			//  remove property from node
-			pDstNode->RemoveProperty(*ppIter);
 
 			//  set new property to node
 			pDstNode->SetBSProperty(bsPropIdx++, &(*pPropAlpha));
@@ -584,9 +587,6 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 				}
 			}  //  if ((pDstGeo != NULL) && (pDstGeo->GetColors().size() <= 0) && ...
 
-			//  remove property from node
-			pDstNode->RemoveProperty(*ppIter);
-
 			//  set new property to node
 			pDstNode->SetBSProperty(bsPropIdx++, &(*pDstLShader));
 		}
@@ -625,6 +625,16 @@ NiTriShapeRef NifConvertUtility::convertNiTri(NiTriShapeRef pDstNode, NiTriShape
 		{
 			pDstLShader->SetShaderFlags2((SkyrimShaderPropertyFlags2) (pDstLShader->GetShaderFlags2() | Niflib::SLSF2_VERTEX_COLORS));
 		}
+	}
+
+	//  add allowed properties to fee slots
+	for (auto pIter=dstPropArray.begin(), pEnd=dstPropArray.end(); (pIter != pEnd) && (bsPropIdx < 2); ++pIter)
+	{
+		//  skip old style properties
+		if ((*pIter)->GetType().GetTypeName() == "NiMaterialProperty")		continue;
+
+		//  add property to free slot
+		pDstNode->SetBSProperty(bsPropIdx++, *pIter);
 	}
 
 	//  reorder properties - only necessary in case of both are set
