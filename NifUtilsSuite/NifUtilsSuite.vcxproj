@@ -80,7 +80,7 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <PreBuildEvent>
-      <Command>F:\Sourcen\verschange\Release\verschange.exe ./version.h</Command>
+      <Command>F:\Sourcen\verschange\Release\verschange.exe ./version.h ./NifUtilsSuite.rc</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
