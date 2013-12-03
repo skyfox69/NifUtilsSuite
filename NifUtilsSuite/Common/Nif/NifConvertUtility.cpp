@@ -140,7 +140,7 @@ unsigned int NifConvertUtility::convertShape(string fileNameSrc, string fileName
 	//  set version information
 	stringstream	sStream;
 
-	sStream << nifInfo.version;
+	sStream << nifInfo.version << ';' << nifInfo.userVersion;
 	nifInfo.version      = VER_20_2_0_7;
 	nifInfo.userVersion  = 12;
 	nifInfo.userVersion2 = 83;

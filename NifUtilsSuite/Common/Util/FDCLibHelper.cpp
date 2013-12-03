@@ -86,3 +86,18 @@ unsigned int argb2bgr(const unsigned int argb)
 {
 	return (((argb & 0x000000FF) << 16) | (argb & 0x0000FF00) | ((argb & 0x00FF0000) >> 16));
 }
+
+//*****************************************************************************
+//
+unsigned int strexplode(const char* pString, const char* pDelim, vector<string>& vecOut)
+{
+	char*	pToken(strtok((char*) pString, pDelim));
+
+	while (pToken != NULL)
+	{
+		vecOut.push_back(pToken);
+		pToken = strtok(NULL, pDelim);
+	}
+
+	return vecOut.size();
+}

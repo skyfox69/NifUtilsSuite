@@ -8,6 +8,7 @@
 //-----  INCLUDES  ------------------------------------------------------------
 //  common includes
 #include <sstream>
+#include "Common\Util\FDCLibHelper.h"
 
 //  NifUtils includes
 #include "DirectX\DirectXNifConverter.h"
@@ -182,7 +183,21 @@ NiNodeRef DirectXNifConverter::getRootNodeFromNifFile(string fileName)
 	}
 
 	//  check NIF versions
-	_factor = (nifInfo.userVersion >= 12) ? 71.0f : 7.1f;
+	unsigned int	nifVersion(nifInfo.version);
+	unsigned int	nifUserVer(nifInfo.userVersion);
+	
+	if (nifInfo.creator == "NifConvert")
+	{
+		vector<string>		tokenList;
+
+		if (strexplode(nifInfo.exportInfo2.c_str(), ";", tokenList) >= 2)
+		{
+			nifVersion = atol(tokenList[0].c_str());
+			nifUserVer = atol(tokenList[1].c_str());
+		}
+	}
+
+	_factor = ((nifVersion >= VER_20_2_0_7) && (nifUserVer >= 12)) ? 71.0f : 7.1f;
 
 	return pRootInput;
 }
