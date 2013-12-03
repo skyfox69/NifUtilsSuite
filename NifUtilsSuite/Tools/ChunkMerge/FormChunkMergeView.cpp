@@ -321,8 +321,9 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 	{
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
-		GetDlgItem(IDC_RD_COLL_GLOBAL)->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_RD_COLL_LOCAL) ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
@@ -351,8 +352,9 @@ void CFormChunkMergeView::OnBnClickedBtFileColl()
 	{
 		_fileNameColl = fileName;
 		UpdateData(FALSE);
-		GetDlgItem(IDC_RD_COLL_GLOBAL)->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_RD_COLL_LOCAL) ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
+		GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(!_fileNameColl.IsEmpty());
