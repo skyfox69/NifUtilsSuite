@@ -342,6 +342,16 @@ unsigned int DirectXNifConverter::getGeometryFromData(vector<Vector3>& vecVertic
 	unsigned int			texCoordSize(vecTexCoords.size());
 	bool					hasMaterial (false);
 
+	//  use default normals if not given
+	//  (does this make sense???)
+	if (vecNormals.empty())
+	{
+		for (unsigned int tmpCnt(0); tmpCnt < vecVertices.size(); ++tmpCnt)
+		{
+			vecNormals.push_back(vecVertices[tmpCnt].Normalized());
+		}
+	}
+
 	//  parse properties (old style)
 	for (auto pIter=propList.begin(), pEnd=propList.end(); pIter != pEnd; ++pIter)
 	{
