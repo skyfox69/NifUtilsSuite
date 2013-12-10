@@ -53,8 +53,25 @@ BOOL CAboutPage3::OnSetActive()
 	CString		tString;
 
 	tString  = "\r\n";
-	tString += "Version 1.1.2\r\n";
+	tString += "Version 1.2.0\r\n";
 	tString += "=============\r\n\r\n";
+	tString += "* New:  Common: added ReferenceGuide documentation\r\n";
+	tString += "* New:	Common: (Beta) support simple collision meshes allowed in Skyrim (e.g. bhkBoxShape, bhkNiTriStripsShape)\r\n";
+	tString += "* New:  Common: support NiTriStrips next to NiTriShape\r\n";
+	tString += "* New:  Common: adapt to newest nifxml/niflib\r\n";
+	tString += "* New:  NifConvert: optional remove all collision nodes from NIF tree\r\n";
+	tString += "* New:  NifConvert: re-use tangents and bitangents from NiBinaryExtraData\r\n";
+	tString += "* New:  ChunkMerge: in-place collision nodes vs. global collision structure\r\n";
+	tString += "* New:  ChunkMerge: detect and report NIF version\r\n";
+	tString += "* New:  ModelViewer: add more colors (e.g. background, ambient)\r\n";
+	tString += "* New:  ModelViewer: display (bhk(Packed)NiTriStrips)\r\n";
+	tString += "* Fix:  Common: use correct version info in resource data\r\n";
+	tString += "* Fix:  NifConvert: remove all NiMaterialProperty objects\r\n";
+	tString += "* Fix:  ModelViewer: display wireframe of simple collision data in correct size\r\n";
+	tString += "* Fix:  ModelViewer: display vertex colors in case of existing texture\r\n";
+	tString += "* Fix:  ModelViewer: occasional crash when showing model\r\n\r\n\r\n";
+	tString += "Version 1.1.2 (internal)\r\n";
+	tString += "========================\r\n\r\n";
 	tString += "* Fix:	ChunkMerge: correct handling of buildType and MOPP data (fields swapped)\r\n\r\n\r\n";
 	tString += "Version 1.1.1\r\n";
 	tString += "=============\r\n\r\n";

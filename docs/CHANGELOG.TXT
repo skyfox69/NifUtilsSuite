@@ -1,5 +1,25 @@
-Version 1.1.2
+Version 1.2.0
 =============
+
+* New:  Common: added ReferenceGuide documentation
+* New:	Common: (Beta) support simple collision meshes allowed in Skyrim (e.g. bhkBoxShape, bhkNiTriStripsShape)
+* New:  Common: support NiTriStrips next to NiTriShape
+* New:  Common: adapt to newest nifxml/niflib
+* New:  NifConvert: optional remove all collision nodes from NIF tree
+* New:  NifConvert: re-use tangents and bitangents from NiBinaryExtraData
+* New:  ChunkMerge: in-place collision nodes vs. global collision structure
+* New:  ChunkMerge: detect and report NIF version
+* New:  ModelViewer: add more colors (e.g. background, ambient)
+* New:  ModelViewer: display (bhk(Packed)NiTriStrips)
+* Fix:  Common: use correct version info in resource data
+* Fix:  NifConvert: remove all NiMaterialProperty objects
+* Fix:  ModelViewer: display vertex colors in case of existing texture
+* Fix:  ModelViewer: display wireframe of simple collision data in correct size
+* Fix:  ModelViewer: occasional crash when showing model
+
+
+Version 1.1.2 (internal)
+========================
 
 * Fix:	ChunkMerge: correct handling of buildType and MOPP data (fields swapped)
 
