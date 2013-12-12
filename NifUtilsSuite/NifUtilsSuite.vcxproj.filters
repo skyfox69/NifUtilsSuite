@@ -305,6 +305,9 @@
     <ClInclude Include="Common\Nif\NifExtractUtility.h">
       <Filter>Header Files\Common\Nif</Filter>
     </ClInclude>
+    <ClInclude Include="Common\GUI\LogWindow.h">
+      <Filter>Header Files\Common\GUI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NifUtilsSuite.cpp">
@@ -450,6 +453,9 @@
     </ClCompile>
     <ClCompile Include="Common\Nif\NifExtractUtility.cpp">
       <Filter>Source Files\Common\Nif</Filter>
+    </ClCompile>
+    <ClCompile Include="Common\GUI\LogWindow.cpp">
+      <Filter>Source Files\Common\GUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -93,8 +93,10 @@ class Configuration
 				bool					_mvShowCollision;
 				bool					_mvShowModel;
 				bool					_mvDoubleSided;
+				bool					_mvAutoFocus;
 				bool					_bpABRemInvMarker;
 				bool					_bpABRemBSProp;
+				bool					_showLogWindow;
 
 		virtual							~Configuration();
 

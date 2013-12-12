@@ -51,8 +51,10 @@ Configuration::Configuration(const string fileName)
 		_mvShowCollision (true),
 		_mvShowModel     (true),
 		_mvDoubleSided   (true),
+		_mvAutoFocus     (true),
 		_bpABRemInvMarker(true),
-		_bpABRemBSProp   (true)
+		_bpABRemBSProp   (true),
+		_showLogWindow   (true)
 {
 	initLogView();
 }
@@ -333,6 +335,7 @@ bool Configuration::read()
 			readAttribute(content, "LogVwEnabled>",            _lvwLogActive,      offset);
 			readAttribute(content, "LogVwColor>",              _lvwColors,         offset);
 			readAttribute(content, "ShowToolTipps>",           _showToolTipps,     offset);
+			readAttribute(content, "ShowLogWindow>",           _showLogWindow,     offset);
 			readAttribute(content, "NameHandling>",            _ceNameHandling,    offset);
 			readAttribute(content, "GenNormals>",              _ceGenNormals,      offset);
 			readAttribute(content, "ScaleToModel>",            _ceScaleToModel,    offset);
@@ -352,6 +355,7 @@ bool Configuration::read()
 			readAttribute(content, "MvShowModel>",             _mvShowModel,       offset);
 			readAttribute(content, "MvLevelOfDetail>",         _mvDefLOD,          offset);
 			readAttribute(content, "MvDoubleSided>",           _mvDoubleSided,     offset);
+			readAttribute(content, "MvAutoFocus>",             _mvAutoFocus,       offset);
 			readAttribute(content, "BpABRemInvMarker>",        _bpABRemInvMarker,  offset);
 			readAttribute(content, "BpABRemBSProp>",           _bpABRemBSProp,     offset);
 			readAttribute(content, "BpBAMapping>",             _bpBAMapping,       offset);
@@ -401,6 +405,7 @@ bool Configuration::write()
 		oStr << "<PathDefInput>"          << _pathDefaultInput        << "</PathDefInput>";
 		oStr << "<PathDefOutput>"         << _pathDefaultOutput       << "</PathDefOutput>";
 		oStr << "<ShowToolTipps>"         << _showToolTipps           << "</ShowToolTipps>";
+		oStr << "<ShowLogWindow>"         << _showLogWindow           << "</ShowLogWindow>";
 		oStr << "<SaveLastView>"          << _saveLastView            << "</SaveLastView>";
 		oStr << "<LastOpenView>"          << _lastOpenView            << "</LastOpenView>";
 		oStr << "</Common><NifConvert>";
@@ -485,6 +490,7 @@ bool Configuration::write()
 		oStr << "<MvShowModel>"           << _mvShowModel             << "</MvShowModel>";
 		oStr << "<MvLevelOfDetail>"       << _mvDefLOD                << "</MvLevelOfDetail>";
 		oStr << "<MvDoubleSided>"         << _mvDoubleSided           << "</MvDoubleSided>";
+		oStr << "<MvAutoFocus>"           << _mvAutoFocus             << "</MvAutoFocus>";
 		oStr << "</ModelViewer>";
 
 

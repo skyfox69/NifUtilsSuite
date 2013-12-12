@@ -10,6 +10,7 @@
 
 //-----  INCLUDES  ------------------------------------------------------------
 #include "BCTabBarCtrl.h"
+#include "LogWindow.h"
 
 //-----  CLASS  ---------------------------------------------------------------
 class CNifUtilsSuiteFrame : public CFrameWnd
@@ -17,6 +18,7 @@ class CNifUtilsSuiteFrame : public CFrameWnd
 	private:
 
 	protected:
+		CLogWindow*		m_pLogWindow;
 		CStatusBar		m_wndStatusBar;
 		CToolBar		m_wndToolBar;
 		BCTabBarCtrl	m_wndTabBar;
@@ -32,6 +34,7 @@ class CNifUtilsSuiteFrame : public CFrameWnd
 		afx_msg void	OnOptionsSavecurrent();
 		afx_msg void	OnOptionsShowtooltipps();
 		afx_msg void	OnOptionsSaveopenview();
+		afx_msg void	OnOptionsShowlogwindow();
 		afx_msg	void	SelectTabNifConvert();
 		afx_msg	void	SelectTabChunkMerge();
 		afx_msg	void	SelectTabModelViewer();

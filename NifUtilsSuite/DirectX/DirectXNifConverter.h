@@ -41,6 +41,8 @@ class DirectXNifConverter
 {
 	protected:
 		vector<string>				_texturePathList;
+		Vector3						_pointMin;
+		Vector3						_pointMax;
 		DWORD						_defWireframeColor;
 		DWORD						_defCollisionColor;
 		DWORD						_defAmbientColor;
@@ -94,4 +96,6 @@ class DirectXNifConverter
 		virtual	DWORD				SetDefaultDiffuseColor  (const DWORD color);
 		virtual	DWORD				SetDefaultSpecularColor (const DWORD color);
 		virtual	unsigned int		SetDefaultLODRenderLevel(const unsigned int level);
+
+		virtual	Vector3				GetBoundingBox();
 };

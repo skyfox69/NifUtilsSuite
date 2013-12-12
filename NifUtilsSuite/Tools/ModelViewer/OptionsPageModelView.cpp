@@ -37,6 +37,7 @@ COptionsPageModelView::COptionsPageModelView(CWnd* pParent /*=NULL*/)
 	_alterRows     = pConfig->_mvAlterRows     ? 1 : 0;
 	_forceDDS      = pConfig->_mvForceDDS      ? 1 : 0;
 	_doubleSided   = pConfig->_mvDoubleSided   ? 1 : 0;
+	_autofocus     = pConfig->_mvAutoFocus     ? 1 : 0;
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -55,6 +56,7 @@ void COptionsPageModelView::DoDataExchange(CDataExchange* pDX)
 	DDX_Check  (pDX, IDC_CK_VW_COLLISION,   _showCollision);
 	DDX_Check  (pDX, IDC_CK_ROW_BACKGROUND, _alterRows);
 	DDX_Check  (pDX, IDC_CK_DOUBLE_SIDED,   _doubleSided);
+	DDX_Check  (pDX, IDC_CK_AUTOFOCUS,      _autofocus);
 	DDX_Control(pDX, IDC_BT_COL_BACKGROUND, _defColorBack);
 	DDX_Control(pDX, IDC_BT_COL_COLLISION,  _defColorColl);
 	DDX_Control(pDX, IDC_BT_COL_WIREFRAME,  _defColorWire);
@@ -86,6 +88,7 @@ void COptionsPageModelView::OnOK()
 	pConfig->_mvAlterRows     = (_alterRows == 1);
 	pConfig->_mvForceDDS      = (_forceDDS == 1);
 	pConfig->_mvDoubleSided   = (_doubleSided == 1);
+	pConfig->_mvAutoFocus     = (_autofocus == 1);
 	pConfig->_mvDefBackColor  = bgr2argb(_defColorBack.GetColor());
 	pConfig->_mvDefWireColor  = bgr2argb(_defColorWire.GetColor());
 	pConfig->_mvDefCollColor  = bgr2argb(_defColorColl.GetColor());

@@ -44,6 +44,7 @@ BEGIN_MESSAGE_MAP(CNifUtilsSuiteFrame, CFrameWnd)
 	ON_COMMAND(ID_OPTIONS_SHOWTOOLTIPPS, &CNifUtilsSuiteFrame::OnOptionsShowtooltipps)
 	ON_COMMAND(ID_HELP_ABOUT,            &CNifUtilsSuiteFrame::OnHelpAbout)
 	ON_COMMAND(ID_OPTIONS_SAVEOPENVIEW,  &CNifUtilsSuiteFrame::OnOptionsSaveopenview)
+	ON_COMMAND(ID_OPTIONS_SHOWLOGWINDOW, &CNifUtilsSuiteFrame::OnOptionsShowlogwindow)
 END_MESSAGE_MAP()
 
 //-----  STATICS  -------------------------------------------------------------
@@ -64,6 +65,7 @@ void logCallback(const int type, const char* pMessage)
 
 //-----  CNifUtilsSuiteFrame()  -----------------------------------------------
 CNifUtilsSuiteFrame::CNifUtilsSuiteFrame()
+	:	m_pLogWindow(NULL)
 {}
 
 //-----  ~CNifUtilsSuiteFrame()  ----------------------------------------------
@@ -73,7 +75,25 @@ CNifUtilsSuiteFrame::~CNifUtilsSuiteFrame()
 //-----  OnCreate()  ----------------------------------------------------------
 int CNifUtilsSuiteFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	return (CFrameWnd::OnCreate(lpCreateStruct) == -1) ? -1 : 0;
+	int		retVal(CFrameWnd::OnCreate(lpCreateStruct));
+
+	//  create LogWindow if enabled
+	if (Configuration::getInstance()->_showLogWindow)
+	{
+		m_pLogWindow = new CLogWindow(this);
+		m_pLogWindow->Create(IDD_LOG_WINDOW, GetDesktopWindow());
+		m_pLogWindow->ShowWindow(SW_SHOW);
+	}
+
+	//  log messages from material loading
+	vector<string>	userMessages(NifUtlMaterialList::getInstance()->getUserMessages());
+
+	for (auto pIter=userMessages.begin(), pEnd=userMessages.end(); pIter != pEnd; ++pIter)
+	{
+		LogMessage(NCU_MSG_TYPE_INFO, pIter->c_str());
+	}
+
+	return ( retVal == -1) ? -1 : 0;
 }
 
 //-----  OnClose()  -----------------------------------------------------------
@@ -88,6 +108,9 @@ void CNifUtilsSuiteFrame::OnClose()
 		pConfig->_lastOpenView = selView;
 		pConfig->write();
 	}
+
+	//  destroy log window if open
+	if (m_pLogWindow != NULL)		m_pLogWindow->DestroyWindow();
 
 	CFrameWnd::OnClose();
 }
@@ -146,15 +169,8 @@ BOOL CNifUtilsSuiteFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pC
 	//  set tool tipp usage
 	pMenu = GetMenu()->GetSubMenu(2);
 	pMenu->CheckMenuItem(ID_OPTIONS_SHOWTOOLTIPPS, (pConfig->_showToolTipps ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
+	pMenu->CheckMenuItem(ID_OPTIONS_SHOWLOGWINDOW, (pConfig->_showLogWindow ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
 	pMenu->CheckMenuItem(ID_OPTIONS_SAVEOPENVIEW,  (pConfig->_saveLastView  ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
-
-	//  log messages from material loading
-	vector<string>	userMessages(NifUtlMaterialList::getInstance()->getUserMessages());
-
-	for (auto pIter=userMessages.begin(), pEnd=userMessages.end(); pIter != pEnd; ++pIter)
-	{
-		LogMessage(NCU_MSG_TYPE_INFO, pIter->c_str());
-	}
 
 	//  switch to last activated view
 	::PostMessage(m_hWnd, WM_COMMAND , toolList[pConfig->_lastOpenView]._cmdId, 0);
@@ -280,6 +296,43 @@ void CNifUtilsSuiteFrame::OnOptionsShowtooltipps()
 	m_wndTabBar.BroadcastEvent(IBCE_SET_TOOLTIPP);
 }
 
+//-----  OnOptionsShowlogwindow()  --------------------------------------------
+void CNifUtilsSuiteFrame::OnOptionsShowlogwindow()
+{
+	CMenu*			pMenu  (GetMenu());
+	Configuration*	pConfig(Configuration::getInstance());
+
+	//  toggle show log-window
+	pConfig->_showLogWindow = !Configuration::getInstance()->_showLogWindow;
+	pConfig->write();
+
+	//  get 'Options' menu entry
+	pMenu = pMenu->GetSubMenu(2);
+	pMenu->CheckMenuItem(ID_OPTIONS_SHOWLOGWINDOW, (pConfig->_showLogWindow ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
+
+	//  display log-window
+	if (pConfig->_showLogWindow)
+	{
+		//  already existing?
+		if (m_pLogWindow != NULL)
+		{
+			m_pLogWindow->SetForegroundWindow();
+		}
+		else
+		{
+			//  create new one
+			m_pLogWindow = new CLogWindow(this);
+			m_pLogWindow->Create(IDD_LOG_WINDOW, GetDesktopWindow());
+			m_pLogWindow->ShowWindow(SW_SHOW);
+		}
+	}
+	else if (m_pLogWindow != NULL)
+	{
+		//  destroy existing log-window
+		m_pLogWindow->DestroyWindow();
+	}
+}
+
 //-----  OnOptionsSaveopenview()  ---------------------------------------------
 void CNifUtilsSuiteFrame::OnOptionsSaveopenview()
 {
@@ -333,6 +386,12 @@ void CNifUtilsSuiteFrame::LogMessage(const int type, const char* pMessage, ...)
 	charFormat.dwEffects   = 0;
 	charFormat.crTextColor = pConfig->_lvwColors[tType];
 
+	//  send to log-window if existing
+	if (m_pLogWindow != NULL)
+	{
+		m_pLogWindow->LogMessage(text, &charFormat);
+	}
+
 	//  broadcast to every tab
 	m_wndTabBar.LogMessage(text, &charFormat);
 }
@@ -340,7 +399,32 @@ void CNifUtilsSuiteFrame::LogMessage(const int type, const char* pMessage, ...)
 //-----  BroadcastEvent()  ----------------------------------------------------
 BOOL CNifUtilsSuiteFrame::BroadcastEvent(WORD event, void* pParameter)
 {
-	return m_wndTabBar.BroadcastEvent(event, pParameter);
+	BOOL	retVal(FALSE);
+
+	switch (event)
+	{
+		case IBCE_LOG_WINDOW_KILLED:
+		{
+			CMenu*	pMenu(GetMenu());
+
+			//  toggle show log-window
+			Configuration::getInstance()->_showLogWindow = false;
+
+			//  get 'Options' menu entry
+			pMenu = pMenu->GetSubMenu(2);
+			pMenu->CheckMenuItem(ID_OPTIONS_SHOWLOGWINDOW, MF_UNCHECKED | MF_BYCOMMAND);
+
+			m_pLogWindow = NULL;
+			retVal       = TRUE;
+			break;
+		}
+
+		default:
+		{
+			retVal = m_wndTabBar.BroadcastEvent(event, pParameter);
+		}
+	}
+	return retVal;
 }
 
 //-----  OnHelpAbout()  -------------------------------------------------------
@@ -350,4 +434,3 @@ void CNifUtilsSuiteFrame::OnHelpAbout()
 	
 	aboutDlg.DoModal();
 }
-

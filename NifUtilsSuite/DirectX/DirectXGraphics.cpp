@@ -18,7 +18,8 @@ CDirectXGraphics::CDirectXGraphics()
 		_vecViewCam   (0.0f, 0.0f, 0.0f),
 		_posX         (0.0f),
 		_posY         (0.0f),
-		_zoom         (1.0f),
+		_zoomInit     (1.0f),
+		_zoom         (_zoom),
 		_rotX         (0.0f),
 		_rotY         (0.0f)
 {}
@@ -285,7 +286,7 @@ void CDirectXGraphics::dxSetCameraPos(const DirecXCameraPos pos)
 
 	_posX = 0.0f;
 	_posY = 0.0f;
-	_zoom = 1.0f;
+	_zoom = _zoomInit;
 	_rotX = 0.0f;
 	_rotY = 0.0f;
 
@@ -330,4 +331,11 @@ void CDirectXGraphics::dxResetColors()
 
 	_pd3dDevice->SetLight(1, &light);
 	_pd3dDevice->LightEnable(1, true);
+}
+
+//-----  dxSetZoom()  ---------------------------------------------------------
+void CDirectXGraphics::dxSetZoom(const float zoom)
+{
+	_zoom     = zoom;
+	_zoomInit = zoom;
 }

@@ -33,6 +33,7 @@ class COptionsPageModelView : public CPropertyPage
 				int					_alterRows;
 				int					_forceDDS;
 				int					_doubleSided;
+				int					_autofocus;
 
 	protected:
 		virtual	void				DoDataExchange(CDataExchange* pDX);

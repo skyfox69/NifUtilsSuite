@@ -31,6 +31,7 @@ class CDirectXGraphics
 		float							_posX;
 		float							_posY;
 		float							_zoom;
+		float							_zoomInit;
 		float							_rotX;
 		float							_rotY;
 
@@ -49,6 +50,7 @@ class CDirectXGraphics
 		virtual	void					dxCreate      (CRect rect, CWnd* pParent, CWnd* pSelf);
 		virtual bool					dxShutdown    ();
 		virtual void					dxSetCameraPos(const DirecXCameraPos pos);
+		virtual	void					dxSetZoom     (const float zoom);
 		virtual	void					dxResetColors ();
 
 		virtual	vector<DirectXMesh*>&	dxGetMeshList  () { return _meshList; }

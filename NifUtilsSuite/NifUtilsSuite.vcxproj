@@ -133,6 +133,7 @@
     <ClInclude Include="Common\GUI\AboutPage3.h" />
     <ClInclude Include="Common\GUI\BCBrowseVSListBox.h" />
     <ClInclude Include="Common\GUI\BCTabBarCtrl.h" />
+    <ClInclude Include="Common\GUI\LogWindow.h" />
     <ClInclude Include="Common\GUI\NifUtilsSuiteFrm.h" />
     <ClInclude Include="Common\GUI\OptionsPageGeneral.h" />
     <ClInclude Include="Common\GUI\OptionsPageLogView.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="Common\GUI\AboutPage3.cpp" />
     <ClCompile Include="Common\GUI\BCBrowseVSListBox.cpp" />
     <ClCompile Include="Common\GUI\BCTabBarCtrl.cpp" />
+    <ClCompile Include="Common\GUI\LogWindow.cpp" />
     <ClCompile Include="Common\GUI\NifUtilsSuiteFrm.cpp" />
     <ClCompile Include="Common\GUI\OptionsPageGeneral.cpp" />
     <ClCompile Include="Common\GUI\OptionsPageLogView.cpp" />

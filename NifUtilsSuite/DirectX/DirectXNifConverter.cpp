@@ -448,6 +448,14 @@ unsigned int DirectXNifConverter::getGeometryFromData(vector<Vector3>& vecVertic
 			pBufVertices[i]._color    = !vecColors.empty() ? D3DXCOLOR(vecColors[i].r, vecColors[i].g, vecColors[i].b, 1.0f) : D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 			pBufVertices[i]._u        = (i < texCoordSize) ? vecTexCoords[i].u : 0.0f;
 			pBufVertices[i]._v        = (i < texCoordSize) ? vecTexCoords[i].v : 0.0f;
+
+			//  check for min/max bounds
+			if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+			if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 		}
 
 		//  - material
@@ -535,6 +543,14 @@ unsigned int DirectXNifConverter::getGeometryFromData(vector<Vector3>& vecVertic
 			pBufVertices[i]._y     = vecVertices[i].y;
 			pBufVertices[i]._z     = vecVertices[i].z;
 			pBufVertices[i]._color = _defCollisionColor;
+
+			//  check for min/max bounds
+			if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+			if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 		}
 
 		//  create new model
@@ -765,6 +781,14 @@ unsigned int DirectXNifConverter::getGeometryFromCapsuleShape(bhkCapsuleShapeRef
 		for (unsigned int ii(0); ii < countV; ++ii)
 		{
 			pBufVertices[ii] = tmpVertices[idx][ii];
+
+			//  check for min/max bounds
+			if (pBufVertices[ii]._x < _pointMin.x)		_pointMin.x = pBufVertices[ii]._x;
+			if (pBufVertices[ii]._x > _pointMax.x)		_pointMax.x = pBufVertices[ii]._x;
+			if (pBufVertices[ii]._y < _pointMin.y)		_pointMin.y = pBufVertices[ii]._y;
+			if (pBufVertices[ii]._y > _pointMax.y)		_pointMax.y = pBufVertices[ii]._y;
+			if (pBufVertices[ii]._z < _pointMin.z)		_pointMin.z = pBufVertices[ii]._z;
+			if (pBufVertices[ii]._z > _pointMax.z)		_pointMax.z = pBufVertices[ii]._z;
 		}
 		vecVertices.push_back(pBufVertices);
 		vecCntVertices.push_back(countV);
@@ -882,6 +906,14 @@ unsigned int DirectXNifConverter::getGeometryFromSphereShape(bhkSphereShapeRef p
 		for (unsigned int ii(0); ii < countV; ++ii)
 		{
 			pBufVertices[ii] = tmpVertices[idx][ii];
+
+			//  check for min/max bounds
+			if (pBufVertices[ii]._x < _pointMin.x)		_pointMin.x = pBufVertices[ii]._x;
+			if (pBufVertices[ii]._x > _pointMax.x)		_pointMax.x = pBufVertices[ii]._x;
+			if (pBufVertices[ii]._y < _pointMin.y)		_pointMin.y = pBufVertices[ii]._y;
+			if (pBufVertices[ii]._y > _pointMax.y)		_pointMax.y = pBufVertices[ii]._y;
+			if (pBufVertices[ii]._z < _pointMin.z)		_pointMin.z = pBufVertices[ii]._z;
+			if (pBufVertices[ii]._z > _pointMax.z)		_pointMax.z = pBufVertices[ii]._z;
 		}
 		vecVertices.push_back(pBufVertices);
 		vecCntVertices.push_back(countV);
@@ -1004,7 +1036,15 @@ unsigned int DirectXNifConverter::getGeometryFromBoxShape(bhkBoxShapeRef pShape,
 	for (unsigned int i(0); i < countV; ++i)
 	{
 		pBufVertices[i]._color = _defCollisionColor;
-	}
+	
+		//  check for min/max bounds
+		if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+		if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+		if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+		if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+		if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+		if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
+}
 
 	//  collected all data needed => convert to DirectX
 	//  - transformation matrix
@@ -1066,6 +1106,14 @@ unsigned int DirectXNifConverter::getGeometryFromConvexVerticesShape(bhkConvexVe
 		pBufVertices[i]._y     = vecVertices[i].y * _factor;
 		pBufVertices[i]._z     = vecVertices[i].z * _factor;
 		pBufVertices[i]._color = _defCollisionColor;
+	
+		//  check for min/max bounds
+		if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+		if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+		if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+		if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+		if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+		if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 	}
 
 	//  collected all data needed => convert to DirectX
@@ -1175,6 +1223,14 @@ unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompress
 			pBufVertices[i]._y     = vecVertices[i].y * _factor;
 			pBufVertices[i]._z     = vecVertices[i].z * _factor;
 			pBufVertices[i]._color = _defCollisionColor;
+	
+			//  check for min/max bounds
+			if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+			if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 		}
 
 		//  collected all data needed => convert to DirectX
@@ -1289,6 +1345,14 @@ unsigned int DirectXNifConverter::getGeometryFromCompressedMeshShape(bhkCompress
 				pBufVertices[i]._y     = pIter->_vertices[i].y * _factor;
 				pBufVertices[i]._z     = pIter->_vertices[i].z * _factor;
 				pBufVertices[i]._color = _defCollisionColor;
+	
+				//  check for min/max bounds
+				if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+				if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+				if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+				if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+				if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+				if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 			}
 
 			//  collected all data needed => convert to DirectX
@@ -1362,6 +1426,14 @@ unsigned int DirectXNifConverter::getGeometryFromPackedTriStripsShape(bhkPackedN
 			pBufVertices[i]._y     = vecVertices[i+vertOff].y * _factor;
 			pBufVertices[i]._z     = vecVertices[i+vertOff].z * _factor;
 			pBufVertices[i]._color = _defCollisionColor;
+	
+			//  check for min/max bounds
+			if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+			if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 		}
 
 		//  - indices
@@ -1455,6 +1527,14 @@ unsigned int DirectXNifConverter::getGeometryFromTriStripsShape(bhkNiTriStripsSh
 			pBufVertices[i]._y     = vecVertices[i].y;
 			pBufVertices[i]._z     = vecVertices[i].z;
 			pBufVertices[i]._color = _defCollisionColor;
+	
+			//  check for min/max bounds
+			if (pBufVertices[i]._x < _pointMin.x)		_pointMin.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._x > _pointMax.x)		_pointMax.x = pBufVertices[i]._x;
+			if (pBufVertices[i]._y < _pointMin.y)		_pointMin.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._y > _pointMax.y)		_pointMax.y = pBufVertices[i]._y;
+			if (pBufVertices[i]._z < _pointMin.z)		_pointMin.z = pBufVertices[i]._z;
+			if (pBufVertices[i]._z > _pointMax.z)		_pointMax.z = pBufVertices[i]._z;
 		}
 
 		//  collected all data needed => convert to DirectX
@@ -1633,4 +1713,10 @@ DirectXAlphaState* DirectXNifConverter::DecodeAlphaProperty(NiAlphaProperty* pPr
 	pAlpha->_function     = testMap[(flags >> 10) & 0x0007];
 
 	return pAlpha;
+}
+
+//-----  GetBoundingBox()  ----------------------------------------------------
+Vector3 DirectXNifConverter::GetBoundingBox()
+{
+	return _pointMax - _pointMin;
 }

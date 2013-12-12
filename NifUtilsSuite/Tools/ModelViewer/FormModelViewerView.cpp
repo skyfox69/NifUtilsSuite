@@ -203,6 +203,7 @@ BOOL CFormModelViewerView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_CK_VW_MODEL)    )->SetCheck(pConfig->_mvShowModel     ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_VW_COLLISION))->SetCheck(pConfig->_mvShowCollision ? BST_CHECKED : BST_UNCHECKED);
 			((CButton*) GetDlgItem(IDC_CK_DOUBLE_SIDED))->SetCheck(pConfig->_mvDoubleSided   ? BST_CHECKED : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_AUTOFOCUS))   ->SetCheck(pConfig->_mvAutoFocus     ? BST_CHECKED : BST_UNCHECKED);
 
 			//  update model view
 			if (!_directXView.dxGetMeshList().empty())
@@ -277,6 +278,7 @@ void CFormModelViewerView::LoadModel(const string fileName)
 	DirectXMeshAxes*		pMeshAxes(NULL);
 	vector<DirectXMesh*>&	meshList (_directXView.dxGetMeshList());
 	string					fName    (fileName);
+	bool					autofocus(((CButton*) GetDlgItem(IDC_CK_AUTOFOCUS))->GetCheck() == BST_CHECKED);
 
 	//  reset view
 	OnBnClickedBtResetView();
@@ -324,6 +326,18 @@ void CFormModelViewerView::LoadModel(const string fileName)
 			GetDlgItem(IDC_BT_RELOAD_MODEL)->EnableWindow(FALSE);
 
 			return;
+		}
+
+		//  use autofocus if active
+		if (autofocus)
+		{
+			Vector3		modelSize(dxConverter.GetBoundingBox());
+
+			_directXView.dxSetZoom(1000.0f / max(modelSize.x, max(modelSize.y, modelSize.z)));
+		}
+		else
+		{
+			_directXView.dxSetZoom(1.0f);
 		}
 	}
 	//  OBJ source
@@ -454,8 +468,11 @@ void CFormModelViewerView::OnBnClickedCkVwButton()
 //-----  OnBnClickedBtResetView()  --------------------------------------------
 void CFormModelViewerView::OnBnClickedBtResetView()
 {
+	bool	autofocus(((CButton*) GetDlgItem(IDC_CK_AUTOFOCUS))->GetCheck() == BST_CHECKED);
+
 	BroadcastEvent(IBCE_CHANGED_SETTINGS);
 	_directXView.dxSetCameraPos(DX_CAM_POS_FRONT);
+	((CButton*) GetDlgItem(IDC_CK_AUTOFOCUS))->SetCheck(autofocus ? BST_CHECKED : BST_UNCHECKED);
 	OnBnClickedCkVwButton();
 }
 
