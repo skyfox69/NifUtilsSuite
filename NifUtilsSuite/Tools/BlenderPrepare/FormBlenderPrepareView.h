@@ -59,9 +59,6 @@ class CFormBlenderPrepareView : public CFormView, public LogMessageObject, publi
 
 		//  IfcBroadcastObject
 		virtual	BOOL				BroadcastEvent(WORD event, void* pParameter=NULL);
-
-		//  IfcLogMessageObject
-		virtual	void				LogMessage(const CString text, const CHARFORMAT* pFormat);
 };
 
 #ifndef _DEBUG  // debug version in NifUtilsSuiteView.cpp

@@ -75,6 +75,12 @@ class Configuration
 				int						_cmMatSingleType;
 				int						_ceNameHandling;
 				int						_lastOpenView;
+				int						_framePosX;
+				int						_framePosY;
+				int						_logPosX;
+				int						_logPosY;
+				int						_logWidth;
+				int						_logHeight;
 				bool					_hasFile;
 				bool					_ncUpTangent;
 				bool					_ncReorderProp;

@@ -96,7 +96,6 @@ class BCTabBarCtrl : public CControlBar
 		virtual	BOOL			OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult);
 
 		virtual	BOOL			BroadcastEvent(WORD event, void* pParameter=NULL);
-		virtual	void			LogMessage(const CString text, const CHARFORMAT* pFormat);
 };
 
 //-----  INLINES  -------------------------------------------------------------

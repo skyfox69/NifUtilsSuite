@@ -12,7 +12,6 @@
 #include "Common\GUI\BCTabBarCtrl.h"
 #include "Common\GUI\NifUtilsSuiteFrm.h"
 #include "Common\Util\IfcBroadcastObject.h"
-#include "Common\Util\IfcLogMessageObject.h"
 
 //-----  CLASS  ---------------------------------------------------------------
 typedef struct _BARTCITEMW
@@ -853,22 +852,3 @@ BOOL BCTabBarCtrl::BroadcastEvent(WORD event, void* pParameter)
 	return TRUE;
 }
 
-//-----  BroadcastEvent()  ----------------------------------------------------
-void BCTabBarCtrl::LogMessage(const CString text, const CHARFORMAT* pFormat)
-{
-	CWnd*	pView  (NULL);
-	int		cntItem(GetItemCount());
-
-	for(int idx(0); idx < cntItem; ++idx)
-	{
-		BARTCITEM	barItem;
-
-		barItem.hdr.mask = TCIF_PARAM;
-		GetItem(idx, (TCITEMHEADER*)&barItem);
-
-		if (dynamic_cast<IfcLogMessageObject*>(barItem.pWnd) != NULL)
-		{
-			dynamic_cast<IfcLogMessageObject*>(barItem.pWnd)->LogMessage(text, pFormat);
-		}
-	}
-}

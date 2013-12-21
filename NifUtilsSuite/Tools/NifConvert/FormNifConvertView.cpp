@@ -40,7 +40,6 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,  "Open source in Nif
 						                   {IDC_BT_FILE_OUT,   "Choose destination NIF-file"},
 						                   {IDC_BT_TEMPLATE,   "Choose path to template files and scan recursively"},
 						                   {IDC_BT_TEXTURE,    "Choose path to Skyrim and scan Data/Textures recursively"},
-						                   {IDC_RE_LOG,        "Some log output"},
 						                   {IDC_BT_RESET_FORM, "Reset form to default settings"},
 						                   {IDC_BT_CONVERT,    "Convert NIF"},
 						                   {-1, ""}
@@ -66,8 +65,8 @@ END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
 CFormNifConvertView::CFormNifConvertView()
-	:	CFormView(CFormNifConvertView::IDD),
-		LogMessageObject()
+	:	CFormView       (CFormNifConvertView::IDD),
+		LogMessageObject(LogMessageObject::NIFCONVERT)
 {}
 
 //-----  ~CFormChunkMergeView()  ----------------------------------------------
@@ -134,23 +133,6 @@ void CFormNifConvertView::OnInitialUpdate()
 	GetDlgItem(IDC_BT_NSCOPE_IN) ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(FALSE);
-
-	//  initialize log view
-	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
-	CHARFORMAT		cf = { 0 };
-
-	cf.cbSize    = sizeof(cf);
-	cf.dwMask    = CFM_FACE | CFM_SIZE | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_PROTECTED;
-	cf.dwEffects = 0;
-	cf.yHeight   = 127;
-	lstrcpy(cf.szFaceName, _T("Small Fonts"));
-
-	pLogView->SetDefaultCharFormat(cf);
-	pLogView->SetReadOnly         (TRUE);
-	if (Configuration::getInstance()->_lvwLogActive[0])
-	{
-		pLogView->SetBackgroundColor(FALSE, Configuration::getInstance()->_lvwColors[0]);
-	}
 
 	//  prepare tool tips
 	if (_toolTipCtrl.Create(this, TTS_USEVISUALSTYLE | TTS_BALLOON))
@@ -422,22 +404,6 @@ BOOL CFormNifConvertView::BroadcastEvent(WORD event, void* pParameter)
 	}  //  switch (event)
 
 	return TRUE;
-}
-
-//-----  LogMessage()  --------------------------------------------------------
-void CFormNifConvertView::LogMessage(const CString text, const CHARFORMAT* pFormat)
-{
-	CRichEditCtrl*	pLogView    ((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
-	int				lineCountOld(pLogView->GetLineCount());
-
-	//  select  nothing, set format and append new text
-	pLogView->SetSel(-1, -1);
-	pLogView->SetSelectionCharFormat(*((CHARFORMAT*) pFormat));
-	pLogView->ReplaceSel(text);
-
-	//  scroll to end of text
-	pLogView->LineScroll(pLogView->GetLineCount() - lineCountOld);
-	pLogView->SetSel(-1, -1);
 }
 
 //-----  OnBnClickedBtConvert()  ----------------------------------------------

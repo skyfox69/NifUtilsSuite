@@ -17,7 +17,6 @@
 #include "Common\GUI\OptionsSheet.h"
 #include "Common\GUI\AboutDialog.h"
 #include "Common\Util\IfcBroadcastObject.h"
-#include "Common\Util\IfcLogMessageObject.h"
 #include "Common\Nif\NifUtlMaterial.h"
 #include "Tools\NifConvert\FormNifConvertView.h"
 #include "Tools\ChunkMerge\FormChunkMergeView.h"
@@ -65,7 +64,8 @@ void logCallback(const int type, const char* pMessage)
 
 //-----  CNifUtilsSuiteFrame()  -----------------------------------------------
 CNifUtilsSuiteFrame::CNifUtilsSuiteFrame()
-	:	m_pLogWindow(NULL)
+	:	LogMessageObject(LogMessageObject::COMMON),
+		m_pLogWindow    (NULL)
 {}
 
 //-----  ~CNifUtilsSuiteFrame()  ----------------------------------------------
@@ -75,25 +75,7 @@ CNifUtilsSuiteFrame::~CNifUtilsSuiteFrame()
 //-----  OnCreate()  ----------------------------------------------------------
 int CNifUtilsSuiteFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
-	int		retVal(CFrameWnd::OnCreate(lpCreateStruct));
-
-	//  create LogWindow if enabled
-	if (Configuration::getInstance()->_showLogWindow)
-	{
-		m_pLogWindow = new CLogWindow(this);
-		m_pLogWindow->Create(IDD_LOG_WINDOW, GetDesktopWindow());
-		m_pLogWindow->ShowWindow(SW_SHOW);
-	}
-
-	//  log messages from material loading
-	vector<string>	userMessages(NifUtlMaterialList::getInstance()->getUserMessages());
-
-	for (auto pIter=userMessages.begin(), pEnd=userMessages.end(); pIter != pEnd; ++pIter)
-	{
-		LogMessage(NCU_MSG_TYPE_INFO, pIter->c_str());
-	}
-
-	return ( retVal == -1) ? -1 : 0;
+	return (CFrameWnd::OnCreate(lpCreateStruct) == -1) ? -1 : 0;
 }
 
 //-----  OnClose()  -----------------------------------------------------------
@@ -101,13 +83,18 @@ void CNifUtilsSuiteFrame::OnClose()
 {
 	Configuration*	pConfig(Configuration::getInstance());
 	int				selView(m_wndTabBar.GetCurSel());
+	RECT			tRect = {0};
 
 	//  ModelViewer is forbidden and doesn't make sense
 	if (pConfig->_saveLastView && (selView < 4) && (selView != pConfig->_lastOpenView))
 	{
 		pConfig->_lastOpenView = selView;
-		pConfig->write();
 	}
+
+	GetWindowRect(&tRect);
+	pConfig->_framePosX = tRect.left;
+	pConfig->_framePosY = tRect.top;
+	pConfig->write();
 
 	//  destroy log window if open
 	if (m_pLogWindow != NULL)		m_pLogWindow->DestroyWindow();
@@ -118,11 +105,18 @@ void CNifUtilsSuiteFrame::OnClose()
 //-----  PreCreateWindow()  ---------------------------------------------------
 BOOL CNifUtilsSuiteFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
+	Configuration*	pConfig(Configuration::getInstance());
+
 	if (!CFrameWnd::PreCreateWindow(cs))	return FALSE;
 
 	cs.cx = 646;
 	cs.cy = 490;
 	cs.style = WS_OVERLAPPED | WS_CAPTION | FWS_ADDTOTITLE | WS_MINIMIZEBOX | WS_SYSMENU;
+	if (pConfig->_framePosX >= 0)
+	{
+		cs.x = pConfig->_framePosX;
+		cs.y = pConfig->_framePosY;
+	}
 
 	return TRUE;
 }
@@ -347,55 +341,6 @@ void CNifUtilsSuiteFrame::OnOptionsSaveopenview()
 	pMenu->CheckMenuItem(ID_OPTIONS_SAVEOPENVIEW, (Configuration::getInstance()->_saveLastView ? MF_CHECKED : MF_UNCHECKED) | MF_BYCOMMAND);
 }
 
-//-----  LogMessage()  --------------------------------------------------------
-void CNifUtilsSuiteFrame::LogMessage(const int type, const char* pMessage, ...)
-{
-	//  decode var-args
-	char	cbuffer[5000] = {0};
-	va_list	ap;
-
-	va_start(ap, pMessage);
-	vsnprintf(cbuffer, 5000, pMessage, ap);
-	va_end(ap);
-
-	//  start logging
-	Configuration*	pConfig(Configuration::getInstance());
-	CHARFORMAT		charFormat = {0};
-	CString			text (cbuffer);
-	int				tType(type);
-
-	//  special handling of type settings
-	if (cbuffer[0] == '^')
-	{
-		tType = atoi(cbuffer+1);
-		text  = (cbuffer+2);
-	}
-
-	//  early return on non enabled type
-	if (!pConfig->_lvwLogActive[tType])		return;
-
-	//  append of newline necessary?
-	if (cbuffer[strlen(cbuffer) - 1] != '\n')
-	{
-		text += _T("\r\n");
-	}
-
-	//  character format
-	charFormat.cbSize      = sizeof(charFormat);
-	charFormat.dwMask      = CFM_COLOR;
-	charFormat.dwEffects   = 0;
-	charFormat.crTextColor = pConfig->_lvwColors[tType];
-
-	//  send to log-window if existing
-	if (m_pLogWindow != NULL)
-	{
-		m_pLogWindow->LogMessage(text, &charFormat);
-	}
-
-	//  broadcast to every tab
-	m_wndTabBar.LogMessage(text, &charFormat);
-}
-
 //-----  BroadcastEvent()  ----------------------------------------------------
 BOOL CNifUtilsSuiteFrame::BroadcastEvent(WORD event, void* pParameter)
 {
@@ -434,3 +379,27 @@ void CNifUtilsSuiteFrame::OnHelpAbout()
 	
 	aboutDlg.DoModal();
 }
+
+//-----  ShowLogWindow()  -----------------------------------------------------
+void CNifUtilsSuiteFrame::ShowLogWindow()
+{
+	//  create LogWindow if enabled
+	if (Configuration::getInstance()->_showLogWindow)
+	{
+		m_pLogWindow = new CLogWindow(this);
+		m_pLogWindow->Create(IDD_LOG_WINDOW, GetDesktopWindow());
+		m_pLogWindow->ShowWindow(SW_SHOW);
+
+		//  log messages from material loading
+		vector<string>	userMessages(NifUtlMaterialList::getInstance()->getUserMessages());
+
+		for (auto pIter=userMessages.begin(), pEnd=userMessages.end(); pIter != pEnd; ++pIter)
+		{
+			LogMessage(NCU_MSG_TYPE_INFO, pIter->c_str());
+		}
+
+		//  dump exisitng log buffer
+		DumpLogBuffer();
+	}
+}
+

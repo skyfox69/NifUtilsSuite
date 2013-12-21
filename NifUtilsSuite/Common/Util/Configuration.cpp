@@ -34,6 +34,12 @@ Configuration::Configuration(const string fileName)
 		_ceSaveVersion   (NUS_USERVER_1134),
 		_mvDefLOD        (2),
 		_lastOpenView    (0),
+		_framePosX       (-1),
+		_framePosY       (-1),
+		_logPosX         (-1),
+		_logPosY         (-1),
+		_logWidth        (-1),
+		_logHeight       (-1),
 		_ncUpTangent     (true),
 		_ncReorderProp   (true),
 		_ncForceDDS      (true),
@@ -318,6 +324,12 @@ bool Configuration::read()
 			readAttribute(content, "PathDefOutput>",           _pathDefaultOutput, offset);
 			readAttribute(content, "SaveLastView>",            _saveLastView,      offset);
 			readAttribute(content, "LastOpenView>",            _lastOpenView,      offset);
+			readAttribute(content, "FramePosX>",               _framePosX,         offset);
+			readAttribute(content, "FramePosY>",               _framePosY,         offset);
+			readAttribute(content, "LogPosX>",                 _logPosX,           offset);
+			readAttribute(content, "LogPosY>",                 _logPosY,           offset);
+			readAttribute(content, "LogWidth>",                _logWidth,          offset);
+			readAttribute(content, "LogHeight>",               _logHeight,         offset);
 			readAttribute(content, "VertexColorHandling>",     _ncVtFlagsRemove,   offset);
 			readAttribute(content, "DefaultVertexColor>",      _ncDefColor,        offset);
 			readAttribute(content, "UpdateTangentSpace>",      _ncUpTangent,       offset);
@@ -408,6 +420,12 @@ bool Configuration::write()
 		oStr << "<ShowLogWindow>"         << _showLogWindow           << "</ShowLogWindow>";
 		oStr << "<SaveLastView>"          << _saveLastView            << "</SaveLastView>";
 		oStr << "<LastOpenView>"          << _lastOpenView            << "</LastOpenView>";
+		oStr << "<FramePosX>"             << _framePosX               << "</FramePosX>";
+		oStr << "<FramePosY>"             << _framePosY               << "</FramePosY>";
+		oStr << "<LogPosX>"               << _logPosX                 << "</LogPosX>";
+		oStr << "<LogPosY>"               << _logPosY                 << "</LogPosY>";
+		oStr << "<LogWidth>"              << _logWidth                << "</LogWidth>";
+		oStr << "<LogHeight>"             << _logHeight               << "</LogHeight>";
 		oStr << "</Common><NifConvert>";
 		oStr << "<VertexColorHandling>"   << _ncVtFlagsRemove         << "</VertexColorHandling>";
 		oStr << "<DefaultVertexColor>"    << _ncDefColor              << "</DefaultVertexColor>";

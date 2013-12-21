@@ -19,6 +19,9 @@ IMPLEMENT_DYNAMIC(CLogWindow, CDialog)
 
 BEGIN_MESSAGE_MAP(CLogWindow, CDialog)
 	ON_WM_CLOSE()
+	ON_WM_DESTROY()
+	ON_WM_SIZE()
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 //-----  CLogWindow()  --------------------------------------------------------
@@ -44,10 +47,35 @@ void CLogWindow::PostNcDestroy()
 	delete this;
 }
 
+//-----  PreCreateWindow()  ---------------------------------------------------
+BOOL CLogWindow::PreCreateWindow(CREATESTRUCT& cs)
+{
+	Configuration*	pConfig(Configuration::getInstance());
+
+	if (!CDialog::PreCreateWindow(cs))	return FALSE;
+
+	if (pConfig->_logPosX >= 0)
+	{
+		cs.x  = pConfig->_logPosX;
+		cs.y  = pConfig->_logPosY;
+		cs.cx = pConfig->_logWidth;
+		cs.cy = pConfig->_logHeight;
+	}
+
+	return TRUE;
+}
+
 //-----  OnInitDialog()  ------------------------------------------------------
 BOOL CLogWindow::OnInitDialog()
 {
+	Configuration*	pConfig(Configuration::getInstance());
+
 	CDialog::OnInitDialog();
+
+	if (pConfig->_logPosX >= 0)
+	{
+		MoveWindow(pConfig->_logPosX, pConfig->_logPosY, pConfig->_logWidth, pConfig->_logHeight);
+	}
 
 	//  initialize log view
 	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
@@ -70,14 +98,29 @@ BOOL CLogWindow::OnInitDialog()
 }
 
 //-----  OnClose()  -----------------------------------------------------------
-void CLogWindow::OnClose()
+void CLogWindow::OnDestroy()
 {
-	if (_pParent != NULL)
-	{
-		((CNifUtilsSuiteFrame*) _pParent)->BroadcastEvent(IBCE_LOG_WINDOW_KILLED);
-	}
+	Configuration*	pConfig(Configuration::getInstance());
+	RECT			tRect = {0};
 
-	CDialog::OnClose();
+	GetWindowRect(&tRect);
+	pConfig->_logPosX   = tRect.left;
+	pConfig->_logPosY   = tRect.top;
+	pConfig->_logWidth  = (tRect.right - tRect.left);
+	pConfig->_logHeight = (tRect.bottom - tRect.top);
+	pConfig->write();
+
+	CDialog::OnDestroy();
+}
+
+//-----  OnSize()  ------------------------------------------------------------
+void CLogWindow::OnSize(UINT nType, int cx, int cy)
+{
+	CDialog::OnSize(nType, cx, cy);
+
+	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
+
+	pLogView->MoveWindow(0, 0, cx, cy);
 }
 
 //-----  LogMessage()  --------------------------------------------------------

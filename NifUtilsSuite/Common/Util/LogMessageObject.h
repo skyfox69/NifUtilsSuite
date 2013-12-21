@@ -9,17 +9,34 @@
 #pragma once
 
 //-----  INCLUDES  ------------------------------------------------------------
-#include "Common\Util\IfcLogMessageObject.h"
+#include "Common\Util\DefLogMessageTypes.h"
+#include <vector>
+#include <string>
+
+using namespace std;
 
 //-----  CLASS  ---------------------------------------------------------------
-class LogMessageObject : public IfcLogMessageObject
+class LogMessageObject
 {
 	public:
-								LogMessageObject();
+		enum ClientType
+		{
+			COMMON = 0,
+			NIFCONVERT = 1,
+			CHUNKMERGE = 2,
+			CHUNKEXTRACT = 3,
+			BLENDERPREPARE = 4,
+			MODELVIEWER = 5
+		};
+
+	private:
+		ClientType				_clientType;
+		static	vector<string>	_logBuffer;
+
+	public:
+								LogMessageObject(ClientType clientType);
 		virtual					~LogMessageObject();
 
 		virtual	void			LogMessage(const int type, const char* pMessage, ...);
-
-		//  IfcLogMessageObject
-		virtual	void			LogMessage(const CString text, const CHARFORMAT* pFormat) = 0;
+		virtual	void			DumpLogBuffer();
 };

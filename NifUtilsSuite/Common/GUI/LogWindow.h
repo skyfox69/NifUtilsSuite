@@ -10,12 +10,11 @@
 
 //-----  INCLUDES  ------------------------------------------------------------
 #include <string>
-#include "Common\Util\LogMessageObject.h"
 
 using namespace std;
 
 //-----  CLASS  ---------------------------------------------------------------
-class CLogWindow : public CDialog, public LogMessageObject
+class CLogWindow : public CDialog
 {
 	private:
 		CWnd*						_pParent;
@@ -26,12 +25,13 @@ class CLogWindow : public CDialog, public LogMessageObject
 
 		virtual	void				PostNcDestroy();
 		virtual	BOOL				OnInitDialog();
-		afx_msg	void				OnClose();
+		afx_msg	void				OnDestroy();
+		afx_msg	void				OnSize(UINT nType, int cx, int cy);
 
 	public:
 									CLogWindow(CWnd* pParentWnd = NULL);
 		virtual						~CLogWindow();
+		virtual	BOOL				PreCreateWindow(CREATESTRUCT& cs);
 
-		//  IfcLogMessageObject
 		virtual	void				LogMessage(const CString text, const CHARFORMAT* pFormat);
 };

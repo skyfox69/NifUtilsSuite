@@ -16,3 +16,4 @@
 #define   NCU_MSG_TYPE_TEXTURE              0x06
 #define   NCU_MSG_TYPE_TEXTURE_MISS         0x07
 #define   NCU_MSG_TYPE_DEBUG                0x08
+#define   NCU_MSG_TYPE_IGN_CLIENT           0x09

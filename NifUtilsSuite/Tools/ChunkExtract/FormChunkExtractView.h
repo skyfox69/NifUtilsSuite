@@ -53,9 +53,6 @@ class CFormChunkExtractView : public CFormView, public LogMessageObject, public 
 
 		//  IfcBroadcastObject
 		virtual	BOOL				BroadcastEvent(WORD event, void* pParameter=NULL);
-
-		//  IfcLogMessageObject
-		virtual	void				LogMessage(const CString text, const CHARFORMAT* pFormat);
 };
 
 #ifndef _DEBUG  // debug version in NifUtilsSuiteView.cpp

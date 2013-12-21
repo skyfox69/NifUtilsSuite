@@ -31,7 +31,6 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,    "Open source in N
 						                   {IDC_ED_FILE_OUT,     "Path to destination NIF-file"},
 						                   {IDC_BT_FILE_IN,      "Choose source NIF-file to be converted"},
 						                   {IDC_BT_FILE_OUT,     "Choose destination NIF-file"},
-						                   {IDC_RE_LOG,          "Some log output"},
 						                   {IDC_BT_RESET_FORM,   "Reset form to default settings"},
 						                   {IDC_BT_CONVERT,      "Process tools action"},
 										   {IDC_RD_TO_BLENDER,   "Prepare NIF for Blender-Import"},
@@ -58,7 +57,7 @@ END_MESSAGE_MAP()
 //-----  CFormBlenderPrepareView()  -------------------------------------------
 CFormBlenderPrepareView::CFormBlenderPrepareView()
 	:	CFormView(CFormBlenderPrepareView::IDD),
-		LogMessageObject(),
+		LogMessageObject(LogMessageObject::BLENDERPREPARE),
 		_actDirection   (IDC_RD_TO_BLENDER),
 		_actTool        (IDC_RD_ARMOR)
 {}
@@ -122,23 +121,6 @@ void CFormBlenderPrepareView::OnInitialUpdate()
 	GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(FALSE);
 
-	//  initialize log view
-	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
-	CHARFORMAT		cf = { 0 };
-
-	cf.cbSize    = sizeof(cf);
-	cf.dwMask    = CFM_FACE | CFM_SIZE | CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_PROTECTED;
-	cf.dwEffects = 0;
-	cf.yHeight   = 127;
-	lstrcpy(cf.szFaceName, _T("Small Fonts"));
-
-	pLogView->SetDefaultCharFormat(cf);
-	pLogView->SetReadOnly         (TRUE);
-	if (Configuration::getInstance()->_lvwLogActive[0])
-	{
-		pLogView->SetBackgroundColor(FALSE, Configuration::getInstance()->_lvwColors[0]);
-	}
-
 	//  create initial sub form
 	CRect	tRect;
 	GetDlgItem(IDC_SUBFORM_BOX)->GetWindowRect(&tRect);
@@ -191,6 +173,7 @@ HBRUSH CFormBlenderPrepareView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 			hbr = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
 			break;
 		}
+
 	}
 
 	return hbr;
@@ -373,22 +356,6 @@ BOOL CFormBlenderPrepareView::BroadcastEvent(WORD event, void* pParameter)
 	}
 
 	return TRUE;
-}
-
-//-----  LogMessage()  --------------------------------------------------------
-void CFormBlenderPrepareView::LogMessage(const CString text, const CHARFORMAT* pFormat)
-{
-	CRichEditCtrl*	pLogView    ((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
-	int				lineCountOld(pLogView->GetLineCount());
-
-	//  select  nothing, set format and append new text
-	pLogView->SetSel(-1, -1);
-	pLogView->SetSelectionCharFormat(*((CHARFORMAT*) pFormat));
-	pLogView->ReplaceSel(text);
-
-	//  scroll to end of text
-	pLogView->LineScroll(pLogView->GetLineCount() - lineCountOld);
-	pLogView->SetSel(-1, -1);
 }
 
 //-----  OnBnClickedBtConvert()  ----------------------------------------------
