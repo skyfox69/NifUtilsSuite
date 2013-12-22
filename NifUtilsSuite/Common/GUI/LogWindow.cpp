@@ -120,7 +120,10 @@ void CLogWindow::OnSize(UINT nType, int cx, int cy)
 
 	CRichEditCtrl*	pLogView((CRichEditCtrl*) GetDlgItem(IDC_RE_LOG));
 
-	pLogView->MoveWindow(0, 0, cx, cy);
+	if ((pLogView != NULL) && (pLogView->GetSafeHwnd() != 0))
+	{
+		pLogView->MoveWindow(0, 0, cx, cy);
+	}
 }
 
 //-----  LogMessage()  --------------------------------------------------------
