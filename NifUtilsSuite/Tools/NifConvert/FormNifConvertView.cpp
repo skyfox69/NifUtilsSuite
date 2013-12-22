@@ -65,8 +65,7 @@ END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
 CFormNifConvertView::CFormNifConvertView()
-	:	CFormView       (CFormNifConvertView::IDD),
-		LogMessageObject(LogMessageObject::NIFCONVERT)
+	:	ToolsFormViewBase(CFormNifConvertView::IDD, LogMessageObject::NIFCONVERT)
 {}
 
 //-----  ~CFormChunkMergeView()  ----------------------------------------------
@@ -82,12 +81,6 @@ void CFormNifConvertView::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_ED_FILE_OUT, _fileNameOut);
 	DDX_Text(pDX, IDC_CB_TEMPLATE, _template);
 	DDX_Text(pDX, IDC_CB_TEXTURE,  _texturePath);
-}
-
-//-----  PreCreateWindow()  ---------------------------------------------------
-BOOL CFormNifConvertView::PreCreateWindow(CREATESTRUCT& cs)
-{
-	return CFormView::PreCreateWindow(cs);
 }
 
 //-----  OnInitialUpdate()  ---------------------------------------------------
@@ -135,124 +128,38 @@ void CFormNifConvertView::OnInitialUpdate()
 	GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(FALSE);
 
 	//  prepare tool tips
-	if (_toolTipCtrl.Create(this, TTS_USEVISUALSTYLE | TTS_BALLOON))
-	{
-		for (short i(0); glToolTiplist[i]._uid != -1; ++i)
-		{
-			_toolTipCtrl.AddTool(GetDlgItem(glToolTiplist[i]._uid), CString(glToolTiplist[i]._text.c_str()));
-		}
-
-		_toolTipCtrl.SetMaxTipWidth(260);
-		_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
-	}
+	PrepareToolTips(glToolTiplist);
 
 	//  set settings from configuration
 	BroadcastEvent(IBCE_CHANGED_SETTINGS);
-}
-
-//-----  PreTranslateMessage()  -----------------------------------------------
-BOOL CFormNifConvertView::PreTranslateMessage(MSG* pMsg)
-{
-	if (Configuration::getInstance()->_showToolTipps)
-	{
-		_toolTipCtrl.RelayEvent(pMsg);
-	}
-
-    return CFormView::PreTranslateMessage(pMsg);
-}
-
-//-----  OnCtlColor()  --------------------------------------------------------
-HBRUSH CFormNifConvertView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
-{
-	HBRUSH  hbr = CFormView::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	switch (pWnd->GetDlgCtrlID())
-	{
-		case IDC_GBOX_FILES:
-		case IDC_GBOX_VCOLORS:
-		case IDC_GBOX_FLAGS:
-		case IDC_GBOX_HINTS:
-		{
-			pDC->SetTextColor(RGB(0,0,255));
-			pDC->SetBkMode(TRANSPARENT);
-			hbr = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
-			break;
-		}
-	}
-
-	return hbr;
 }
 
 //-----  OnBnClickedBtViewIn()  -----------------------------------------------
 void CFormNifConvertView::OnBnClickedBtViewIn()
 {
 	UpdateData(TRUE);
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameIn).GetString());
+	ShowModel(_fileNameIn);
 }
 
 //-----  OnBnClickedBtNscopeIn()  ---------------------------------------------
 void CFormNifConvertView::OnBnClickedBtNscopeIn()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameIn).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameIn);
 }
 
 //-----  OnBnClickedBtViewOut()  ----------------------------------------------
 void CFormNifConvertView::OnBnClickedBtViewOut()
 {
 	UpdateData(TRUE);
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameOut).GetString());
+	ShowModel(_fileNameOut);
 }
 
 //-----  OnBnClickedBtNscopeOut()  --------------------------------------------
 void CFormNifConvertView::OnBnClickedBtNscopeOut()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameOut).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameOut);
 }
 
 //-----  OnBnClickedOpenSettings()  -------------------------------------------
@@ -272,19 +179,9 @@ void CFormNifConvertView::OnBnClickedBtFileIn()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameIn);
+	CString		fileName(GetFileName(_fileNameIn, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultInput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultInput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultInput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
@@ -300,24 +197,16 @@ void CFormNifConvertView::OnBnClickedBtFileOut()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameOut);
+	CString		fileName(GetFileName(_fileNameOut, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), true, _T("Select output NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultOutput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), true, _T("Select output NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameOut = fileName;
 		UpdateData(FALSE);
 	}
+#ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(FALSE);
+#endif
 	GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(FALSE);
 }
 

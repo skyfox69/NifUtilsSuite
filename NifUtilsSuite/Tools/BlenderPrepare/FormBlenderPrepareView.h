@@ -10,19 +10,17 @@
 
 //-----  INCLUDES  ------------------------------------------------------------
 #include "resource.h"
-#include "Common\Util\IfcBroadcastObject.h"
-#include "Common\Util\LogMessageObject.h"
+#include "Common\GUI\ToolsFormViewBase.h"
 #include "Common\Util\FDSubFormList.h"
 #include <vector>
 
 using namespace std;
 
 //-----  CLASS  ---------------------------------------------------------------
-class CFormBlenderPrepareView : public CFormView, public LogMessageObject, public IfcBroadcastObject
+class CFormBlenderPrepareView : public ToolsFormViewBase
 {
 	private:
 		CFDSubFormList				_subFormList;
-		CToolTipCtrl				_toolTipCtrl;
 		CString						_fileNameIn;
 		CString						_fileNameOut;
 		CString						_template;
@@ -35,9 +33,7 @@ class CFormBlenderPrepareView : public CFormView, public LogMessageObject, publi
 									CFormBlenderPrepareView();
 		virtual	void				DoDataExchange(CDataExchange* pDX);
 		virtual	void				OnInitialUpdate();
-		virtual	BOOL				PreTranslateMessage(MSG* pMsg);
 
-		afx_msg	HBRUSH				OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 		afx_msg void				OnBnClickedBtViewIn();
 		afx_msg void				OnBnClickedBtViewOut();
 		afx_msg void				OnBnClickedBtFileIn();
@@ -53,7 +49,6 @@ class CFormBlenderPrepareView : public CFormView, public LogMessageObject, publi
 
 	public:
 		virtual						~CFormBlenderPrepareView();
-		virtual	BOOL				PreCreateWindow(CREATESTRUCT& cs);
 
 				CNifUtilsSuiteDoc*	GetDocument() const;
 

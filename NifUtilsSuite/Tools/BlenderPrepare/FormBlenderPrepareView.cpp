@@ -56,10 +56,9 @@ END_MESSAGE_MAP()
 
 //-----  CFormBlenderPrepareView()  -------------------------------------------
 CFormBlenderPrepareView::CFormBlenderPrepareView()
-	:	CFormView(CFormBlenderPrepareView::IDD),
-		LogMessageObject(LogMessageObject::BLENDERPREPARE),
-		_actDirection   (IDC_RD_TO_BLENDER),
-		_actTool        (IDC_RD_ARMOR)
+	:	ToolsFormViewBase(CFormBlenderPrepareView::IDD, LogMessageObject::BLENDERPREPARE),
+		_actDirection    (IDC_RD_TO_BLENDER),
+		_actTool         (IDC_RD_ARMOR)
 {}
 
 //-----  ~CFormBlenderPrepareView()  ------------------------------------------
@@ -73,12 +72,6 @@ void CFormBlenderPrepareView::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Text(pDX, IDC_ED_FILE_IN,  _fileNameIn);
 	DDX_Text(pDX, IDC_ED_FILE_OUT, _fileNameOut);
-}
-
-//-----  PreCreateWindow()  ---------------------------------------------------
-BOOL CFormBlenderPrepareView::PreCreateWindow(CREATESTRUCT& cs)
-{
-	return CFormView::PreCreateWindow(cs);
 }
 
 //-----  OnInitialUpdate()  ---------------------------------------------------
@@ -131,124 +124,38 @@ void CFormBlenderPrepareView::OnInitialUpdate()
 	_subFormList.ShowSubForm  (0);
 
 	//  prepare tool tips
-	if (_toolTipCtrl.Create(this, TTS_USEVISUALSTYLE | TTS_BALLOON))
-	{
-		for (short i(0); glToolTiplist[i]._uid != -1; ++i)
-		{
-			_toolTipCtrl.AddTool(GetDlgItem(glToolTiplist[i]._uid), CString(glToolTiplist[i]._text.c_str()));
-		}
-
-		_toolTipCtrl.SetMaxTipWidth(260);
-		_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
-	}
+	PrepareToolTips(glToolTiplist);
 
 	//  set settings from configuration
 	BroadcastEvent(IBCE_CHANGED_SETTINGS);
 }
 
-//-----  PreTranslateMessage()  -----------------------------------------------
-BOOL CFormBlenderPrepareView::PreTranslateMessage(MSG* pMsg)
-{
-	if (Configuration::getInstance()->_showToolTipps)
-	{
-		_toolTipCtrl.RelayEvent(pMsg);
-	}
-
-    return CFormView::PreTranslateMessage(pMsg);
-}
-
-//-----  OnCtlColor()  --------------------------------------------------------
-HBRUSH CFormBlenderPrepareView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
-{
-	HBRUSH  hbr = CFormView::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	switch (pWnd->GetDlgCtrlID())
-	{
-		case IDC_GBOX_FILES:
-		case IDC_GBOX_TOOLS:
-		case IDC_GBOX_HINTS:
-		{
-			pDC->SetTextColor(RGB(0,0,255));
-			pDC->SetBkMode(TRANSPARENT);
-			hbr = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
-			break;
-		}
-
-	}
-
-	return hbr;
-}
-
 //-----  OnBnClickedBtViewIn()  -----------------------------------------------
 void CFormBlenderPrepareView::OnBnClickedBtViewIn()
 {
-	// TODO: Add your control notification handler code here
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameIn).GetString());
+	UpdateData(TRUE);
+	ShowModel(_fileNameIn);
 }
 
 //-----  OnBnClickedBtNscopeIn()  ---------------------------------------------
 void CFormBlenderPrepareView::OnBnClickedBtNscopeIn()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameIn).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameIn);
 }
 
 //-----  OnBnClickedBtViewOut()  ----------------------------------------------
 void CFormBlenderPrepareView::OnBnClickedBtViewOut()
 {
-	// TODO: Add your control notification handler code here
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameOut).GetString());
+	UpdateData(TRUE);
+	ShowModel(_fileNameOut);
 }
 
 //-----  OnBnClickedBtNscopeOut()  --------------------------------------------
 void CFormBlenderPrepareView::OnBnClickedBtNscopeOut()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameOut).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameOut);
 }
 
 //-----  OnBnClickedBtFileIn()  -----------------------------------------------
@@ -256,19 +163,9 @@ void CFormBlenderPrepareView::OnBnClickedBtFileIn()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameIn);
+	CString		fileName(GetFileName(_fileNameIn, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultInput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultInput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select source NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultInput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
@@ -284,19 +181,9 @@ void CFormBlenderPrepareView::OnBnClickedBtFileOut()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameOut);
+	CString		fileName(GetFileName(_fileNameOut, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), true, _T("Select target NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultOutput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), true, _T("Select target NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameOut = fileName;
 		UpdateData(FALSE);
@@ -325,17 +212,7 @@ BOOL CFormBlenderPrepareView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_TO_BLENDER))  ->SetCheck(_actDirection == IDC_RD_TO_BLENDER);
 			((CButton*) GetDlgItem(IDC_RD_FROM_BLENDER))->SetCheck(_actDirection == IDC_RD_FROM_BLENDER);
 			GetDlgItem(IDC_BT_CONVERT)->SetWindowText((_actDirection == IDC_RD_TO_BLENDER) ? _T("Prep. Blender") : _T("Prep. Skyrim"));
-/*
-			//  name flags
-			int		selItem(pConfig->_ceNameHandling + IDC_RD_NAME_MAT);
 
-			((CButton*) GetDlgItem(IDC_RD_NAME_MAT))  ->SetCheck(selItem == IDC_RD_NAME_MAT);
-			((CButton*) GetDlgItem(IDC_RD_NAME_CHUNK))->SetCheck(selItem == IDC_RD_NAME_CHUNK);
-
-			//  various flags
-			((CButton*) GetDlgItem(IDC_CK_GEN_NORMALS))   ->SetCheck(pConfig->_ceGenNormals   ? BST_CHECKED : BST_UNCHECKED);
-			((CButton*) GetDlgItem(IDC_CK_SCALE_TO_MODEL))->SetCheck(pConfig->_ceScaleToModel ? BST_CHECKED : BST_UNCHECKED);
-*/
 			break;
 		}
 

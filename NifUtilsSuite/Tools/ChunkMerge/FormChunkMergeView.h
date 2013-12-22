@@ -10,14 +10,12 @@
 
 //-----  INCLUDES  ------------------------------------------------------------
 #include "resource.h"
-#include "Common\Util\IfcBroadcastObject.h"
-#include "Common\Util\LogMessageObject.h"
+#include "Common\GUI\ToolsFormViewBase.h"
 
 //-----  CLASS  ---------------------------------------------------------------
-class CFormChunkMergeView : public CFormView, public LogMessageObject, public IfcBroadcastObject
+class CFormChunkMergeView : public ToolsFormViewBase
 {
 	private:
-		CToolTipCtrl				_toolTipCtrl;
 		CString						_fileNameIn;
 		CString						_fileNameColl;
 		CString						_template;
@@ -28,9 +26,7 @@ class CFormChunkMergeView : public CFormView, public LogMessageObject, public If
 									CFormChunkMergeView();
 		virtual	void				DoDataExchange(CDataExchange* pDX);
 		virtual	void				OnInitialUpdate();
-		virtual	BOOL				PreTranslateMessage(MSG* pMsg);
 
-		afx_msg	HBRUSH				OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 		afx_msg void				OnBnClickedBtViewIn();
 		afx_msg void				OnBnClickedBtViewColl();
 		afx_msg void				OnBnClickedOpenSettings();
@@ -49,7 +45,6 @@ class CFormChunkMergeView : public CFormView, public LogMessageObject, public If
 
 	public:
 		virtual						~CFormChunkMergeView();
-		virtual	BOOL				PreCreateWindow(CREATESTRUCT& cs);
 
 				CNifUtilsSuiteDoc*	GetDocument() const;
 

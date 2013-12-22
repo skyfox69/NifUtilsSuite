@@ -10,14 +10,12 @@
 
 //-----  INCLUDES  ------------------------------------------------------------
 #include "resource.h"
-#include "Common\Util\IfcBroadcastObject.h"
-#include "Common\Util\LogMessageObject.h"
+#include "Common\GUI\ToolsFormViewBase.h"
 
 //-----  CLASS  ---------------------------------------------------------------
-class CFormNifConvertView : public CFormView, public LogMessageObject, public IfcBroadcastObject
+class CFormNifConvertView : public ToolsFormViewBase
 {
 	private:
-		CToolTipCtrl				_toolTipCtrl;
 		CString						_fileNameIn;
 		CString						_fileNameOut;
 		CString						_texturePath;
@@ -29,9 +27,7 @@ class CFormNifConvertView : public CFormView, public LogMessageObject, public If
 									CFormNifConvertView();
 		virtual	void				DoDataExchange(CDataExchange* pDX);
 		virtual	void				OnInitialUpdate();
-		virtual	BOOL				PreTranslateMessage(MSG* pMsg);
 	
-		afx_msg	HBRUSH				OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 		afx_msg void				OnBnClickedBtViewIn();
 		afx_msg void				OnBnClickedBtViewOut();
 		afx_msg void				OnBnClickedOpenSettings();
@@ -48,7 +44,6 @@ class CFormNifConvertView : public CFormView, public LogMessageObject, public If
 
 	public:
 		virtual						~CFormNifConvertView();
-		virtual	BOOL				PreCreateWindow(CREATESTRUCT& cs);
 
 				CNifUtilsSuiteDoc*	GetDocument() const;
 

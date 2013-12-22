@@ -71,8 +71,7 @@ END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
 CFormChunkMergeView::CFormChunkMergeView()
-	:	CFormView(CFormChunkMergeView::IDD),
-		LogMessageObject(LogMessageObject::CHUNKMERGE)
+	:	ToolsFormViewBase(CFormChunkMergeView::IDD, LogMessageObject::CHUNKMERGE)
 {}
 
 //-----  ~CFormChunkMergeView()  ----------------------------------------------
@@ -87,12 +86,6 @@ void CFormChunkMergeView::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_ED_FILE_IN,   _fileNameIn);
 	DDX_Text(pDX, IDC_ED_FILE_COLL, _fileNameColl);
 	DDX_Text(pDX, IDC_CB_TEMPLATE,  _template);
-}
-
-//-----  PreCreateWindow()  ---------------------------------------------------
-BOOL CFormChunkMergeView::PreCreateWindow(CREATESTRUCT& cs)
-{
-	return CFormView::PreCreateWindow(cs);
 }
 
 //-----  OnInitialUpdate()  ---------------------------------------------------
@@ -143,16 +136,7 @@ void CFormChunkMergeView::OnInitialUpdate()
 	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(FALSE);
 
 	//  prepare tool tips
-	if (_toolTipCtrl.Create(this, TTS_USEVISUALSTYLE | TTS_BALLOON))
-	{
-		for (short i(0); glToolTiplist[i]._uid != -1; ++i)
-		{
-			_toolTipCtrl.AddTool(GetDlgItem(glToolTiplist[i]._uid), CString(glToolTiplist[i]._text.c_str()));
-		}
-
-		_toolTipCtrl.SetMaxTipWidth(260);
-		_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
-	}
+	PrepareToolTips(glToolTiplist);
 
 	//  set settings from configuration
 	BroadcastEvent(IBCE_CHANGED_SETTINGS);
@@ -161,110 +145,32 @@ void CFormChunkMergeView::OnInitialUpdate()
 	GetDlgItem(IDC_RD_MAT_DEFINE)->EnableWindow(FALSE);
 }
 
-//-----  PreTranslateMessage()  -----------------------------------------------
-BOOL CFormChunkMergeView::PreTranslateMessage(MSG* pMsg)
-{
-	if (Configuration::getInstance()->_showToolTipps)
-	{
-		_toolTipCtrl.RelayEvent(pMsg);
-	}
-
-    return CFormView::PreTranslateMessage(pMsg);
-}
-
-//-----  OnCtlColor()  --------------------------------------------------------
-HBRUSH CFormChunkMergeView::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
-{
-	HBRUSH  hbr = CFormView::OnCtlColor(pDC, pWnd, nCtlColor);
-
-	switch (pWnd->GetDlgCtrlID())
-	{
-		case IDC_GBOX_FILES:
-		case IDC_GBOX_COLLISION:
-		case IDC_GBOX_MATERIAL:
-		case IDC_GBOX_HINTS:
-		case IDC_GBOX_HANDLING:
-		{
-			pDC->SetTextColor(RGB(0,0,255));
-			pDC->SetBkMode(TRANSPARENT);
-			hbr = CreateSolidBrush(GetSysColor(COLOR_3DFACE));
-			break;
-		}
-	}
-
-	return hbr;
-}
-
 //-----  OnBnClickedBtViewIn()  -----------------------------------------------
 void CFormChunkMergeView::OnBnClickedBtViewIn()
 {
-	// TODO: Add your control notification handler code here
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameIn).GetString());
+	UpdateData(TRUE);
+	ShowModel(_fileNameIn);
 }
 
 //-----  OnBnClickedBtNscopeIn()  ---------------------------------------------
 void CFormChunkMergeView::OnBnClickedBtNscopeIn()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameIn).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameIn);
 }
 
 //-----  OnBnClickedBtViewColl()  ---------------------------------------------
 void CFormChunkMergeView::OnBnClickedBtViewColl()
 {
-	// TODO: Add your control notification handler code here
-
-	//  switch to form ModelView
-	theApp.m_pMainWnd->PostMessage(WM_COMMAND, ID_TOOLS_MODELVIEWER);
-
-	//  load model
-	((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_SHOW_MODEL, (void*) CStringA(_fileNameColl).GetString());
+	UpdateData(TRUE);
+	ShowModel(_fileNameColl);
 }
 
 //-----  OnBnClickedBtNscopeColl()  -------------------------------------------
 void CFormChunkMergeView::OnBnClickedBtNscopeColl()
 {
-	string	cmdString(Configuration::getInstance()->_pathNifSkope);
-
-	if (!cmdString.empty())
-	{
-		STARTUPINFO			startupInfo = {0};
-		PROCESS_INFORMATION	processInfo = {0};
-		stringstream		sStream;
-
-		startupInfo.cb = sizeof(startupInfo);
-
-		UpdateData(TRUE);
-
-		sStream << "\"" << cmdString << "\" \"" << CStringA(_fileNameColl).GetString() << "\"";
-		CreateProcess(CString(cmdString.c_str()).GetString(), (LPWSTR) CString(sStream.str().c_str()).GetString(), NULL, NULL, TRUE, CREATE_NEW_PROCESS_GROUP, NULL, NULL, &startupInfo, &processInfo);
-	}
-	else
-	{
-		AfxMessageBox(_T("You didn't specify the NifSkope\r\nexecuteable in options."), MB_OK | MB_ICONEXCLAMATION);
-	}
+	UpdateData(TRUE);
+	OpenNifSkope(_fileNameColl);
 }
 
 //-----  OnBnClickedOpenSettings()  -------------------------------------------
@@ -287,19 +193,9 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameIn);
+	CString		fileName(GetFileName(_fileNameIn, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultOutput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultOutput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameIn = fileName;
 		UpdateData(FALSE);
@@ -318,19 +214,9 @@ void CFormChunkMergeView::OnBnClickedBtFileColl()
 {
 	UpdateData(TRUE);
 
-	Configuration*	pConfig (Configuration::getInstance());
-	CString			fileName(_fileNameColl);
+	CString		fileName(GetFileName(_fileNameColl, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select collision NIF")));
 
-	//  set default input dir if empty
-	if (fileName.IsEmpty() && !pConfig->_pathDefaultInput.empty())
-	{
-		fileName = CString(pConfig->_pathDefaultInput.c_str()) + _T("\\");
-	}
-
-	//  get new input file
-	fileName = FDFileHelper::getFile(fileName, _T("Nif Files (*.nif)|*.nif||"), _T("nif"), false, _T("Select input NIF"));
-
-	if (!fileName.IsEmpty() && (fileName != (CString(pConfig->_pathDefaultInput.c_str()) + _T("\\") )))
+	if (!fileName.IsEmpty())
 	{
 		_fileNameColl = fileName;
 		UpdateData(FALSE);
