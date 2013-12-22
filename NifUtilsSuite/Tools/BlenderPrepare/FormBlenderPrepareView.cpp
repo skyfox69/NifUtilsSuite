@@ -240,6 +240,9 @@ void CFormBlenderPrepareView::OnBnClickedBtConvert()
 {
 	CSubFormBase*	pActForm(_subFormList.GetActiveDlg());
 
+	//  set wait pointer
+	BeginWaitCursor();
+
 	//  store data
 	UpdateData(TRUE);
 
@@ -266,6 +269,9 @@ void CFormBlenderPrepareView::OnBnClickedBtConvert()
 	}  //  if (pActForm != NULL)
 
 	LogMessageObject::LogMessage(NCU_MSG_TYPE_INFO, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+	//  end wait pointer
+	EndWaitCursor();
 }
 
 //-----  OnBnClickedRdDirection()  ----------------------------------------------

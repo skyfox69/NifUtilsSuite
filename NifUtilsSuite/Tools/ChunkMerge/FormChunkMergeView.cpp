@@ -324,6 +324,9 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	map<int, unsigned int>	materialMap;
 	unsigned short			ncReturn (NCU_OK);
 
+	//  set wait pointer
+	BeginWaitCursor();
+
 	//  store data
 	UpdateData(TRUE);
 
@@ -365,6 +368,9 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 		LogMessageObject::LogMessage(NCU_MSG_TYPE_ERROR, "NifCollision returned code: %d", ncReturn);
 	}
 	LogMessageObject::LogMessage(NCU_MSG_TYPE_INFO, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+	//  end wait pointer
+	EndWaitCursor();
 }
 
 //-----  OnBnClickedRdCollGlobal()  -------------------------------------------

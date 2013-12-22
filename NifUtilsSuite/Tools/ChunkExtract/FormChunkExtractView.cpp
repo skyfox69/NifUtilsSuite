@@ -253,6 +253,9 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 	NifExtractUtility		ncUtility(*(NifUtlMaterialList::getInstance()));
 	unsigned short			ncReturn (NCU_OK);
 
+	//  set wait pointer
+	BeginWaitCursor();
+
 	//  store data
 	UpdateData(TRUE);
 
@@ -289,4 +292,7 @@ void CFormChunkExtractView::OnBnClickedBtConvert()
 		GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(FALSE);
 	}
 	LogMessageObject::LogMessage(NCU_MSG_TYPE_INFO, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+	//  end wait pointer
+	EndWaitCursor();
 }

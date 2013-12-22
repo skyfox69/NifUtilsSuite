@@ -302,6 +302,9 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 	NifConvertUtility	ncUtility;
 	unsigned short		ncReturn(NCU_OK);
 
+	//  set wait pointer
+	BeginWaitCursor();
+
 	//  store data
 	UpdateData(TRUE);
 
@@ -336,5 +339,8 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 		LogMessageObject::LogMessage(NCU_MSG_TYPE_ERROR, "NifConverter returned code: %d", ncReturn);
 	}
 	LogMessageObject::LogMessage(NCU_MSG_TYPE_INFO, "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+
+	//  end wait pointer
+	EndWaitCursor();
 }
 
