@@ -53,6 +53,12 @@ BOOL CAboutPage3::OnSetActive()
 	CString		tString;
 
 	tString  = "\r\n";
+	tString += "Version 1.2.2\r\n";
+	tString += "=============\r\n\r\n";
+	tString += "* Fix:  Common: forgot to update CHANGELOG.TXT\r\n\r\n\r\n";
+	tString += "Version 1.2.1\r\n";
+	tString += "=============\r\n\r\n";
+	tString += "* Fix:  ChunkMerge: handling of oblivion-style collision information when not re-use collision data\r\n\r\n\r\n";
 	tString += "Version 1.2.0\r\n";
 	tString += "=============\r\n\r\n";
 	tString += "* New:  Common: added ReferenceGuide documentation\r\n";

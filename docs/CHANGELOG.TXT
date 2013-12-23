@@ -1,3 +1,15 @@
+Version 1.2.2
+=============
+
+* Fix:  Common: forgot to update CHANGELOG.TXT
+
+
+Version 1.2.1
+=============
+
+* Fix:  ChunkMerge: handling of oblivion-style collision information when not re-use collision data
+
+
 Version 1.2.0
 =============
 
