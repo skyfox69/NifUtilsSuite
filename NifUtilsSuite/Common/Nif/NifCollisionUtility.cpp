@@ -124,11 +124,13 @@ unsigned int NifCollisionUtility::addCollision(string fileNameCollSrc, string fi
 		_mergeCollision = true;
 		_cnHandling     = CollisionNodeHandling(NCU_CN_SHAPES);
 	}
+/* temp. removed due to non-implemented functionality
 	else if (_cnHandling == NCU_CN_FALLBACK)
 	{
 		//  collision node existing
 		_cnHandling = CollisionNodeHandling(NCU_CN_COLLISION);
 	}
+*/
 
 	//  output != collision source => force merge
 	_mergeCollision = (_mergeCollision || (fileNameCollSrc != fileNameNifDst));
