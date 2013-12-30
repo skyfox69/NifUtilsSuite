@@ -198,6 +198,10 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 	if (!fileName.IsEmpty())
 	{
 		_fileNameIn = fileName;
+		if (Configuration::getInstance()->_autoSetPath)
+		{
+			_fileNameColl = fileName;
+		}
 		UpdateData(FALSE);
 		GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
 		GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
@@ -310,6 +314,21 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			_toolTipCtrl.Activate(Configuration::getInstance()->_showToolTipps);
 			break;
 		}
+
+		case IBCE_AUTO_SET_PATH:
+		{
+			_fileNameIn = (char*) pParameter;
+			if (Configuration::getInstance()->_autoSetPath)
+			{
+				_fileNameColl = _fileNameIn;
+			}
+			GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
+			GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
+			GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
+			UpdateData(FALSE);
+			break;
+		}
+
 	}  //  switch (event)
 
 	return TRUE;

@@ -60,7 +60,8 @@ Configuration::Configuration(const string fileName)
 		_mvAutoFocus     (true),
 		_bpABRemInvMarker(true),
 		_bpABRemBSProp   (true),
-		_showLogWindow   (true)
+		_showLogWindow   (true),
+		_autoSetPath     (false)
 {
 	initLogView();
 }

@@ -12,6 +12,7 @@
 #define		IBCE_SET_TOOLTIPP			1001
 #define		IBCE_SHOW_MODEL				1002
 #define		IBCE_LOG_WINDOW_KILLED		1003
+#define		IBCE_AUTO_SET_PATH			1004
 
 
 class IfcBroadcastObject

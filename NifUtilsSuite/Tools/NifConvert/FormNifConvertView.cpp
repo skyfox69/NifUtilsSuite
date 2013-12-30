@@ -333,6 +333,11 @@ void CFormNifConvertView::OnBnClickedBtConvert()
 		GetDlgItem(IDC_BT_VIEW_OUT)  ->EnableWindow(TRUE);
 #endif
 		GetDlgItem(IDC_BT_NSCOPE_OUT)->EnableWindow(TRUE);
+
+		if (pConfig->_autoSetPath)
+		{
+			((CNifUtilsSuiteFrame*) theApp.m_pMainWnd)->BroadcastEvent(IBCE_AUTO_SET_PATH, (void*) CStringA(_fileNameOut).GetString());
+		}
 	}
 	else
 	{

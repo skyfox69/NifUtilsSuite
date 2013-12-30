@@ -103,6 +103,7 @@ class Configuration
 				bool					_bpABRemInvMarker;
 				bool					_bpABRemBSProp;
 				bool					_showLogWindow;
+				bool					_autoSetPath;
 
 		virtual							~Configuration();
 

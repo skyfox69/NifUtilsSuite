@@ -124,6 +124,20 @@ BOOL CNifUtilsSuiteApp::InitInstance()
 	ParseCommandLine(cmdInfo);
 	if (!ProcessShellCommand(cmdInfo))		return FALSE;
 
+	//  Parse command line for special handling
+	LPWSTR*		argv;
+	int			argc(0);
+
+	argv = CommandLineToArgvW(m_lpCmdLine, &argc);
+	for (int idx(0); idx < argc; ++idx)
+	{
+		if (StrCmpW(argv[idx], _T("-ap")) == 0)
+		{
+			pConfig->_autoSetPath = true;
+		}
+	}
+	LocalFree(argv);
+
 	// call DragAcceptFiles only if there's a suffix
 	//  In an SDI app, this should occur after ProcessShellCommand
 
