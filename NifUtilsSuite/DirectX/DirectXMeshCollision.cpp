@@ -106,7 +106,7 @@ DirectXRenderMode DirectXMeshCollision::IncreaseRenderMode()
 	DirectXRenderMode	oldMode   (GetRenderMode());
 	int					renderMode(oldMode + 1);
 
-	if (renderMode >= DXRM_SOLID)		renderMode = 0;
+	if (renderMode >= DXRM_TEXTURE)		renderMode = 0;
 
 	SetRenderMode((DirectXRenderMode) renderMode);
 	return oldMode;
@@ -116,7 +116,7 @@ DirectXRenderMode DirectXMeshCollision::IncreaseRenderMode()
 DirectXRenderMode DirectXMeshCollision::SetRenderMode(const DirectXRenderMode renderMode)
 {
 	//  check allowed modes
-	if (renderMode >= 2)		return _renderMode;
+	if (renderMode >= DXRM_TEXTURE)		return _renderMode;
 
 	return DirectXMesh::SetRenderMode(renderMode);
 }
@@ -153,10 +153,10 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 	if (_vecVBuffer.empty())
 	{
 		for (unsigned int idxShape(0); idxShape < _vecVertices.size(); ++idxShape)
-	{
-		//  vertices
+		{
+			//  vertices
 			LPDIRECT3DVERTEXBUFFER9		pVBuffer     (NULL);
-		D3DCustomVertex*	pVModel(NULL);
+			D3DCustomVertex*			pVModel      (NULL);
 			D3DCustomVertex*			pVertices    (_vecVertices[idxShape]);
 			unsigned int				countVertices(_vecCountVertices[idxShape]);
 
@@ -167,16 +167,16 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 				pVModel[i]._x     = pVertices[i]._x;
 				pVModel[i]._y     = pVertices[i]._y;
 				pVModel[i]._z     = pVertices[i]._z;
-			pVModel[i]._color = _wireframeColor;
-		}
+				pVModel[i]._color = _wireframeColor;
+			}
 			pVBuffer->Unlock();
 			_vecVBuffer.push_back(pVBuffer);
 
-		//  indices
+			//  indices
 			if (_vecIBuffer.size() < _vecVBuffer.size())
-		{
+			{
 				LPDIRECT3DINDEXBUFFER9	pIBuffer    (NULL);
-			unsigned short*		pIModel(NULL);
+				unsigned short*			pIModel     (NULL);
 				unsigned short*			pIndices    (_vecIndices[idxShape]);
 				unsigned int			countIndices(_vecCountIndices[idxShape]);
 
@@ -185,7 +185,7 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 				memcpy(pIModel, pIndices, countIndices*sizeof(unsigned short));
 				pIBuffer->Unlock();
 				_vecIBuffer.push_back(pIBuffer);
-		}
+			}
 		}  // for (unsigned int idxShape(0); idxShape < _vesVertices.size(); ++idxShape)
 	}  //  if (_vecVBuffer.empty())
 
@@ -209,25 +209,111 @@ bool DirectXMeshCollision::Render(LPDIRECT3DDEVICE9 pd3dDevice, D3DXMATRIX& worl
 			unsigned int	countVertices(_vecCountVertices[idxShape]);
 
 			switch (_vecPrimitiveType[idxShape])
-		{
-			case D3DPT_TRIANGLELIST:
 			{
-					countIndices  = countIndices/3;
-					countVertices = countVertices;
-				break;
-			}
+				case D3DPT_TRIANGLELIST:
+				{
+						countIndices  = countIndices/3;
+						countVertices = countVertices;
+					break;
+				}
 
-			case D3DPT_LINELIST:
-			{
-					countIndices  = countIndices/2;
-					countVertices = countVertices;
-				break;
+				case D3DPT_LINELIST:
+				{
+						countIndices  = countIndices/2;
+						countVertices = countVertices;
+					break;
+				}
 			}
-		}
 
 			pd3dDevice->DrawIndexedPrimitive(_vecPrimitiveType[idxShape], 0, 0, countVertices, 0, countIndices);		//  render
 
 		}  //  for (unsigned int idxShape(0); idxShape < _vecVBuffer.size(); ++idxShape)
+	}
+	else if (_renderMode == DXRM_SOLID)
+	{
+		ZeroMemory(&_material, sizeof(_material));
+		_material.Ambient  = D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f);
+		_material.Diffuse  = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+		_material.Specular = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+
+		pd3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
+		pd3dDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
+		pd3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+		pd3dDevice->SetRenderState(D3DRS_ALPHATESTENABLE, false);
+		pd3dDevice->SetMaterial         (&_material);
+		pd3dDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+		pd3dDevice->SetRenderState(D3DRS_LIGHTING, true);
+
+		pd3dDevice->SetTransform        (D3DTS_WORLD, &worldMatrix);									//  set world transformation
+		pd3dDevice->MultiplyTransform   (D3DTS_WORLD, &_transform);										//  transform local object into world
+		pd3dDevice->SetTexture          (0, NULL);														//  no texture
+		pd3dDevice->SetFVF              (D3DFVF_CUSTOMVERTEX_COLOR);									//  set vertex style
+
+		for (unsigned int idxShape(0); idxShape < _vecVBuffer.size(); ++idxShape)
+		{
+			pd3dDevice->SetStreamSource     (0, _vecVBuffer[idxShape], 0, sizeof(D3DCustomVertex));		//  set vertices source
+			pd3dDevice->SetIndices          (_vecIBuffer[idxShape]);									//  set indices source
+
+			unsigned int	countIndices (_vecCountIndices[idxShape]);
+			unsigned int	countVertices(_vecCountVertices[idxShape]);
+
+			switch (_vecPrimitiveType[idxShape])
+			{
+				case D3DPT_TRIANGLELIST:
+				{
+						countIndices  = countIndices/3;
+						countVertices = countVertices;
+					break;
+				}
+
+				case D3DPT_LINELIST:
+				{
+						countIndices  = countIndices/2;
+						countVertices = countVertices;
+					break;
+				}
+			}
+
+			pd3dDevice->DrawIndexedPrimitive(_vecPrimitiveType[idxShape], 0, 0, countVertices, 0, countIndices);		//  render
+		}
+
+		ZeroMemory(&_material, sizeof(_material));
+		_material.Ambient  = D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f);
+		_material.Diffuse  = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+		_material.Specular = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
+
+		pd3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+		pd3dDevice->SetMaterial         (&_material);
+
+		for (unsigned int idxShape(0); idxShape < _vecVBuffer.size(); ++idxShape)
+		{
+			pd3dDevice->SetStreamSource     (0, _vecVBuffer[idxShape], 0, sizeof(D3DCustomVertex));		//  set vertices source
+			pd3dDevice->SetIndices          (_vecIBuffer[idxShape]);									//  set indices source
+
+			unsigned int	countIndices (_vecCountIndices[idxShape]);
+			unsigned int	countVertices(_vecCountVertices[idxShape]);
+
+			switch (_vecPrimitiveType[idxShape])
+			{
+				case D3DPT_TRIANGLELIST:
+				{
+						countIndices  = countIndices/3;
+						countVertices = countVertices;
+					break;
+				}
+
+				case D3DPT_LINELIST:
+				{
+						countIndices  = countIndices/2;
+						countVertices = countVertices;
+					break;
+				}
+			}
+
+			pd3dDevice->DrawIndexedPrimitive(_vecPrimitiveType[idxShape], 0, 0, countVertices, 0, countIndices);		//  render
+		}
+
+
 	}
 
 	return true;
