@@ -41,6 +41,16 @@
 using namespace Niflib;
 
 /*---------------------------------------------------------------------------*/
+NifCollisionUtility::NCUBorder::NCUBorder(int index, vector<int> neightbours)
+	:	_index(index),
+		_neightbours(neightbours)
+{}
+
+/*---------------------------------------------------------------------------*/
+NifCollisionUtility::NCUBorder::~NCUBorder()
+{}
+
+/*---------------------------------------------------------------------------*/
 NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 	:	_cnHandling        (NCU_CN_FALLBACK),
 		_mtHandling        (NCU_MT_SINGLE),
@@ -450,7 +460,7 @@ unsigned int NifCollisionUtility::getGeometryFromPackedNiTriStrips(bhkPackedNiTr
 			//  re-order triangles points to match same winding
 			if (_reorderTriangles)
 			{
-				reorderTriangles(triAry);
+				reorderTriangles(triAry, vertAry);
 			}
 
 			//  add geometry to result array
@@ -1324,57 +1334,240 @@ bhkShapeRef NifCollisionUtility::convertCollPackedNiTriStrips(bhkPackedNiTriStri
 }
 
 /*---------------------------------------------------------------------------*/
-void NifCollisionUtility::reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry)
+void NifCollisionUtility::reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry)
 {
-	int		length  (srcAry.getSize() - 1);
-	short	idxGroup(0);
+	int						length      (srcAry.getSize());
+	vector<NCUTriangle>		triangleList(length);
+	vector<NCUBorder>		borderList;
 
-	//  for each triangle in list
+	//  find neightbours for each triangle in list
 	for (int idx(0); idx < length; ++idx)
 	{
-		hkGeometry::Triangle&	dstTri(srcAry[idx]);
-		hkGeometry::Triangle&	srcTri(srcAry[idx+1]);
-		int						vertsDst[3] = {dstTri.m_a, dstTri.m_b, dstTri.m_c};
-		int						vertsSrc[3] = {srcTri.m_a, srcTri.m_b, srcTri.m_c};
-		short					idxDst(0);
-		short					idxSrc(0);
-		short					cntPts(0);
+		hkGeometry::Triangle&	triRef  (srcAry[idx]);
+		NCUTriangle&			triangle(triangleList[idx]);
+		int						vertsRef[3] = {triRef.m_a, triRef.m_b, triRef.m_c};
+
+		//  find adjacent triangles
+		for (int idx2(0); idx2 < length; ++idx2)
+		{
+			//  skip self
+			if (idx2 == idx)		continue;
+
+			hkGeometry::Triangle&	triAct  (srcAry[idx2]);
+			int						vertsAct[3] = {triAct.m_a, triAct.m_b, triAct.m_c};
+			short					matchCount(0);
+
+			for (short j(0); ((j < 3) && (matchCount < 2)); ++j)
+			{
+				for (short i(0); ((i < 3) && (matchCount < 2)); ++i)
+				{
+					if (vertsRef[j] == vertsAct[i])
+					{
+						if (++matchCount == 2)
+						{
+							triangle._neightbours.push_back(idx2);
+							break;
+						}
+					}  //  if (vertsRef[j] == vertsAct[i])
+				}  //  for (short i(0); ((i < 3) && (matchCount < 2)); ++i)
+			}  //  for (short j(0); ((j < 3) && (matchCount < 2)); ++j)
+		}  //  for (int idx2(0); idx2 < length; ++idx2)
+	}  //  for (int idx(1); idx < length; ++idx)
+
+	//  process each triangle and its neightbours
+	for (int idx(0); idx < length; ++idx)
+	{
+		//  skip processed triangles
+		if (triangleList[idx]._windingOk)	continue;
+
+		//  starting triangle should be always OK
+		if ((idx > 0) && !getTriangleWinding(idx, srcAry, vertAry))
+		{
+			int	tmp(srcAry[idx].m_a);
+
+			srcAry[idx].m_a = srcAry[idx].m_c;
+			srcAry[idx].m_c = tmp;
+		}
+		triangleList[idx]._windingOk = true;
+
+		//  add starting triangle to border list
+		borderList.push_back(NCUBorder(idx, triangleList[idx]._neightbours));
+
+		//  process border list
+		while (!borderList.empty())
+		{
+			//  process first element
+			reorderTriangleBorders(srcAry, triangleList, borderList, borderList[0]);
+
+			//  remove first element from border list
+			borderList.erase(borderList.begin());
+
+		}  //  while (!borderList.empty())
+	}  //  for (int idx(0); idx < length; ++idx)
+}
+
+/*---------------------------------------------------------------------------*/
+void NifCollisionUtility::reorderTriangleBorders(hkArray<hkGeometry::Triangle>& srcAry, vector<NCUTriangle>& triangleList, vector<NCUBorder>& borderList, NCUBorder& border)
+{
+	hkGeometry::Triangle&	triRef     (srcAry[border._index]);
+	NCUTriangle&			triangleRef(triangleList[border._index]);
+
+	//  check each neightbour
+	for (auto pIter=triangleRef._neightbours.begin(), pEnd=triangleRef._neightbours.end(); pIter != pEnd; ++pIter)
+	{
+		hkGeometry::Triangle&	triAct     (srcAry[*pIter]);
+		NCUTriangle&			triangleAct(triangleList[*pIter]);
+		int						vertsRef[3] = {triRef.m_a, triRef.m_b, triRef.m_c};
+		int						vertsAct[3] = {triAct.m_a, triAct.m_b, triAct.m_c};
+		int						lstRef[2] = { -1, -1 };
+		int						lstAct[2] = { -1, -1 };
+		short					idxPnt(0);
+
+		//  skip already checked triangles
+		if (triangleAct._windingOk && triangleRef._windingOk)		continue;
 
 		//  find common edge
-		for (; idxDst < 3; ++idxDst)
+		for (int i(0); ((i < 3) && (idxPnt < 2)); ++i)
 		{
-			for (idxSrc=0; idxSrc < 3; ++idxSrc)
+			for (int j(0); ((j < 3) && (idxPnt < 2)); ++j)
 			{
-				if (vertsSrc[idxSrc] == vertsDst[idxDst])	break;
+				if (vertsRef[i] == vertsAct[j])
+				{
+					lstRef[idxPnt] = i;
+					lstAct[idxPnt] = j;
+					++idxPnt;
+					break;
+				}
 			}
+		}
 
-			if (idxSrc > 2)
+		//  rotate triangles in correct order
+		if (lstRef[0] == 0)
+		{
+			int	 tmp(vertsRef[2]);
+
+			vertsRef[2] = vertsRef[1];
+			vertsRef[1] = vertsRef[0];
+			vertsRef[0] = tmp;
+		}
+		else if (lstRef[0] == 2)
+		{
+			int	 tmp(vertsRef[0]);
+
+			vertsRef[0] = vertsRef[1];
+			vertsRef[1] = vertsRef[2];
+			vertsRef[2] = tmp;
+		}
+		if (lstAct[0] == 0)
+		{
+			int	 tmp(vertsAct[2]);
+
+			vertsAct[2] = vertsAct[1];
+			vertsAct[1] = vertsAct[0];
+			vertsAct[0] = tmp;
+		}
+		else if (lstAct[0] == 2)
+		{
+			int	 tmp(vertsAct[0]);
+
+			vertsAct[0] = vertsAct[1];
+			vertsAct[1] = vertsAct[2];
+			vertsAct[2] = tmp;
+		}
+
+		//  wrong winding?
+		if ((vertsRef[2] == vertsAct[2]) || (vertsRef[0] == vertsAct[0]))
+		{
+			if (!triangleRef._windingOk)
 			{
-				vertsDst[idxDst] = -1;
+				int	tmp(triRef.m_a);
+
+				triRef.m_a = triRef.m_c;
+				triRef.m_c = tmp;
+			}
+			else
+			{
+				int	tmp(triAct.m_a);
+
+				triAct.m_a = triAct.m_c;
+				triAct.m_c = tmp;
 			}
 		}
 
-		for (idxDst=0; idxDst < 3; ++idxDst)
-		{
-			if (vertsDst[idxDst] != -1)		++cntPts;
-		}
+		//  add triangles borders to border list
+		borderList.push_back(NCUBorder(*pIter, triangleAct._neightbours));
 
-		//  swap two vertices in case of uneven triangle in group having common edge with precessor
-		if ((cntPts == 2) && ((idxGroup % 2) == 1))
-		{
-			int	tmp(srcTri.m_a);
+		//  mark triangle as processed
+		triangleAct._windingOk = true;
 
-			srcTri.m_a = srcTri.m_c;
-			srcTri.m_c = tmp;
-		}
-		//  no common edge => start new group
-		else if (cntPts != 2)
-		{
-			idxGroup = 0;
-		}
+	}  //  for (auto pIter=triangleList[idx]._neightbours.begin(), ...
+}
 
-		//  increase index in group
-		++idxGroup;
+/*---------------------------------------------------------------------------*/
+bool NifCollisionUtility::getTriangleWinding(const int triIndex, hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry)
+{
+	hkGeometry::Triangle&	triAct (srcAry[triIndex]);
+	Vector3					vecActA(vertAry[triAct.m_a](0), vertAry[triAct.m_a](1), vertAry[triAct.m_a](2));
+	Vector3					vecActB(vertAry[triAct.m_b](0), vertAry[triAct.m_b](1), vertAry[triAct.m_b](2));
+	Vector3					vecActC(vertAry[triAct.m_c](0), vertAry[triAct.m_c](1), vertAry[triAct.m_c](2));
+	Vector3					origin ((vecActA.x + vecActB.x + vecActC.x) / 3.0f,
+								    (vecActA.y + vecActB.y + vecActC.y) / 3.0f,
+									(vecActA.z + vecActB.z + vecActC.z) / 3.0f
+									);
+	Vector3					normal ((vecActB-vecActA).CrossProduct(vecActC-vecActA));
+	Vector3					direction(normal * -1);
+	vector<int>				matched;
+	int						length(srcAry.getSize());
 
-	}  //  for (int idxRes(0); idxRes < length; ++idxRes)
+	//  for each other triangle
+	for (int idxTst(0); idxTst < length; ++idxTst)
+	{
+		//  skip self-test
+		if (idxTst == triIndex)		continue;
+
+		hkGeometry::Triangle&	triTst(srcAry[idxTst]);
+		Vector3					v0    (vertAry[triTst.m_a](0), vertAry[triTst.m_a](1), vertAry[triTst.m_a](2));
+		Vector3					v1    (vertAry[triTst.m_b](0), vertAry[triTst.m_b](1), vertAry[triTst.m_b](2));
+		Vector3					v2    (vertAry[triTst.m_c](0), vertAry[triTst.m_c](1), vertAry[triTst.m_c](2));
+
+		Vector3 v0v1 = v1 - v0;
+		Vector3 v0v2 = v2 - v0;
+		Vector3 N = v0v1.CrossProduct(v0v2);
+		float nDotRay = N.DotProduct(direction);
+		if (nDotRay == 0) continue; // ray parallel to triangle
+		float d = N.DotProduct(v0);
+		float t = -(N.DotProduct(origin) + d) / nDotRay;
+			
+		// behind origin
+		if (t < 0) continue;
+
+		// inside-out test
+		Vector3 Phit = origin + (direction * t);
+			
+		// inside-out test edge0
+		Vector3 v0p = Phit - v0;
+		float v = N.DotProduct(v0v1.CrossProduct(v0p));
+		if (v < 0) continue; // P outside triangle
+			
+		// inside-out test edge1
+		Vector3 v1p = Phit - v1;
+		Vector3 v1v2 = v2 - v1;
+		float w = N.DotProduct(v1v2.CrossProduct(v1p));
+		if (w < 0) continue; // P outside triangle
+			
+		// inside-out test edge2
+		Vector3 v2p = Phit - v2;
+		Vector3 v2v0 = v0 - v2;
+		float u = N.DotProduct(v2v0.CrossProduct(v2p));
+		if (u < 0) continue; // P outside triangle
+
+		matched.push_back(idxTst);
+
+	}  //  for (int idxTst(0); idxTst < length; ++idxTst)
+
+	//  no other triangle touched => winding seems OK
+	if (matched.empty())		return true;
+
+	//  odd number of triangles touched => winding seems OK?
+	return ((matched.size() % 2) == 1);
 }

@@ -49,6 +49,25 @@ using namespace std;
 //-----  CLASS  ---------------------------------------------------------------
 class NifCollisionUtility
 {
+protected:
+	struct NCUTriangle
+	{
+		vector<int>			_neightbours;
+		bool				_windingOk;
+
+							NCUTriangle() : _windingOk(false) {};
+		virtual				~NCUTriangle() {};
+	};
+
+	struct NCUBorder
+	{
+		vector<int>			_neightbours;
+		int					_index;
+
+							NCUBorder(int index, vector<int> neightbours);
+		virtual				~NCUBorder();
+	};
+
 public:
 	/*!
 	 * Default Constructor
@@ -336,7 +355,27 @@ protected:
 	/*!
 	 * Reorder winding of triangles to face outward
 	 * 
-	 * \param[in/out] srcAry  reference to vector of hkGeometry
+	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
+	 * \param[in] vertAry  reference to vector of vertices (hkVector4)
 	 */
-	virtual void reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry);
+	virtual void reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry);
+
+	/*!
+	 * Reorder winding of triangles using adjacent triangles defined by borders
+	 * 
+	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
+	 * \param[in/out] triangleList  reference to internal triangle definition list
+	 * \param[in/out] borderList  reference to internal border definition list
+	 * \param[in/out] border  reference to border being processed
+	 */
+	virtual void reorderTriangleBorders(hkArray<hkGeometry::Triangle>& srcAry, vector<NCUTriangle>& triangleList, vector<NCUBorder>& borderList, NCUBorder& border);
+
+	/*!
+	 * Try getting winding of single triangle
+	 * 
+	 * \param[in/out] triIndex  index of triangle to get winding for
+	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
+	 * \param[in] vertAry  reference to vector of vertices (hkVector4)
+	 */
+	virtual bool getTriangleWinding(const int triIndex, hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry);
 };
