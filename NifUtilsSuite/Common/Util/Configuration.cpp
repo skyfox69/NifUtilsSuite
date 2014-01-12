@@ -24,6 +24,7 @@ Configuration::Configuration(const string fileName)
 		_ncVtFlagsRemove (0),
 		_cmMatHandling   (0),
 		_cmCollHandling  (1),
+		_cmWindHandling  (0),
 		_ceNameHandling  (0),
 		_mvDefBackColor  (0xFF000000),
 		_mvDefCollColor  (0xFFFF0000),
@@ -45,7 +46,6 @@ Configuration::Configuration(const string fileName)
 		_ncForceDDS      (true),
 		_ncRemoveColl    (true),
 		_cmMergeColl     (true),
-		_cmReorderTris   (true),
 		_showToolTipps   (true),
 		_saveLastView    (false),
 		_ceGenNormals    (true),
@@ -376,7 +376,7 @@ bool Configuration::read()
 			readAttribute(content, "NcForceDDS>",              _ncForceDDS,        offset);
 			readAttribute(content, "NcRemoveColl>",            _ncRemoveColl,      offset);
 			readAttribute(content, "CmMergeColl>",             _cmMergeColl,       offset);
-			readAttribute(content, "CmReorderTris>",           _cmReorderTris,     offset);
+			readAttribute(content, "CmWindHandling>",          _cmWindHandling,    offset);
 
 
 		}  //  while (iStr.good())
@@ -442,7 +442,7 @@ bool Configuration::write()
 		oStr << "<MaterialSingleType>"    << _cmMatSingleType         << "</MaterialSingleType>";
 		oStr << "<DefaultTemplateNameCM>" << _cmDefaultTemplate       << "</DefaultTemplateNameCM>";
 		oStr << "<CmMergeColl>"           << _cmMergeColl             << "</CmMergeColl>";
-		oStr << "<CmReorderTris>"         << _cmReorderTris           << "</CmReorderTris>";
+		oStr << "<CmWindHandling>"        << _cmWindHandling          << "</CmWindHandling>";
 		oStr << "</ChunkMerge><ChunkExtract>";
 		oStr << "<NameHandling>"          << _ceNameHandling          << "</NameHandling>";
 		oStr << "<GenNormals>"            << _ceGenNormals            << "</GenNormals>";

@@ -55,6 +55,7 @@ HBRUSH ToolsFormViewBase::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 		case IDC_GBOX_MATERIAL:
 		case IDC_GBOX_HANDLING:
 		case IDC_GBOX_TOOLS:
+		case IDC_GBOX_TRIANGLES:
 		{
 			pDC->SetTextColor(RGB(0,0,255));
 			pDC->SetBkMode(TRANSPARENT);

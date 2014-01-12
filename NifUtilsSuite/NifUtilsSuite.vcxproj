@@ -143,6 +143,7 @@
     <ClInclude Include="Common\GUI\ToolsFormViewBase.h" />
     <ClInclude Include="Common\Nif\ChunkNameHandling.h" />
     <ClInclude Include="Common\Nif\CollisionNodeHandling.h" />
+    <ClInclude Include="Common\Nif\CollisionWindingHandling.h" />
     <ClInclude Include="Common\Nif\MaterialTypeHandling.h" />
     <ClInclude Include="Common\Nif\NifChunkData.h" />
     <ClInclude Include="Common\Nif\NifCollisionUtility.h" />

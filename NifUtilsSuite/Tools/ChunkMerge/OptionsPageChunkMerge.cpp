@@ -10,6 +10,7 @@
 #include "stdafx.h"
 #include "Common\Util\Configuration.h"
 #include "Common\Nif\NifUtlMaterial.h"
+#include "Common\Nif\CollisionWindingHandling.h"
 #include "Tools\ChunkMerge\OptionsPageChunkMerge.h"
 
 //-----  DEFINES  -------------------------------------------------------------
@@ -28,8 +29,10 @@ COptionsPageChunkMerge::COptionsPageChunkMerge(CWnd* pParent /*=NULL*/)
 	_colHandling      = pConfig->_cmCollHandling;
 	_matHandling      = pConfig->_cmMatHandling;
 	_matSingle        = pConfig->_cmMatSingleType;
-	_mergeCollision   = pConfig->_cmMergeColl ? 0 : 1;
-	_reorderTriangles = pConfig->_cmReorderTris ? 1 : 0;
+	_mergeCollision   = pConfig->_cmMergeColl   ? 0 : 1;
+	_reorderTriangles = (pConfig->_cmWindHandling & NCU_CW_ENABLED) ? 1 : 0;
+	_visual           = (pConfig->_cmWindHandling & NCU_CW_VISUAL)  ? 1 : 0;
+	_wndHandling      = ((pConfig->_cmWindHandling >> 4) - 1);
 }
 
 //-----  ~COptionsPageGeneral()  ----------------------------------------------
@@ -45,6 +48,8 @@ void COptionsPageChunkMerge::DoDataExchange(CDataExchange* pDX)
 	DDX_Radio(pDX, IDC_RD_COLL_CDATA,   _colHandling);
 	DDX_Radio(pDX, IDC_RD_COLL_GLOBAL,  _mergeCollision); 
 	DDX_Check(pDX, IDC_CK_REORDER_TRIS, _reorderTriangles);
+	DDX_Check(pDX, IDC_CK_TRI_VISUAL,   _visual);
+	DDX_Radio(pDX, IDC_RD_TRI_SIMPLE,   _wndHandling); 
 }
 
 //-----  OnWizardNext()  ------------------------------------------------------
@@ -57,15 +62,20 @@ LRESULT COptionsPageChunkMerge::OnWizardNext()
 //-----  OnOK()  --------------------------------------------------------------
 void COptionsPageChunkMerge::OnOK()
 {
-	Configuration*	pConfig(Configuration::getInstance());
+	Configuration*	pConfig     (Configuration::getInstance());
+	int				windHandling(0);
 
 	UpdateData(TRUE);
+
+	windHandling = (_wndHandling +1) << 4;
+	windHandling |= (_visual == 1)           ? NCU_CW_VISUAL  : 0;
+	windHandling |= (_reorderTriangles == 1) ? NCU_CW_ENABLED : 0;
 
 	pConfig->_cmCollHandling  = _colHandling;
 	pConfig->_cmMatHandling   = _matHandling;
 	pConfig->_cmMatSingleType = _matSingle;
 	pConfig->_cmMergeColl     = (_mergeCollision   == 0);
-	pConfig->_cmReorderTris   = (_reorderTriangles == 1);
+	pConfig->_cmWindHandling  = windHandling;
 }
 
 //-----  OnInitDialog()  ------------------------------------------------------

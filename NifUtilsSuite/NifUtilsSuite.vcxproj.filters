@@ -311,6 +311,9 @@
     <ClInclude Include="Common\GUI\ToolsFormViewBase.h">
       <Filter>Header Files\Common\GUI</Filter>
     </ClInclude>
+    <ClInclude Include="Common\Nif\CollisionWindingHandling.h">
+      <Filter>Header Files\Common\Nif</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NifUtilsSuite.cpp">

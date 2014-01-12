@@ -19,6 +19,7 @@
 #include "Common\Nif\NifUtlMaterial.h"
 #include "Common\Nif\NifCollisionUtility.h"
 #include "Common\Nif\MaterialTypeHandling.h"
+#include "Common\Nif\CollisionWindingHandling.h"
 #include <afxbutton.h>
 
 extern void logCallback(const int type, const char* pMessage);
@@ -45,7 +46,10 @@ static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in
 						                   {IDC_BT_TEMPLATE,       "Choose path to template files and scan recursively"},
 						                   {IDC_BT_RESET_FORM,     "Reset form to default settings"},
 						                   {IDC_BT_CONVERT,        "Add collision data to target"},
-										   {IDC_CK_REORDER_TRIS,   "Reorder triangles of bhk(Packed)NiTriStrips facing outward of model"},
+										   {IDC_CK_REORDER_TRIS,   "Enable reordering of triangles of bhk(Packed)NiTriStrips to face outward of model"},
+										   {IDC_RD_TRI_SIMPLE,     "Simply swap winding of each odd triangle (fast and most used for original Bethesda TriStrips)"},
+										   {IDC_RD_TRI_COMPLEX,    "Use complex algorithm based on adjacent triangles (groups) and face normals to reorder triangle winding"},
+										   {IDC_CK_TRI_VISUAL,     "Use visual editor to check collision model and modify triangle winding manually"},
 						                   {-1, ""}
 						                  };
 
@@ -65,8 +69,11 @@ BEGIN_MESSAGE_MAP(CFormChunkMergeView, CFormView)
 	ON_BN_CLICKED(IDC_BT_NSCOPE_IN,      &CFormChunkMergeView::OnBnClickedBtNscopeIn)
 	ON_BN_CLICKED(IDC_BT_NSCOPE_COLL,    &CFormChunkMergeView::OnBnClickedBtNscopeColl)
 	ON_BN_CLICKED(IDC_BT_CONVERT,        &CFormChunkMergeView::OnBnClickedBtConvert)
-	ON_BN_CLICKED(IDC_RD_COLL_GLOBAL,    &CFormChunkMergeView::OnBnClickedRdCollGlobal)
-	ON_BN_CLICKED(IDC_RD_COLL_LOCAL,     &CFormChunkMergeView::OnBnClickedRdCollLocal)
+	ON_BN_CLICKED(IDC_CK_REORDER_TRIS,   &CFormChunkMergeView::OnBnClickedCkReorderTris)
+	ON_BN_CLICKED(IDC_RD_TRI_SIMPLE,     &CFormChunkMergeView::OnBnClickedRdTriSimCom)
+	ON_BN_CLICKED(IDC_RD_TRI_COMPLEX,    &CFormChunkMergeView::OnBnClickedRdTriSimCom)
+	ON_BN_CLICKED(IDC_RD_COLL_LOCAL,     &CFormChunkMergeView::OnBnClickedRdLocGloLoc)
+	ON_BN_CLICKED(IDC_RD_COLL_GLOBAL,    &CFormChunkMergeView::OnBnClickedRdLocGloLoc)
 END_MESSAGE_MAP()
 
 //-----  CFormChunkMergeView()  -----------------------------------------------
@@ -109,12 +116,16 @@ void CFormChunkMergeView::OnInitialUpdate()
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_COLLISION)->GetSafeHwnd(), _T(""), _T(""));
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_MATERIAL) ->GetSafeHwnd(), _T(""), _T(""));
 	::SetWindowTheme(GetDlgItem(IDC_GBOX_HANDLING) ->GetSafeHwnd(), _T(""), _T(""));
+	::SetWindowTheme(GetDlgItem(IDC_GBOX_TRIANGLES)->GetSafeHwnd(), _T(""), _T(""));
 
 	pImageList = CFDResourceManager::getInstance()->getImageListNumbers();
-	for (short i(1); i < 6; ++i)
+	for (short i(1); i < 7; ++i)
 	{
 		((CStatic*) GetDlgItem(IDC_PC_NUM_0+i)) ->SetIcon(pImageList->ExtractIcon(i));
-		((CStatic*) GetDlgItem(IDC_PC_HINT_0+i))->SetIcon(pImageList->ExtractIcon(i));
+		if (i < 6)
+		{
+			((CStatic*) GetDlgItem(IDC_PC_HINT_0+i))->SetIcon(pImageList->ExtractIcon(i));
+		}
 	}
 
 	pImageList = CFDResourceManager::getInstance()->getImageListOther();
@@ -131,9 +142,7 @@ void CFormChunkMergeView::OnInitialUpdate()
 	GetDlgItem(IDC_BT_NSCOPE_IN)   ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_VIEW_COLL)   ->EnableWindow(FALSE);
 	GetDlgItem(IDC_BT_NSCOPE_COLL) ->EnableWindow(FALSE);
-	GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(FALSE);
-	GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(FALSE);
-	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(FALSE);
+	EnableGroupCollisionLocation(false);
 
 	//  prepare tool tips
 	PrepareToolTips(glToolTiplist);
@@ -203,9 +212,7 @@ void CFormChunkMergeView::OnBnClickedBtFileIn()
 			_fileNameColl = fileName;
 		}
 		UpdateData(FALSE);
-		GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
+		EnableGroupCollisionLocation(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_IN)  ->EnableWindow(!_fileNameIn.IsEmpty());
@@ -224,9 +231,7 @@ void CFormChunkMergeView::OnBnClickedBtFileColl()
 	{
 		_fileNameColl = fileName;
 		UpdateData(FALSE);
-		GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
-		GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
+		EnableGroupCollisionLocation(_fileNameIn == _fileNameColl);
 	}
 #ifndef NUS_LIGHT
 	GetDlgItem(IDC_BT_VIEW_COLL)  ->EnableWindow(!_fileNameColl.IsEmpty());
@@ -301,10 +306,15 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			((CButton*) GetDlgItem(IDC_RD_COLL_FBACK))->SetCheck(selItem == IDC_RD_COLL_FBACK);
 			((CButton*) GetDlgItem(IDC_RD_COLL_MESH)) ->SetCheck(selItem == IDC_RD_COLL_MESH);
 
+			//  winding flags
+			((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->SetCheck((pConfig->_cmWindHandling & NCU_CW_ENABLED) ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_RD_TRI_SIMPLE))  ->SetCheck((pConfig->_cmWindHandling & NCU_CW_SIMPLE)  ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_RD_TRI_COMPLEX)) ->SetCheck((pConfig->_cmWindHandling & NCU_CW_COMPLEX) ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_CK_TRI_VISUAL))  ->SetCheck((pConfig->_cmWindHandling & NCU_CW_VISUAL)  ? BST_CHECKED   : BST_UNCHECKED);
+
 			//  other flags
-			((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL))  ->SetCheck(pConfig->_cmMergeColl   ? BST_UNCHECKED : BST_CHECKED);
-			((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL)) ->SetCheck(pConfig->_cmMergeColl   ? BST_CHECKED   : BST_UNCHECKED);
-			((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->SetCheck(pConfig->_cmReorderTris ? BST_CHECKED   : BST_UNCHECKED);
+			((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL))  ->SetCheck(pConfig->_cmMergeColl ? BST_UNCHECKED : BST_CHECKED);
+			((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL)) ->SetCheck(pConfig->_cmMergeColl ? BST_CHECKED   : BST_UNCHECKED);
 
 			break;
 		}
@@ -322,9 +332,7 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 			{
 				_fileNameColl = _fileNameIn;
 			}
-			GetDlgItem(IDC_RD_COLL_GLOBAL) ->EnableWindow(_fileNameIn == _fileNameColl);
-			GetDlgItem(IDC_RD_COLL_LOCAL)  ->EnableWindow(_fileNameIn == _fileNameColl);
-			GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(_fileNameIn == _fileNameColl);
+			EnableGroupCollisionLocation(_fileNameIn == _fileNameColl);
 			UpdateData(FALSE);
 			break;
 		}
@@ -392,14 +400,50 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	EndWaitCursor();
 }
 
-//-----  OnBnClickedRdCollGlobal()  -------------------------------------------
-void CFormChunkMergeView::OnBnClickedRdCollGlobal()
+//-----  OnBnClickedCkReorderTris()  ------------------------------------------
+void CFormChunkMergeView::OnBnClickedCkReorderTris()
 {
-	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(FALSE);
+	bool	checked(((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->GetCheck() == BST_CHECKED);
+
+	GetDlgItem(IDC_RD_TRI_SIMPLE) ->EnableWindow(checked);
+	GetDlgItem(IDC_RD_TRI_COMPLEX)->EnableWindow(checked);
+	GetDlgItem(IDC_CK_TRI_VISUAL) ->EnableWindow((checked && (((CButton*) GetDlgItem(IDC_RD_TRI_COMPLEX))->GetCheck() == BST_CHECKED)));
 }
 
-//-----  OnBnClickedRdCollLocal()  --------------------------------------------
-void CFormChunkMergeView::OnBnClickedRdCollLocal()
+//-----  OnBnClickedRdTriSimCom()  --------------------------------------------
+void CFormChunkMergeView::OnBnClickedRdTriSimCom()
 {
-	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(TRUE);
+	GetDlgItem(IDC_CK_TRI_VISUAL)->EnableWindow(((CButton*) GetDlgItem(IDC_RD_TRI_COMPLEX))->GetCheck() == BST_CHECKED);
+}
+
+//-----  OnBnClickedRdLocGloLoc()  --------------------------------------------
+void CFormChunkMergeView::OnBnClickedRdLocGloLoc()
+{
+	EnableGroupTriangleWinding(((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL))->GetCheck() == BST_CHECKED);
+}
+
+//-----  EnableGroupCollisionLocation()  --------------------------------------
+void CFormChunkMergeView::EnableGroupCollisionLocation(const bool enable)
+{
+	GetDlgItem(IDC_RD_COLL_LOCAL) ->EnableWindow(enable);
+	GetDlgItem(IDC_RD_COLL_GLOBAL)->EnableWindow(enable);
+
+	EnableGroupTriangleWinding(enable);
+}
+
+//-----  EnableGroupTriangleWinding()  ----------------------------------------
+void CFormChunkMergeView::EnableGroupTriangleWinding(const bool enable)
+{
+	bool	doEnable(enable);
+
+	doEnable &= (GetDlgItem(IDC_RD_COLL_LOCAL)->IsWindowEnabled() == TRUE);
+	doEnable &= ((CButton*) GetDlgItem(IDC_RD_COLL_LOCAL))->GetCheck() == BST_CHECKED;
+
+	GetDlgItem(IDC_CK_REORDER_TRIS)->EnableWindow(doEnable);
+
+	doEnable &= ((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->GetCheck() == BST_CHECKED;
+
+	GetDlgItem(IDC_RD_TRI_SIMPLE) ->EnableWindow(doEnable);
+	GetDlgItem(IDC_RD_TRI_COMPLEX)->EnableWindow(doEnable);
+	GetDlgItem(IDC_CK_TRI_VISUAL) ->EnableWindow((doEnable && (((CButton*) GetDlgItem(IDC_RD_TRI_COMPLEX))->GetCheck() == BST_CHECKED)));
 }

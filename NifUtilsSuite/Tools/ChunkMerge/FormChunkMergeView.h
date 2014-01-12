@@ -26,6 +26,8 @@ class CFormChunkMergeView : public ToolsFormViewBase
 									CFormChunkMergeView();
 		virtual	void				DoDataExchange(CDataExchange* pDX);
 		virtual	void				OnInitialUpdate();
+		virtual	void				EnableGroupCollisionLocation(const bool enable=true);
+		virtual	void				EnableGroupTriangleWinding(const bool enable=true);
 
 		afx_msg void				OnBnClickedBtViewIn();
 		afx_msg void				OnBnClickedBtViewColl();
@@ -37,8 +39,9 @@ class CFormChunkMergeView : public ToolsFormViewBase
 		afx_msg void				OnBnClickedBtNscopeColl();
 		afx_msg void				OnBnClickedBtConvert();
 		afx_msg void				OnBnClickedRadioCollMat();
-		afx_msg void				OnBnClickedRdCollGlobal();
-		afx_msg void				OnBnClickedRdCollLocal();
+		afx_msg void				OnBnClickedCkReorderTris();
+		afx_msg void				OnBnClickedRdTriSimCom();
+		afx_msg void				OnBnClickedRdLocGloLoc();
 
 		DECLARE_DYNCREATE(CFormChunkMergeView)
 		DECLARE_MESSAGE_MAP()

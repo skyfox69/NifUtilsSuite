@@ -72,6 +72,7 @@ class Configuration
 				int						_ncVtFlagsRemove;
 				int						_cmMatHandling;
 				int						_cmCollHandling;
+				int						_cmWindHandling;
 				int						_cmMatSingleType;
 				int						_ceNameHandling;
 				int						_lastOpenView;
@@ -87,7 +88,6 @@ class Configuration
 				bool					_ncForceDDS;
 				bool					_ncRemoveColl;
 				bool					_cmMergeColl;
-				bool					_cmReorderTris;
 				bool					_showToolTipps;
 				bool					_saveLastView;
 				bool					_ceGenNormals;
