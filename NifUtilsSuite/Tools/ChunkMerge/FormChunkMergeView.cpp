@@ -23,6 +23,7 @@
 #include <afxbutton.h>
 
 extern void logCallback(const int type, const char* pMessage);
+extern bool visCallback(NifCollisionUtility* pCollUtil);
 
 //-----  DEFINES  -------------------------------------------------------------
 static SFDToolTipText	glToolTiplist[] = {{IDC_BT_NSCOPE_IN,      "Open target in NifSkope"},
@@ -345,11 +346,12 @@ BOOL CFormChunkMergeView::BroadcastEvent(WORD event, void* pParameter)
 //-----  OnBnClickedBtConvert()  ----------------------------------------------
 void CFormChunkMergeView::OnBnClickedBtConvert()
 {
-	Configuration*			pConfig  (Configuration::getInstance());
-	CComboBox*				pCBox    ((CComboBox*) GetDlgItem(IDC_CB_MAT_SINGLE));
-	NifCollisionUtility		ncUtility(*(NifUtlMaterialList::getInstance()));
+	Configuration*			pConfig    (Configuration::getInstance());
+	CComboBox*				pCBox      ((CComboBox*) GetDlgItem(IDC_CB_MAT_SINGLE));
+	NifCollisionUtility		ncUtility  (*(NifUtlMaterialList::getInstance()));
 	map<int, unsigned int>	materialMap;
-	unsigned short			ncReturn (NCU_OK);
+	unsigned int			wndHandling(0);
+	unsigned short			ncReturn   (NCU_OK);
 
 	//  set wait pointer
 	BeginWaitCursor();
@@ -363,6 +365,9 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 	//  set callback for log info
 	ncUtility.setLogCallback(logCallback);
 
+	//  set callback for visual editing
+	ncUtility.setVisualCallback(visCallback);
+
 	//  get material handling
 	MaterialTypeHandling	matHandling((MaterialTypeHandling) (GetCheckedRadioButton(IDC_RD_MAT_SINGLE, IDC_RD_MAT_DEFINE) - IDC_RD_MAT_SINGLE));
 
@@ -375,12 +380,17 @@ void CFormChunkMergeView::OnBnClickedBtConvert()
 		//  do something special
 	}
 
+	//  get winding handling
+	wndHandling |= (((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->GetCheck() == TRUE) ? NCU_CW_ENABLED : 0;
+	wndHandling |= (((CButton*) GetDlgItem(IDC_CK_TRI_VISUAL))  ->GetCheck() == TRUE) ? NCU_CW_VISUAL  : 0;
+	wndHandling |= (((CButton*) GetDlgItem(IDC_RD_TRI_SIMPLE))  ->GetCheck() == TRUE) ? NCU_CW_SIMPLE  : NCU_CW_COMPLEX;
+
 	//  set flags
 	ncUtility.setCollisionNodeHandling((CollisionNodeHandling) (GetCheckedRadioButton(IDC_RD_COLL_CDATA, IDC_RD_COLL_MESH) - IDC_RD_COLL_CDATA));
 	ncUtility.setMaterialTypeHandling (matHandling, materialMap);
 	ncUtility.setDefaultMaterial      (materialMap[-1]);
 	ncUtility.setMergeCollision       (((CButton*) GetDlgItem(IDC_RD_COLL_GLOBAL)) ->GetCheck() == TRUE);
-	ncUtility.setReorderTriangles     (((CButton*) GetDlgItem(IDC_CK_REORDER_TRIS))->GetCheck() == TRUE);
+	ncUtility.setWindingHandling      (wndHandling);
 
 	//  add collision data to nif
 	ncReturn = ncUtility.addCollision(CStringA(_fileNameColl).GetString(), CStringA(_fileNameIn).GetString(), pConfig->getPathTemplates() + "\\" + CStringA(_template).GetString());

@@ -13,6 +13,8 @@
 #include "LogWindow.h"
 #include "Common\Util\LogMessageObject.h"
 
+class NifCollisionUtility;
+
 //-----  CLASS  ---------------------------------------------------------------
 class CNifUtilsSuiteFrame : public CFrameWnd, public LogMessageObject
 {
@@ -55,4 +57,6 @@ class CNifUtilsSuiteFrame : public CFrameWnd, public LogMessageObject
 
 		virtual	CLogWindow*		GetLogWindow() const	{ return m_pLogWindow; }
 		virtual	void			ShowLogWindow();
+
+		virtual	bool			VisualTriangeWinding(NifCollisionUtility* pCollUtil);
 };

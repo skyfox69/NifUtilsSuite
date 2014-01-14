@@ -49,7 +49,7 @@ class CFormChunkMergeView : public ToolsFormViewBase
 	public:
 		virtual						~CFormChunkMergeView();
 
-				CNifUtilsSuiteDoc*	GetDocument() const;
+				CNifUtilsSuiteDoc*	GetDocument  () const;
 
 		//  IfcBroadcastObject
 		virtual	BOOL				BroadcastEvent(WORD event, void* pParameter=NULL);

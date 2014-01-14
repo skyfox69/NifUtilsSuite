@@ -11,6 +11,7 @@
 #include <sstream>
 
 #include "Common\Nif\NifCollisionUtility.h"
+#include "Common\Nif\CollisionWindingHandling.h"
 #include "Common\Util\DefLogMessageTypes.h"
 
 //  Niflib includes
@@ -55,10 +56,11 @@ NifCollisionUtility::NifCollisionUtility(NifUtlMaterialList& materialList)
 	:	_cnHandling        (NCU_CN_FALLBACK),
 		_mtHandling        (NCU_MT_SINGLE),
 		_logCallback       (NULL),
+		_visualCallback    (NULL),
 		_materialList      (materialList),
 		_defaultMaterial   (0),
 		_mergeCollision    (true),
-		_reorderTriangles  (true),
+		_windHandling      (NCU_CW_ENABLED | NCU_CW_SIMPLE),
 		_nifVersion        (0)
 {}
 
@@ -265,15 +267,21 @@ void NifCollisionUtility::setLogCallback(void (*logCallback) (const int type, co
 }
 
 /*---------------------------------------------------------------------------*/
+void NifCollisionUtility::setVisualCallback(bool (*visualCallback) (NifCollisionUtility* pCollUtil))
+{
+	_visualCallback = visualCallback;
+}
+
+/*---------------------------------------------------------------------------*/
 void NifCollisionUtility::setMergeCollision(const bool doMerge)
 {
 	_mergeCollision = doMerge;
 }
 
 /*---------------------------------------------------------------------------*/
-void NifCollisionUtility::setReorderTriangles(const bool doReorder)
+void NifCollisionUtility::setWindingHandling(const unsigned int windHandling)
 {
-	_reorderTriangles = doReorder;
+	_windHandling = windHandling;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -458,7 +466,7 @@ unsigned int NifCollisionUtility::getGeometryFromPackedNiTriStrips(bhkPackedNiTr
 			}  //  for (; triIndex < triangles.size(); ++triIndex)
 
 			//  re-order triangles points to match same winding
-			if (_reorderTriangles)
+			if (_windHandling & NCU_CW_ENABLED)
 			{
 				reorderTriangles(triAry, vertAry);
 			}
@@ -1336,6 +1344,75 @@ bhkShapeRef NifCollisionUtility::convertCollPackedNiTriStrips(bhkPackedNiTriStri
 /*---------------------------------------------------------------------------*/
 void NifCollisionUtility::reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry)
 {
+	if (_windHandling & NCU_CW_SIMPLE)
+	{
+		reorderTrianglesSimple(srcAry);
+	}
+	else if (_windHandling & NCU_CW_COMPLEX)
+	{
+		reorderTrianglesComplex(srcAry, vertAry);
+	}
+}
+
+/*---------------------------------------------------------------------------*/
+void NifCollisionUtility::reorderTrianglesSimple(hkArray<hkGeometry::Triangle>& srcAry)
+{
+	int		length  (srcAry.getSize() - 1);
+	short	idxGroup(0);
+
+	// for each triangle in list
+	for (int idx(0); idx < length; ++idx)
+	{
+		hkGeometry::Triangle&	dstTri(srcAry[idx]);
+		hkGeometry::Triangle&	srcTri(srcAry[idx+1]);
+		int						vertsDst[3] = {dstTri.m_a, dstTri.m_b, dstTri.m_c};
+		int						vertsSrc[3] = {srcTri.m_a, srcTri.m_b, srcTri.m_c};
+		short					idxDst(0);
+		short					idxSrc(0);
+		short					cntPts(0);
+
+		// find common edge
+		for (; idxDst < 3; ++idxDst)
+		{
+			for (idxSrc=0; idxSrc < 3; ++idxSrc)
+			{
+				if (vertsSrc[idxSrc] == vertsDst[idxDst])	break;
+			}
+
+			if (idxSrc > 2)
+			{
+				vertsDst[idxDst] = -1;
+			}
+		}
+
+		for (idxDst=0; idxDst < 3; ++idxDst)
+		{
+			if (vertsDst[idxDst] != -1)		++cntPts;
+		}
+
+		// swap two vertices in case of uneven triangle in group having common edge with precessor
+		if ((cntPts == 2) && ((idxGroup % 2) == 1))
+		{
+			int		tmp(srcTri.m_a);
+
+			srcTri.m_a = srcTri.m_c;
+			srcTri.m_c = tmp;
+		}
+		// no common edge => start new group
+		else if (cntPts != 2)
+		{
+			idxGroup = 0;
+		}
+
+		// increase index in group
+		++idxGroup;
+
+	} // for (int idxRes(0); idxRes < length; ++idxRes)
+}
+
+/*---------------------------------------------------------------------------*/
+void NifCollisionUtility::reorderTrianglesComplex(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry)
+{
 	int						length      (srcAry.getSize());
 	vector<NCUTriangle>		triangleList(length);
 	vector<NCUBorder>		borderList;
@@ -1404,6 +1481,13 @@ void NifCollisionUtility::reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry
 
 		}  //  while (!borderList.empty())
 	}  //  for (int idx(0); idx < length; ++idx)
+
+	// in case of visual editing and existing callback function
+	if (((_windHandling & NCU_CW_VISUAL) == NCU_CW_VISUAL) && (_visualCallback != NULL))
+	{
+		logMessage(NCU_MSG_TYPE_INFO, "Visual editing => processing callback function.");
+		(*_visualCallback)(this);
+	}
 }
 
 /*---------------------------------------------------------------------------*/

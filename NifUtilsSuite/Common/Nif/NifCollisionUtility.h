@@ -146,19 +146,27 @@ public:
 	virtual void setLogCallback(void (*logCallback) (const int type, const char* pMessage));
 
 	/*!
+	 * Set callback function for visual modification of triangle winding
+	 */
+	virtual void setVisualCallback(bool (*visualCallback) (NifCollisionUtility* pCollUtil));
+
+	/*!
 	 * Set generation of one or individual collision nodes
 	 */
 	virtual void setMergeCollision(const bool doMerge);
 
 	/*!
-	 * Set if triangles should be reordered matching outward
+	 * Set handling of triangle winding
 	 */
-	virtual void setReorderTriangles(const bool doReorder);
+	virtual void setWindingHandling(const unsigned int windHandling);
 
 protected:
 
 	/*!	ptr. to logging callback function */
 	void (*_logCallback) (const int, const char*);
+
+	/*!	ptr. to callback function used for visual modification of triangle windings */
+	bool (*_visualCallback) (NifCollisionUtility*);
 
 	/*! mapping of material per NiTriShape; key: nif node number, value: material id */
 	map<int, unsigned int> _mtMapping;
@@ -190,14 +198,15 @@ protected:
 	/*! default material */
 	unsigned int _defaultMaterial;
 
+	/*! handling of triangle winding */
+	unsigned int _windHandling;
+
 	/*! NIF version of actual loaded destination NIF (internal) */
 	unsigned _nifVersion;
 
 	/*! generate one global collision or re-use multiple ones on sub trees */
 	bool _mergeCollision;
 
-	/*! reorder triangles to face outwards (bhkPackedNiTriStrips only */
-	bool _reorderTriangles;
 
 
 	/*!
@@ -353,12 +362,27 @@ protected:
 	virtual bhkShapeRef convertCollPackedNiTriStrips(bhkPackedNiTriStripsShapeRef pShape, bhkMoppBvTreeShapeRef pMoppShape, bhkRigidBodyRef pRigidBody, string fileNameCollTmpl);
 
 	/*!
-	 * Reorder winding of triangles to face outward
+	 * Reorder winding of triangles to face outward - proxy method
 	 * 
 	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
 	 * \param[in] vertAry  reference to vector of vertices (hkVector4)
 	 */
 	virtual void reorderTriangles(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry);
+
+	/*!
+	 * Reorder winding of triangles to face outward
+	 * 
+	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
+	 */
+	virtual void reorderTrianglesSimple(hkArray<hkGeometry::Triangle>& srcAry);
+
+	/*!
+	 * Reorder winding of triangles to face outward
+	 * 
+	 * \param[in/out] srcAry  reference to vector of triangles (hkGeometry::Triangle)
+	 * \param[in] vertAry  reference to vector of vertices (hkVector4)
+	 */
+	virtual void reorderTrianglesComplex(hkArray<hkGeometry::Triangle>& srcAry, hkArray<hkVector4>& vertAry);
 
 	/*!
 	 * Reorder winding of triangles using adjacent triangles defined by borders
