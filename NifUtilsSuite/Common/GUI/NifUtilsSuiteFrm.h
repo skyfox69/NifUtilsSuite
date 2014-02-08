@@ -58,5 +58,5 @@ class CNifUtilsSuiteFrame : public CFrameWnd, public LogMessageObject
 		virtual	CLogWindow*		GetLogWindow() const	{ return m_pLogWindow; }
 		virtual	void			ShowLogWindow();
 
-		virtual	bool			VisualTriangeWinding(NifCollisionUtility* pCollUtil);
+		virtual	bool			VisualTriangleWinding(NifCollisionUtility* pCollUtil);
 };

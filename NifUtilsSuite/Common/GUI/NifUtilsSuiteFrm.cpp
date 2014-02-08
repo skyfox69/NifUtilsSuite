@@ -64,7 +64,7 @@ void logCallback(const int type, const char* pMessage)
 
 bool visCallback(NifCollisionUtility* pCollUtil)
 {
-	return ((CNifUtilsSuiteFrame*) AfxGetApp()->GetMainWnd())->VisualTriangeWinding(pCollUtil);
+	return ((CNifUtilsSuiteFrame*) AfxGetApp()->GetMainWnd())->VisualTriangleWinding(pCollUtil);
 }
 
 //-----  CNifUtilsSuiteFrame()  -----------------------------------------------
@@ -409,7 +409,7 @@ void CNifUtilsSuiteFrame::ShowLogWindow()
 }
 
 //-----  VisualTriangeWinding()  ----------------------------------------------
-bool CNifUtilsSuiteFrame::VisualTriangeWinding(NifCollisionUtility* pCollUtil)
+bool CNifUtilsSuiteFrame::VisualTriangleWinding(NifCollisionUtility* pCollUtil)
 {
 
 
